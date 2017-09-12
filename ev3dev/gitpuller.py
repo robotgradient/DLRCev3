@@ -2,4 +2,4 @@
 
 import subprocess
 
-subprocess.run(['git pull'])
+subprocess.call(['git pull'])
