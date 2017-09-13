@@ -10,18 +10,37 @@ from .messages import *
 MASTER_HOST = "localhost"
 
 
+def dont_crash(func):
+    """Stop-gap decorator for preventing the slave from crashing in cases of errors.
+
+    TODO: replace exception printing with logging.
+    """
+
+    def robust(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+            return None
+
+    return robust
+
+
 def _payload_to_message(msg):
     return eval(msg.payload.decode())
 
 
+@dont_crash
 def print_property(objects, obj_name, attr_name):
     return getattr(objects[obj_name], attr_name, "Not set")
 
 
+@dont_crash
 def set_property(objects, obj_name, attr_name, val):
     setattr(objects[obj_name], attr_name, val)
 
 
+@dont_crash
 def run_method(objects, obj_name, method_name, args):
     return getattr(objects[obj_name], method_name)(**args)
 

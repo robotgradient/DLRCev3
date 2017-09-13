@@ -6,5 +6,4 @@ setup(
     packages=find_packages(),
     install_requires=[
         'paho-mqtt>=1.3',
-    ],
-)
+    ],)
