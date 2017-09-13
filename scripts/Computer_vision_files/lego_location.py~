@@ -46,13 +46,6 @@ def get_centers(img):
 	return center_list
 
 
-def get_objective(center_list):
-	center_array=np.array(center_list)
-	center_array[:,0]=abs(center_array[:,0]-320)	
-	index=np.argmin(center_array,axis=0)
-	return index[0]
-
-
 def nothing(x):
 	pass 
 
@@ -91,12 +84,12 @@ if __name__ == "__main__":
 
 		# Binarization
 		inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
-cv2.imshow("Before morphology",inrangeframe)
+		cv2.imshow("Before morphology",inrangeframe)
 		
 		#Morphologic operations
 			# Infill
 		inrangeframe=imfill(inrangeframe)
-		#cv2.imshow("filledOR",inrangeframe)		
+		cv2.imshow("filledOR",inrangeframe)		
 
 			#Opening and closing 
 		morphoimg=open_and_close(inrangeframe,(7,7))
@@ -116,8 +109,6 @@ cv2.imshow("Before morphology",inrangeframe)
 		cv2.line(frame,(420,0),(460,479),(0,0,255),2)
 		cv2.imshow("frame",frame)
 		
-		#check which center is more in the center
-		objective_center=get_objective(center_list)
 		if cv2.waitKey(100) & 0xFF == 27:
 			break
 
