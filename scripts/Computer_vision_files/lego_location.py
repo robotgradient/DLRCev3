@@ -50,7 +50,7 @@ def get_objective(center_list):
 	center_array=np.array(center_list)
 	center_array[:,0]=abs(center_array[:,0]-320)	
 	index=np.argmin(center_array,axis=0)
-	return index[0]
+	return center_list[index[0]]
 
 
 def nothing(x):
@@ -118,6 +118,7 @@ cv2.imshow("Before morphology",inrangeframe)
 		
 		#check which center is more in the center
 		objective_center=get_objective(center_list)
+		print (objective_center)
 		if cv2.waitKey(100) & 0xFF == 27:
 			break
 
