@@ -13,4 +13,7 @@ print("sending message")
 publish_cmd(m, AddDeviceMessage("test", 'LargeMotor("outA")'))
 print("sending message")
 # this asks the client to show the value of a property.
-publish_cmd(m, ShowAttrMessage("test", "max_speed"))
+publish_cmd(m, ShowAttrMessage("test", "min_speed"))
+
+
+publish_cmd(m, RunMethodMessage("test", "run_timed", {"time_sp" : 3000, "speed_sp" : 500}))
