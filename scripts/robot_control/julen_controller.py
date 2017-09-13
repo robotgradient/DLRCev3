@@ -23,6 +23,23 @@ def ImageDot2relPos(pixelVect):
 
 
 	FoV = 75
+	Height = 10
+
+	alfa = 30
+
+	# IMAGE = 640 x 480 : 
+	Npx = 640
+	Npy = 480
+
+	FoVpx = FoV/Npx
+	FoVpy = FoV/Npy
+
+	x2 = Height*np.tan()
+
+
+	
+
+
 
 
 

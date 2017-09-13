@@ -4,6 +4,7 @@
 
 import time
 from ev3control import Robot
+from ev3control.messages import RunMethodMessage
 
 print("Creating robot...")
 robot = Robot({
@@ -14,5 +15,4 @@ robot = Robot({
 
 })
 
-
-
+robot.publish(RunMethodMessage("gripper", "run_timed", {"speed_sp" : -1000, "time_sp" : 2000}))

@@ -1,6 +1,6 @@
 # NOTE: This config should be the same as the config on the ev3!
 
-BROKER_IP = "10.180.226.162"  # This is the IP address of your Jetson, connected to EV3 (check with ifconfig)
+BROKER_IP = "10.180.226.243"  # This is the IP address of your Jetson, connected to EV3 (check with ifconfig)
 BROKER_PORT = 1883
 
 ACTUATORS = 'actuators'
