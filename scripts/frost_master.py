@@ -10,13 +10,9 @@ robot = Robot({
 
     "leftMotor": "LargeMotor('outA')",
     "rightMotor": "LargeMotor('outB')",
+    "gripper": "MediumMotor('outC')",
 
 })
 
-robot.rotate_forever(600)
-time.sleep(1)
-robot.rotate_forever(-600)
-time.sleep(1)
-robot.move_forward(600)
-time.sleep(1)
-robot.stop_motors()
+
+

@@ -13,6 +13,7 @@ class Robot(object):
 
         "leftMotor",
         "rightMotor",
+        "gripper",
         "lightSensor"
     ]
 
@@ -68,6 +69,22 @@ class Robot(object):
         self.publish(RunMethodMessage(self.leftMotor, "stop", {"stop_action": action}))
         self.publish(RunMethodMessage(self.rightMotor, "stop", {"stop_action": action}))
 
+    def stop_motor(self, name, action="brake"):
+
+        self.publish(RunMethodMessage(name, "stop", {"stop_action": action}))
+
+
+
+    def close_grip(self, time=4000, vel=1000):
+
+        self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : vel}))
+        self.stop_motor("gripper")
+
+
+    def open_grip(self, time=4000, vel=1000):
+
+        self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : -vel}))
+        self.stop_motor("gripper")
 
     def move_forward(self, vel=600):
         """
