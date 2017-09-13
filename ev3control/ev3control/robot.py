@@ -1,6 +1,6 @@
 
-from .master import start_master, publish_cmd
 from .messages import *
+from .master import *
 
 """
     Interaface to EV3 for higher level functions. 
@@ -60,21 +60,24 @@ class Robot(object):
 
         print("Running ", self.leftMotor)
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": -vel}))
 
 
-    def stop_motors(self, action="break"):
+    def stop_motors(self, action="brake"):
 
         self.publish(RunMethodMessage(self.leftMotor, "stop", {"stop_action": action}))
+        self.publish(RunMethodMessage(self.rightMotor, "stop", {"stop_action": action}))
 
 
-
-    def move_forward(self, vel=500):
+    def move_forward(self, vel=600):
         """
         Move forward with given speed, top speed is default
         :param vel: Velocity
         :return:
         """
-        pass
+        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
+
 
 
     def move_to_target(self,  vec):

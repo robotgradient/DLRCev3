@@ -14,5 +14,9 @@ robot = Robot({
 })
 
 robot.rotate_forever(600)
-time.sleep(3)
+time.sleep(1)
+robot.rotate_forever(-600)
+time.sleep(1)
+robot.move_forward(600)
+time.sleep(1)
 robot.stop_motors()
