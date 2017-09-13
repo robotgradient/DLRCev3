@@ -24,6 +24,13 @@ def imfill(img):
 	#cv2.imshow("filledOR",inrangeframe)		
 	return imfilled
 
+def filter_2HSV(img):
+	kernel = np.ones((5,5),np.float32)/25
+	img = cv2.filter2D(img,-1,kernel)
+  # Change colorspace
+	hsvframe = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	return hsvframe
+
 def open_and_close(img,size):
 	#opening
 	morphoimage=cv2.morphologyEx(img,cv2.MORPH_OPEN,cv2.getStructuringElement(cv2.MORPH_RECT, size))
@@ -52,12 +59,52 @@ def get_objective(center_list):
 	index=np.argmin(center_array,axis=0)
 	return center_list[index[0]]
 
+def all_operations(frame):
+	LowH=cv2.getTrackbarPos("LowH","frame")
+	HighH=cv2.getTrackbarPos("HighH","frame")
+	LowS=cv2.getTrackbarPos("LowS","frame")
+	HighS=cv2.getTrackbarPos("HighS","frame")
+	LowV=cv2.getTrackbarPos("LowV","frame")
+	HighV=cv2.getTrackbarPos("HighV","frame")
+		
+	hsvframe=filter_2HSV(frame)
+	lowerboundcolor=np.array([LowH,LowS,LowV])
+	upperboundcolor=np.array([HighH,HighS,HighV])
+	# Binarization
+	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
+	#cv2.imshow("Before morphology",inrangeframe)
 
-def nothing(x):
-	pass 
+	#Morphologic operations
+	# Infill
+	inrangeframe=imfill(inrangeframe)
+	#cv2.imshow("filledOR",inrangeframe)		
 
-if __name__ == "__main__":
-	cap = cv2.VideoCapture(1)
+	#Opening and closing 
+	morphoimg=open_and_close(inrangeframe,(7,7))
+		
+	#Getting the centers
+	center_list=get_centers(morphoimg)
+
+	#plotting
+	for i in range(len(center_list)):
+		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+	print (center_list)
+		
+		#Draw the lines that determine the action space
+	cv2.line(frame,(280,0),(260,479),(255,0,0),2)
+	cv2.line(frame,(360,0),(380,479),(255,0,0),2)
+	cv2.line(frame,(220,0),(180,479),(0,0,255),2)
+	cv2.line(frame,(420,0),(460,479),(0,0,255),2)
+		
+		
+		#check which center is more in the center
+	objective_center=get_objective(center_list)
+	
+	cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+	return objective_center
+
+def init_trackbars():
+	
 	cv2.namedWindow('frame')
 	cv2.createTrackbar("LowH", 'frame',LowH, 255,nothing); 
 	cv2.createTrackbar("HighH", 'frame',HighH, 255,nothing);
@@ -65,60 +112,23 @@ if __name__ == "__main__":
 	cv2.createTrackbar("HighS", 'frame',HighS, 255,nothing);
 	cv2.createTrackbar("LowV", 'frame',LowV, 255,nothing); 
 	cv2.createTrackbar("HighV", 'frame',HighV, 255,nothing);
+	return 0
 
+def nothing(x):
+	pass 
+
+if __name__ == "__main__":
+	cap = cv2.VideoCapture(1)
+	init_trackbars()
 	while(True):
   # Capture frame-by-frame
 		ret, frame = cap.read()
 		# Get the trackbar poses
-		LowH=cv2.getTrackbarPos("LowH","frame")
-		HighH=cv2.getTrackbarPos("HighH","frame")
-		LowS=cv2.getTrackbarPos("LowS","frame")
-		HighS=cv2.getTrackbarPos("HighS","frame")
-		LowV=cv2.getTrackbarPos("LowV","frame")
-		HighV=cv2.getTrackbarPos("HighV","frame")
 		
-		 
-		kernel = np.ones((5,5),np.float32)/25
-		frame = cv2.filter2D(frame,-1,kernel)
-    # Change colorspace
-		hsvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-		
-		print(hsvframe[240,320,:])
+		objective_center=all_operations(frame)
+		print(objective_center)
 
-		lowerboundcolor=np.array([LowH,LowS,LowV])
-		upperboundcolor=np.array([HighH,HighS,HighV])
-
-
-		# Binarization
-		inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
-cv2.imshow("Before morphology",inrangeframe)
-		
-		#Morphologic operations
-			# Infill
-		inrangeframe=imfill(inrangeframe)
-		#cv2.imshow("filledOR",inrangeframe)		
-
-			#Opening and closing 
-		morphoimg=open_and_close(inrangeframe,(7,7))
-		
-		#Getting the centers
-		center_list=get_centers(morphoimg)
-
-		#find contours to get some properties
-		for i in range(len(center_list)):
-			cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
-		print (center_list)
-		
-		#Draw the lines that determine the action space
-		cv2.line(frame,(280,0),(260,479),(255,0,0),2)
-		cv2.line(frame,(360,0),(380,479),(255,0,0),2)
-		cv2.line(frame,(220,0),(180,479),(0,0,255),2)
-		cv2.line(frame,(420,0),(460,479),(0,0,255),2)
 		cv2.imshow("frame",frame)
-		
-		#check which center is more in the center
-		objective_center=get_objective(center_list)
-		print (objective_center)
 		if cv2.waitKey(100) & 0xFF == 27:
 			break
 
