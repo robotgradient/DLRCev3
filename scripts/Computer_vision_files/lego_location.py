@@ -3,11 +3,11 @@ import cv2
 import numpy as np
 
 LowH=0
-HighH=183
-LowS=59
-HighS=255
-LowV=0
-HighV=236
+HighH=133
+LowS=0
+HighS=251
+LowV=157
+HighV=224
 
 
 def imfill(img):
@@ -72,16 +72,17 @@ def all_operations(frame):
 	upperboundcolor=np.array([HighH,HighS,HighV])
 	# Binarization
 	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
-	#cv2.imshow("Before morphology",inrangeframe)
+	cv2.imshow("Before morphology",inrangeframe)
 
 	#Morphologic operations
 	# Infill
 	inrangeframe=imfill(inrangeframe)
-	#cv2.imshow("filledOR",inrangeframe)		
+	cv2.imshow("filledOR",inrangeframe)		
 
 	#Opening and closing 
-	morphoimg=open_and_close(inrangeframe,(7,7))
-		
+	morphoimg=open_and_close(inrangeframe,(11,3))
+	morphoimg=open_and_close(morphoimg,(3,11))
+	cv2.imshow("after morphology",morphoimg)	
 	#Getting the centers
 	center_list=get_centers(morphoimg)
 
@@ -96,11 +97,12 @@ def all_operations(frame):
 	cv2.line(frame,(220,0),(180,479),(0,0,255),2)
 	cv2.line(frame,(420,0),(460,479),(0,0,255),2)
 		
-		
+	if len(center_list)>0:
 		#check which center is more in the center
-	objective_center=get_objective(center_list)
-	
-	cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+		objective_center=get_objective(center_list)
+		cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+	else:
+		objective_center=[]
 	return objective_center
 
 def init_trackbars():
