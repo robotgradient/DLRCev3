@@ -5,17 +5,17 @@ from ev3control import Robot
 from ev3control.controllers import act
 
 LowH=0
-HighH=183
-LowS=59
+HighH=186
+LowS=80
 HighS=255
-LowV=0
-HighV=236
+LowV=100
+HighV=255
 LowH2=0
-HighH2=123
+HighH2=0
 LowS2=0
-HighH2=255
-LowV2=147
-HighV2=224
+HighH2=19
+LowV2=235
+HighV2=255
 
 
 def imfill(img):
@@ -120,10 +120,10 @@ def nothing(x):
 #For detecting the lego pieces the parameters are
 '''LowH=0
 HighH=183
-LowS=59
+LowS=80
 HighS=255
-LowV=0
-HighV=236
+LowV=100
+HighV=251
 morph=(7,7)'''
 
 #For detecting the celo box
@@ -134,6 +134,17 @@ LowS2=0
 HighH2=255
 LowV2=147
 HighV2=224
+morph=11,3
+'''
+
+#For detecting the white box
+'''
+LowH2=0
+HighH2=0
+LowS2=0
+HighH2=19
+LowV2=235
+HighV2=255
 morph=11,3
 '''
 if __name__ == "__main__":
@@ -162,8 +173,14 @@ if __name__ == "__main__":
 		else:
 			robot.rotate_forever(vel=500)
 		#print("Direction of robot: ", act(robot,lego_piece,atol=40))
+			#Draw the lines that determine the action space
+		cv2.line(frame,(280,0),(280,479),(255,0,0),2)
+		cv2.line(frame,(360,0),(360,479),(255,0,0),2)
+		cv2.line(frame,(220,0),(180,479),(0,0,255),2)
+		cv2.line(frame,(420,0),(460,479),(0,0,255),2)
 		cv2.imshow("frame",frame)
 		if cv2.waitKey(100) & 0xFF == 27:
+			robot.stop_all_motors()
 			break
 
 	# When everything done, release the capture
