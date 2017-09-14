@@ -71,7 +71,7 @@ def process_message(objects: dict, client, userdata, msg):
     if isinstance(message, ShowAttrMessage):
         value = print_property(objects, *message)
         print(value)
-        publish_value(client, PrintAttrMessage(*message, value))
+        publish_value(client, PrintAttrMessage(message.obj_name, message.attr_name, value))
     elif isinstance(message, SetAttrMessage):
         print("Value before: ", print_property(objects, message.obj_name, message.attr_name))
         set_property(objects, *message)
