@@ -1,7 +1,3 @@
-"""Example of a master script with robot interface.
-
-"""
-
 import time
 from ev3control import Robot
 
@@ -37,21 +33,3 @@ time.sleep(3)
 robot.rotate_forever(1000)
 time.sleep(1)
 robot.stop_motors()'''
-=======
-def run_robot():
-    """
-    PUT YOUR ROBOT COMMANDS IN THIS FUNCTION
-    :return:
-    """
-    robot.move_forward(300)
-    time.sleep(2.)
-    robot.dance()
-
-
-try:
-    run_robot()
-except Exception as e:
-    print(e)
-    robot.stop_all_motors()
-    print("Code is wrong, turned off motors")
->>>>>>> acb86190241e3deaa6629aabc9836ca7d3e1e0a5

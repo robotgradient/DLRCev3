@@ -74,6 +74,10 @@ class Robot(object):
         self.publish(RunMethodMessage(name, "stop", {"stop_action": action}))
 
 
+    def stop_all_motors(self):
+
+        self.stop_motors()
+        self.stop_motor("gripper")
 
     def close_grip(self, time=4000, vel=1000):
 
