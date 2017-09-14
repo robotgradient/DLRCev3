@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from ev3control import Robot
 from ev3control.controllers import act
+from time import time
+from time import sleep
 
 LowH=0
 HighH=186
@@ -166,7 +168,7 @@ if __name__ == "__main__":
 		atol=50
 		
 		white_box=detection(frame,LowH2,HighH2,LowS2,HighV2,LowV2,(3,11))
-	#	print("Lego Brick center:",lego_piece,"white box center",white_box)
+		print("Lego Brick center:",lego_piece,"white box center",white_box)
 		if lego_piece:
 			# determine direction
 			# move robot in direction

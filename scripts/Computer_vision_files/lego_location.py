@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import cv2
 import numpy as np
+from time import sleep
+from time import time
+
 
 LowH=0
 HighH=183
@@ -122,19 +125,30 @@ def nothing(x):
 
 if __name__ == "__main__":
 	cap = cv2.VideoCapture(1)
+	cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
 	init_trackbars()
+	sleep(1)
 	while(True):
   # Capture frame-by-frame
-		ret, frame = cap.read()
+		t0=time()
+		retard=0
+		while(retard<0.1):
+			ret, frame = cap.read()
+			t1=time()
+			retard=t1-t0
+			
 		# Get the trackbar poses
 		
-		objective_center=all_operations(frame)
-		print(objective_center)
-
+		#objective_center=all_operations(frame)
+		#print(objective_center)
+		#sleep(2)
 		cv2.imshow("frame",frame)
-		if cv2.waitKey(100) & 0xFF == 27:
+		if cv2.waitKey(1) & 0xFF == 27:
 			break
-
+		sleep(1)
+		
+		
+		
 	# When everything done, release the capture
 	cap.release()
 	cv2.destroyAllWindows()
