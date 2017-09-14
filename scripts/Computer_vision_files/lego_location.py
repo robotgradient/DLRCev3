@@ -100,6 +100,7 @@ def all_operations(frame):
 	if len(center_list)>0:
 		#check which center is more in the center
 		objective_center=get_objective(center_list)
+		
 		cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
 	else:
 		objective_center=[]

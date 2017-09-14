@@ -21,13 +21,13 @@ def act(robot, coords, img_res=(640, 480), atol=10):
     vel = 500
 
     if np.isclose(coords[0], img_center[0], atol=atol):
-        robot.move_forward(vel)
+        #robot.move_forward(vel)
         return "forward"
     elif error[0] > 0:
-        robot.rotate_forever(vel=-vel)
+        #robot.rotate_forever(vel=-vel)
         return "left"
     elif error[0] < 0:
-        robot.rotate_forever(vel=vel)
+        #robot.rotate_forever(vel=vel)
         return "right"
 
 

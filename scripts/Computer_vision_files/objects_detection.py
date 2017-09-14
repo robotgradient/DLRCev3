@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import cv2
 import numpy as np
+from ev3control import Robot
+from ev3control.controllers import act
 
 LowH=0
 HighH=183
@@ -136,6 +138,14 @@ morph=11,3
 '''
 if __name__ == "__main__":
 	cap = cv2.VideoCapture(1)
+	robot = Robot({
+
+    "leftMotor": "LargeMotor('outA')",
+    "rightMotor": "LargeMotor('outB')",
+    "gripper": "MediumMotor('outC')",
+
+	})
+	
 	while(True):
   # Capture frame-by-frame
 		ret, frame = cap.read()
@@ -145,7 +155,13 @@ if __name__ == "__main__":
 		
 		white_box=detection(frame,LowH2,HighH2,LowS2,HighV2,LowV2,(3,11))
 		print("Lego Brick center:",lego_piece,"white box center",white_box)
-
+		if lego_piece:
+			# determine direction
+			# move robot in direction
+			act(robot,lego_piece,atol=40)
+		else:
+			robot.rotate_forever(vel=500)
+		#print("Direction of robot: ", act(robot,lego_piece,atol=40))
 		cv2.imshow("frame",frame)
 		if cv2.waitKey(100) & 0xFF == 27:
 			break
