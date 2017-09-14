@@ -78,13 +78,11 @@ class Robot(object):
     def close_grip(self, time=4000, vel=1000):
 
         self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : vel}))
-        self.stop_motor("gripper")
 
 
     def open_grip(self, time=4000, vel=1000):
 
         self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : -vel}))
-        self.stop_motor("gripper")
 
     def move_forward(self, vel=600):
         """
