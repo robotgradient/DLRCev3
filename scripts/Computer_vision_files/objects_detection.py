@@ -163,19 +163,23 @@ if __name__ == "__main__":
 		# Get the trackbar poses
 		
 		lego_piece=detection(frame,LowH,HighH,LowS,HighV,LowV,(7,7))
+		atol=50
 		
 		white_box=detection(frame,LowH2,HighH2,LowS2,HighV2,LowV2,(3,11))
-		print("Lego Brick center:",lego_piece,"white box center",white_box)
+	#	print("Lego Brick center:",lego_piece,"white box center",white_box)
 		if lego_piece:
 			# determine direction
 			# move robot in direction
-			act(robot,lego_piece,atol=40)
+
+			direction = act(robot,lego_piece,atol=50)
+			print(direction)
 		else:
-			robot.rotate_forever(vel=500)
+			robot.rotate_forever(vel=100)
+			print("Searching...")
 		#print("Direction of robot: ", act(robot,lego_piece,atol=40))
 			#Draw the lines that determine the action space
-		cv2.line(frame,(280,0),(280,479),(255,0,0),2)
-		cv2.line(frame,(360,0),(360,479),(255,0,0),2)
+		cv2.line(frame,(320-atol,0),(320-atol,479),(255,0,0),2)
+		cv2.line(frame,(320+atol,0),(320+atol,479),(255,0,0),2)
 		cv2.line(frame,(220,0),(180,479),(0,0,255),2)
 		cv2.line(frame,(420,0),(460,479),(0,0,255),2)
 		cv2.imshow("frame",frame)
