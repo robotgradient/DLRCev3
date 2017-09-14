@@ -8,6 +8,12 @@ LowS=59
 HighS=255
 LowV=0
 HighV=236
+LowH2=0
+HighH2=123
+LowS2=0
+HighH2=255
+LowV2=147
+HighV2=224
 
 
 def imfill(img):
@@ -84,7 +90,7 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	#plotting
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
-	print (center_list)
+	#print (center_list)
 		
 		#Draw the lines that determine the action space
 	#cv2.line(frame,(280,0),(260,479),(255,0,0),2)
@@ -95,7 +101,10 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	if len(center_list)>0:
 		#check which center is more in the center
 		objective_center=get_objective(center_list)
-		cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+		if len(set(sizemorph))==1:
+			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+		else:
+			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
 	else:
 		objective_center=[]
 	
@@ -112,8 +121,19 @@ HighH=183
 LowS=59
 HighS=255
 LowV=0
-HighV=236'''
+HighV=236
+morph=(7,7)'''
 
+#For detecting the celo box
+'''
+LowH2=0
+HighH2=123
+LowS2=0
+HighH2=255
+LowV2=147
+HighV2=224
+morph=11,3
+'''
 if __name__ == "__main__":
 	cap = cv2.VideoCapture(1)
 	while(True):
@@ -121,8 +141,10 @@ if __name__ == "__main__":
 		ret, frame = cap.read()
 		# Get the trackbar poses
 		
-		objective_center=detection(frame,LowH,HighH,LowS,HighV,LowV,(7,7))
-		print(objective_center)
+		lego_piece=detection(frame,LowH,HighH,LowS,HighV,LowV,(7,7))
+		
+		white_box=detection(frame,LowH2,HighH2,LowS2,HighV2,LowV2,(3,11))
+		print("Lego Brick center:",lego_piece,"white box center",white_box)
 
 		cv2.imshow("frame",frame)
 		if cv2.waitKey(100) & 0xFF == 27:
