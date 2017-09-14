@@ -1,7 +1,7 @@
 """Master Client implementation."""
 import time
 import paho.mqtt.client as mqtt
-
+from datetime import datetime
 from .messages import *
 
 
@@ -17,7 +17,7 @@ def publish_cmd(client, message, delay=.2):
 
     :message: should be one of the types defined in messages.py
     """
-    client.publish(topic="commands", payload=repr(message))
+    client.publish(topic="commands", payload=repr(message) + ";" + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3])
     # If we chain multiple publish commands, we need delays between them
     time.sleep(delay)
 

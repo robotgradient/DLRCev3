@@ -3,10 +3,14 @@ from functools import partial
 
 import paho.mqtt.client as mqtt
 from ev3dev.ev3 import *
+import logging
 
 from .messages import *
 
 MASTER_HOST = "localhost"
+LOGGER_FORMAT = '%(asctime)-15s %(message)s'
+
+logging.basicConfig(format=LOGGER_FORMAT, level=logging.DEBUG)
 
 
 def dont_crash(func):
@@ -26,7 +30,8 @@ def dont_crash(func):
 
 
 def _payload_to_message(msg):
-    return eval(msg.payload.decode())
+    msg, time_stamp = msg.payload.decode().split(";")
+    return eval(msg), time_stamp
 
 
 @dont_crash
@@ -50,8 +55,9 @@ def process_message(objects: dict, client, userdata, msg):
     Assumes the message payload can be evalueated to one of the message types
     defined in `messages` module.
     """
-    print("receiving message")
-    message = _payload_to_message(msg)
+
+    message, time_stamp = _payload_to_message(msg)
+    logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
         print(print_property(objects, *message))
     elif isinstance(message, SetAttrMessage):
