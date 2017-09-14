@@ -24,10 +24,11 @@ def act(robot, coords, img_res=(640, 480), atol=10):
         robot.move_forward(vel)
         return "forward"
     elif error[0] > 0:
-        robot.rotate_forever(vel=-vel)
+        # Positive velocity for turning left
+        robot.rotate_forever(vel=vel)
         return "left"
     elif error[0] < 0:
-        robot.rotate_forever(vel=vel)
+        robot.rotate_forever(vel=-vel)
         return "right"
 
 
