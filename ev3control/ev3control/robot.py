@@ -34,7 +34,7 @@ class Robot(object):
                 raise Exception("Device " + device + " not known, please follow the naming conventions")
             setattr(self, device, device)
             print("Adding ", device , " with constructor ", device_constructors[device])
-            self.publish(AddDeviceMessage(device, device_constructors[device]))
+            self.publish(AddObjectMessage(device, device_constructors[device]))
 
 
     def publish(self, msg):

@@ -2,7 +2,6 @@
 from functools import partial
 
 import paho.mqtt.client as mqtt
-import ev3dev.ev3 as ev3
 from ev3dev.ev3 import *
 
 from .messages import *
@@ -62,7 +61,7 @@ def process_message(objects: dict, client, userdata, msg):
     elif isinstance(message, RunMethodMessage):
         print('running method')
         run_method(objects, *message)
-    elif isinstance(message, AddDeviceMessage):
+    elif isinstance(message, AddObjectMessage):
         print("adding object!")
         objects[message.obj_name] = eval(message.obj_init)
         print("new objects", objects)
