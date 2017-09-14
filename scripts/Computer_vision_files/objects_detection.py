@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from ev3control import Robot
 from ev3control.controllers import act
+from time import time
+from time import sleep
 
 LowH=0
 HighH=183
@@ -145,10 +147,16 @@ if __name__ == "__main__":
     "gripper": "MediumMotor('outC')",
 
 	})
-	
+	sleep(1)
 	while(True):
-  # Capture frame-by-frame
-		ret, frame = cap.read()
+		t0=time()
+		retard=0
+		while(retard<0.1):
+			t1=time()
+			retard=t1-t0
+			ret, frame=cap.read()
+
+
 		# Get the trackbar poses
 		
 		lego_piece=detection(frame,LowH,HighH,LowS,HighV,LowV,(7,7))
@@ -163,7 +171,7 @@ if __name__ == "__main__":
 			robot.rotate_forever(vel=500)
 		#print("Direction of robot: ", act(robot,lego_piece,atol=40))
 		cv2.imshow("frame",frame)
-		if cv2.waitKey(100) & 0xFF == 27:
+		if cv2.waitKey(1) & 0xFF == 27:
 			break
 
 	# When everything done, release the capture
