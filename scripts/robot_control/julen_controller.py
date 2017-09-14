@@ -34,7 +34,9 @@ def ImageDot2relPos(pixelVect):
 	FoVpx = FoV/Npx
 	FoVpy = FoV/Npy
 
-	x2 = Height*np.tan()
+	relObjPos[1] = 
+
+
 
 
 	
