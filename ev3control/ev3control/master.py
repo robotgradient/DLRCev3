@@ -9,6 +9,7 @@ def start_master():
     """Start MQTT client with setup that makes it a master."""
     client = mqtt.Client()
     client.connect("localhost", 1883, keepalive=60)
+    client.subscribe("printouts")
     return client
 
 

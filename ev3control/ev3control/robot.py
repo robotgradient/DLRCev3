@@ -1,9 +1,10 @@
+from collections import deque
 
 from .messages import *
 from .master import *
 
 """
-    Interaface to EV3 for higher level functions. 
+    Interaface to EV3 for higher level functions.
 """
 
 class Robot(object):
@@ -36,6 +37,23 @@ class Robot(object):
             print("Adding ", device , " with constructor ", device_constructors[device])
             self.publish(AddObjectMessage(device, device_constructors[device]))
 
+        # This stores the messages published via MQTT in an attribute of this class (a deque)
+        self.m.on_message = self.update_sensor_state
+        self._print_messages = deque()
+        # This is non-blocking! It starts listening on any topics the client is subscribed to
+        self.m.start_loop()
+
+    def update_sensor_state(self, client, userdata, msg):
+        """Bad name, this just adds a message to a deque/queue."""
+        # TODO: add message type checking
+        message = eval(msg.payload.decode())
+        self._print_messages.append(message)
+
+    def get_light_sensor(self):
+        self.publish(ShowAttrMessage(self.lightSensor, "reflected_light_intensity"))
+        while True:
+            if self._print_messages:
+                return self._print_messages.popleft()
 
     def publish(self, msg):
         publish_cmd(self.m, msg)

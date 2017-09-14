@@ -49,6 +49,16 @@ def run_method(objects, obj_name, method_name, args):
     return getattr(objects[obj_name], method_name)(**args)
 
 
+def publish_value(client, message, delay=.2):
+    """Convenience wrapper around MQTT's publish method.
+
+    :message: should be one of the types defined in messages.py
+    """
+    client.publish(topic="printouts", payload=repr(message))
+    # If we chain multiple publish commands, we need delays between them
+    time.sleep(delay)
+
+
 def process_message(objects: dict, client, userdata, msg):
     """Callback for processing an MQTT message.
 
@@ -59,7 +69,9 @@ def process_message(objects: dict, client, userdata, msg):
     message, time_stamp = _payload_to_message(msg)
     logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
-        print(print_property(objects, *message))
+        value = print_property(objects, *message)
+        print(value)
+        publish_value(client, PrintAttrMessage(*message, value))
     elif isinstance(message, SetAttrMessage):
         print("Value before: ", print_property(objects, message.obj_name, message.attr_name))
         set_property(objects, *message)
