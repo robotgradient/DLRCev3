@@ -4,7 +4,6 @@
 
 import time
 from ev3control import Robot
-from ev3control.messages import RunMethodMessage
 
 print("Creating robot...")
 robot = Robot({
@@ -15,4 +14,20 @@ robot = Robot({
 
 })
 
-robot.publish(RunMethodMessage("gripper", "run_timed", {"speed_sp" : -1000, "time_sp" : 2000}))
+
+def run_robot():
+    """
+    PUT YOUR ROBOT COMMANDS IN THIS FUNCTION
+    :return:
+    """
+    robot.move_forward(300)
+    time.sleep(2.)
+    robot.dance()
+
+
+try:
+    run_robot()
+except Exception as e:
+    print(e)
+    robot.stop_all_motors()
+    print("Code is wrong, turned off motors")
