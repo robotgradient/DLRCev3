@@ -53,7 +53,7 @@ class Robot(object):
         self.publish(ShowAttrMessage(self.lightSensor, "reflected_light_intensity"))
         while True:
             if self._print_messages:
-                return self._print_messages.popleft()
+                return self._print_messages.pop()
 
     def publish(self, msg):
         publish_cmd(self.m, msg)
