@@ -11,7 +11,7 @@ robot = Robot({
 })
 
 
-<<<<<<< HEAD
+
 #robot.publish(RunMethodMessage("gripper", "run_timed", {"speed_sp" : -400, "time_sp" : 1000}))
 robot.move_forward()
 time.sleep(0.1)
@@ -31,5 +31,4 @@ time.sleep(3)
 #robot.move_forward()
 #time.sleep(1)
 robot.rotate_forever(1000)
-time.sleep(1)
-robot.stop_motors()'''
+time.sleep(1)tr
