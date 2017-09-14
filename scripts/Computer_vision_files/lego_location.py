@@ -3,11 +3,11 @@ import cv2
 import numpy as np
 
 LowH=0
-HighH=133
-LowS=0
-HighS=251
-LowV=157
-HighV=224
+HighH=183
+LowS=59
+HighS=255
+LowV=0
+HighV=236
 
 
 def imfill(img):
