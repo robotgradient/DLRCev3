@@ -5,5 +5,5 @@ You shouldn't need to modify anything in the slave logic.
 """
 from ev3control import run_slave
 
-run_slave("10.180.226.245")
+run_slave("10.42.0.1")
 

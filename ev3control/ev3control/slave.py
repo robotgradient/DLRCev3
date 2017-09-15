@@ -55,6 +55,7 @@ def publish_value(client, message, delay=.2):
 
     :message: should be one of the types defined in messages.py
     """
+    print("publishing value now")
     client.publish(topic=SLAVE_RESPONSES, payload=repr(message))
     # If we chain multiple publish commands, we need delays between them
     time.sleep(delay)
