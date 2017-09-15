@@ -6,7 +6,7 @@ from ev3dev.ev3 import *
 import logging
 
 from .messages import *
-from ev3control.utils import MASTER_COMMANDS, SLAVE_RESPONSES
+from ev3control.utils import MASTER_COMMANDS, SLAVE_RESPONSES, decode_mqtt
 
 MASTER_HOST = "localhost"
 LOGGER_FORMAT = '%(asctime)-15s %(message)s'
@@ -28,11 +28,6 @@ def dont_crash(func):
             return None
 
     return robust
-
-
-def _payload_to_message(msg):
-    msg, time_stamp = msg.payload.decode().split(";")
-    return eval(msg), time_stamp
 
 
 @dont_crash
@@ -67,7 +62,8 @@ def process_message(objects: dict, client, userdata, msg):
     Assumes the message payload can be evalueated to one of the message types
     defined in `messages` module.
     """
-    message, time_stamp = _payload_to_message(msg)
+    message, time_stamp = decode_mqtt(msg).split(';')
+    message = eval(message)
     logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
         value = print_property(objects, *message)

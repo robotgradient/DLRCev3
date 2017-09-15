@@ -2,6 +2,7 @@ from collections import deque
 
 from .messages import *
 from .master import *
+from ev3control.utils import decode_mqtt
 
 """
     Interaface to EV3 for higher level functions.
@@ -49,7 +50,7 @@ class Robot(object):
     def update_sensor_state(self, client, userdata, msg):
         """Bad name, this just adds a message to a deque/queue."""
         # TODO: add message type checking
-        message = eval(msg.payload.decode())
+        message = eval(decode_mqtt(msg))
         self._print_messages.append(message)
 
     def read_proximity_sensor(self):
