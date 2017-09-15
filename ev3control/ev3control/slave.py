@@ -6,6 +6,7 @@ from ev3dev.ev3 import *
 import logging
 
 from .messages import *
+from ev3control.utils import MASTER_COMMANDS, SLAVE_RESPONSES
 
 MASTER_HOST = "localhost"
 LOGGER_FORMAT = '%(asctime)-15s %(message)s'
@@ -54,7 +55,7 @@ def publish_value(client, message, delay=.2):
 
     :message: should be one of the types defined in messages.py
     """
-    client.publish(topic="printouts", payload=repr(message))
+    client.publish(topic=SLAVE_RESPONSES, payload=repr(message))
     # If we chain multiple publish commands, we need delays between them
     time.sleep(delay)
 
@@ -96,6 +97,6 @@ def run_slave(host=MASTER_HOST):
     client.connect(host, 1883, keepalive=60)
     all_objects = {}
     client.on_message = partial(process_message, all_objects)
-    client.subscribe("commands")
+    client.subscribe(MASTER_COMMANDS)
     print("Client is set up, gonna start listening now!")
     client.loop_forever()
