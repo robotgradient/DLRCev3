@@ -67,7 +67,8 @@ def process_message(objects: dict, client, userdata, msg):
     Assumes the message payload can be evalueated to one of the message types
     defined in `messages` module.
     """
-
+    message, time_stamp = _payload_to_message(msg)
+    logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
         value = print_property(objects, *message)
         print(value)
