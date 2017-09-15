@@ -51,7 +51,7 @@ def run_method(objects, obj_name, method_name, args):
     return getattr(objects[obj_name], method_name)(**args)
 
 
-def publish_value(client, message, delay=.2):
+def publish_value(client, message, delay=0):
     """Convenience wrapper around MQTT's publish method.
 
     :message: should be one of the types defined in messages.py
