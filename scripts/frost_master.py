@@ -16,6 +16,7 @@ robot = Robot({
     "leftMotor": "LargeMotor('outA')",
     "rightMotor": "LargeMotor('outB')",
     "gripper": "MediumMotor('outC')",
+    "colorSensor": 'ColorSensor("in1")'
 
 }, camera_id=0)
 
@@ -30,6 +31,6 @@ state_dict = {}
 for state in states:
     state_dict[state.name] = state
 
-start_state = states[0]
+start_state = states[-1]
 main_loop(robot, start_state, state_dict)
 

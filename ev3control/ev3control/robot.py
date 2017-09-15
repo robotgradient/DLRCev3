@@ -56,6 +56,7 @@ class Robot(object):
         self.publish(ShowAttrMessage(self.colorSensor, "reflected_light_intensity"))
         while True:
             if self._print_messages:
+                print("Intensity message")
                 intensity_message = self._print_messages.pop()
                 return intensity_message.value
 

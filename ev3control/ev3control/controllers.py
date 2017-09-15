@@ -5,7 +5,7 @@ from collections import namedtuple
 
 
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
-                         vel_forward = 400, vel_rot = 60, vel_forward_slow=60):
+                         vel_forward = 100, vel_rot = 60, vel_forward_slow=60):
     """
     Moves the robot towards the brick.
 
@@ -17,6 +17,10 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     _, frame = robot.cap.read()
 
     coords = get_lego_piece(frame)
+
+    if not coords:
+        return "SEARCH", frame, {}
+
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
@@ -41,7 +45,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
         return "MOVE_TO_BRICK", frame, {}
 
 
-def rotation_search(robot, frame, vel=400):
+def rotation_search(robot, frame, vel=100):
 
     lego_coords = get_lego_piece(frame)
     if lego_coords:
@@ -53,14 +57,14 @@ def rotation_search(robot, frame, vel=400):
 
 
 
-def move_to_brick_blind_and_grip(robot, frame, vel=60):
+def move_to_brick_blind_and_grip(robot, frame, vel=60, threshold_intensity=10):
 
-    if True:
+    if robot.read_reflected_intensity() > threshold_intensity:
         robot.stop_motors()
         robot.close_grip()
         return "SEARCH", frame, {}
     else:
-        robot.move_forward()
+        robot.move_forward(vel=vel)
         return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
 
 

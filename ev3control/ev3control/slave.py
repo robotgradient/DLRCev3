@@ -71,7 +71,7 @@ def process_message(objects: dict, client, userdata, msg):
     logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
         value = print_property(objects, *message)
-        print(value)
+        print("Object value: ", value)
         publish_value(client, PrintAttrMessage(message.obj_name, message.attr_name, value))
     elif isinstance(message, SetAttrMessage):
         print("Value before: ", print_property(objects, message.obj_name, message.attr_name))
