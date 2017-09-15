@@ -95,4 +95,10 @@ def run_slave(host=MASTER_HOST):
     client.on_message = partial(process_message, all_objects)
     client.subscribe(MASTER_COMMANDS)
     print("Client is set up, gonna start listening now!")
-    client.loop_forever()
+    try:
+        client.loop_forever()
+    finally:
+        # Gracefully shut down all motors if slave is interrupted
+        for obj in all_objects.values():
+            if isinstance(obj, (LargeMotor, MediumMotor, SmallMotor)):
+                obj.stop_action(action="brake")
