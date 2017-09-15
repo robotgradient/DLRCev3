@@ -3,7 +3,8 @@ import cv2
 from object_detection.opencv import draw_lines
 
 
-State = namedtuple("State", "name act")
+State = namedtuple("State", "name act default_args")
+State.__new__.__defaults__ = tuple([None] * 3)
 
 def main_loop(robot, start_state, state_dict):
 
@@ -11,7 +12,6 @@ def main_loop(robot, start_state, state_dict):
     for state in state_dict.values():
         if not isinstance(state, State):
             raise Exception("The state " + str(state) + "is not of type State.")
-
     state = start_state
     kwargs = {}
 
@@ -21,6 +21,9 @@ def main_loop(robot, start_state, state_dict):
         print("Current state: ", state.name, " state args: ", str(kwargs))
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
+
+        if state.default_args:
+            kwargs.update(state.default_args)
 
         cv2.imshow("frame", processed_frame)
         if cv2.waitKey(1) & 0xFF == 27:
