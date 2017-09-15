@@ -44,7 +44,7 @@ class Robot(object):
         self.m.on_message = self.update_sensor_state
         self._print_messages = deque()
         # This is non-blocking! It starts listening on any topics the client is subscribed to
-        self.m.loop_start()
+        # self.m.start_loop()
 
     def update_sensor_state(self, client, userdata, msg):
         """Bad name, this just adds a message to a deque/queue."""

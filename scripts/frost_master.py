@@ -31,6 +31,6 @@ state_dict = {}
 for state in states:
     state_dict[state.name] = state
 
-start_state = states[-1]
+start_state = states[0]
 main_loop(robot, start_state, state_dict)
 
