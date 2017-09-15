@@ -102,4 +102,4 @@ def run_slave(host=MASTER_HOST):
         # Gracefully shut down all motors if slave is interrupted
         for obj in all_objects.values():
             if isinstance(obj, Motor):
-                obj.stop_action(action="brake")
+                obj.stop(stop_action="brake")
