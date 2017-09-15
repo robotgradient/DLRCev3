@@ -3,6 +3,7 @@ from functools import partial
 
 import paho.mqtt.client as mqtt
 from ev3dev.ev3 import *
+from ev3dev.core import Motor
 import logging
 
 from .messages import *
@@ -100,5 +101,5 @@ def run_slave(host=MASTER_HOST):
     finally:
         # Gracefully shut down all motors if slave is interrupted
         for obj in all_objects.values():
-            if isinstance(obj, (LargeMotor, MediumMotor, SmallMotor)):
+            if isinstance(obj, Motor):
                 obj.stop_action(action="brake")
