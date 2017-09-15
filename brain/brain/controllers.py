@@ -51,22 +51,6 @@ def rotation_search(robot, frame, vel=400):
         return "SEARCH", frame, {}
 
 
-
-
-def move_to_brick_blind_and_grip(robot, frame, vel=60):
-
-    if True:
-        robot.stop_motors()
-        robot.close_grip()
-        return "SEARCH", frame, {}
-    else:
-        robot.move_forward()
-        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
-
-
-
-
-
 def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
 
     # Compute the relative position from the image
@@ -96,9 +80,9 @@ def rotation_search(robot, frame, vel=100):
 
 
 
-def move_to_brick_blind_and_grip(robot, frame, vel=60, threshold_intensity=10):
+def move_to_brick_blind_and_grip(robot, frame, vel=60, proximity_threshold=5):
 
-    if robot.read_reflected_intensity() > threshold_intensity:
+    if int(robot.read_proximity_sensor()) > proximity_threshold:
         robot.stop_motors()
         robot.close_grip()
         return "SEARCH", frame, {}

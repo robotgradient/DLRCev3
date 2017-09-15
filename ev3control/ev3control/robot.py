@@ -15,7 +15,8 @@ class Robot(object):
         "leftMotor",
         "rightMotor",
         "gripper",
-        "colorSensor"
+        "colorSensor",
+        "infraredSensor"
     ]
 
 
@@ -43,7 +44,7 @@ class Robot(object):
         self.m.on_message = self.update_sensor_state
         self._print_messages = deque()
         # This is non-blocking! It starts listening on any topics the client is subscribed to
-        # self.m.start_loop()
+        self.m.loop_start()
 
     def update_sensor_state(self, client, userdata, msg):
         """Bad name, this just adds a message to a deque/queue."""
@@ -51,13 +52,13 @@ class Robot(object):
         message = eval(msg.payload.decode())
         self._print_messages.append(message)
 
-    def read_reflected_intensity(self):
-        self.publish(ShowAttrMessage(self.colorSensor, "reflected_light_intensity"))
+    def read_proximity_sensor(self):
+        self.publish(ShowAttrMessage(self.infraredSensor, "proximity"))
         while True:
             if self._print_messages:
                 print("Intensity message")
-                intensity_message = self._print_messages.pop()
-                return intensity_message.value
+                proximity_msg = self._print_messages.pop()
+                return proximity_msg.value
 
     def publish(self, msg):
         publish_cmd(self.m, msg)
