@@ -32,24 +32,29 @@ def act(robot, coords, img_res=(640, 480), atol=10):
         robot.rotate_forever(vel=-vel_rot)
         return "right"
 
-def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
+def control_PID(robot, coords,K1=0 ,K2 = 0, img_res=(640, 480)):
 
     # Compute the relative position from the image
 
     relObjPos = pixel_normalized_pos(coords,img_res)
 
-    # Move to circular params
-    relObjCir[0] = np.sqrt(np.pow(relObjPos(1),2) + np.pow(relObjPos(2),2));
-    relObjCir[1] = np.atan(relObjPos(1)/relObjPos(2))
+    # Move to circular params(not working!!)
+    relObjCir = np.zeros(2)
+    #relObjCir[0] = np.sqrt(np.power(relObjPos[0],2) + np.power(relObjPos[1],2));
+    #relObjCir[1] = np.arctan(relObjPos[0]/relObjPos[1])
+
+    relObjCir[0] = relObjPos[1]
+    relObjCir[1] = relObjPos[0]
 
     # From circular params to wheels vel
 
-    rotationMat = np.matrix([K1/2,K1/2],[K2,K2])
-
-    velWheels = np.matmul(rotationMat,relObjCir)
+    rotationMat = np.matrix([[K1/2, K1/2], [-K2, K2]])
 
 
-    robot.move(velWheels[0], velWheels[1])
+    velWheels = np.matmul(rotationMat.T,relObjCir).T
+
+    print('wheels velocities',velWheels)
+    robot.move(vel_left=velWheels[0,0], vel_right=velWheels[1,0])
 
     return "move"
 
@@ -58,8 +63,10 @@ def pixel_normalized_pos(coords, img_res=(640, 480)):
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
-    er[1] = (coords[1] - img_res[1]/2)/img_res[1];
-    er[2] = -(coords[2]-img_res[2])/img_res[2];
+    er = np.zeros(2)
+    er[0] = (coords[0] - img_res[0]/2)/img_res[0];
+    er[1] = -(coords[1]-img_res[1])/img_res[1];
+    print("relative normalized pos:", er)
 
     return er
 

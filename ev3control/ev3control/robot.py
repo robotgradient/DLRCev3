@@ -41,7 +41,7 @@ class Robot(object):
         self.m.on_message = self.update_sensor_state
         self._print_messages = deque()
         # This is non-blocking! It starts listening on any topics the client is subscribed to
-        self.m.start_loop()
+        #self.m.start_loop()
 
     def update_sensor_state(self, client, userdata, msg):
         """Bad name, this just adds a message to a deque/queue."""
@@ -115,10 +115,10 @@ class Robot(object):
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
 
-    def move(self, vel_left = 300, vel_right = 300, time=4000):
+    def move(self, vel_left = 300, vel_right = 300):
 
-        self.publish(RunMethodMessage(self.leftMotor, "run_timed", {"time_sp" : time, "speed_sp" : vel_left}))
-        self.publish(RunMethodMessage(self.rightMotor, "run_timed", {"time_sp" : time, "speed_sp" : vel_right}))
+        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp" : vel_left}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp" : vel_right}))
 
 
     def move_to_target(self,  vec):
