@@ -1,6 +1,6 @@
 from collections import namedtuple
 import cv2
-from .object_detection.opencv_object_detection import draw_lines
+from object_detection.opencv import draw_lines
 
 
 State = namedtuple("State", "name act")

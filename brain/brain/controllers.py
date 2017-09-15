@@ -1,6 +1,6 @@
 import numpy as np
 from ev3control import Robot
-from ev3control.object_detection.opencv_object_detection import get_lego_piece
+from object_detection.opencv import get_lego_piece
 from collections import namedtuple
 
 
