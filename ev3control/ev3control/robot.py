@@ -115,6 +115,10 @@ class Robot(object):
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
 
+    def move(self, vel_left = 300, vel_right = 300, time=4000):
+
+        self.publish(RunMethodMessage(self.leftMotor, "run_timed", {"time_sp" : time, "speed_sp" : vel_left}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_timed", {"time_sp" : time, "speed_sp" : vel_right}))
 
 
     def move_to_target(self,  vec):
