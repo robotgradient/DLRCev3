@@ -17,7 +17,7 @@ robot = Robot({
     "rightMotor": "LargeMotor('outB')",
     "gripper": "MediumMotor('outC')",
 
-})
+}, camera_id=0)
 
 
 # Define the state graph, we can do this better, currently each method returns the next state name

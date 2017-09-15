@@ -17,7 +17,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     _, frame = robot.cap.read()
 
     coords = get_lego_piece(frame)
-
+    print("Coords ", coords)
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
@@ -28,28 +28,29 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     # and centered
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=10):
         robot.move_forward
-        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {"frame": frame}
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {}
 
     if np.isclose(coords[0], img_center[0], atol=atol):
         robot.move_forward(vel_forward)
-        return "MOVE_TO_BRICK", {"frame": frame}
+        return "MOVE_TO_BRICK", frame, {}
     elif error[0] < 0:
         robot.rotate_forever(vel=-vel_rot)
-        return "MOVE_TO_BRICK", {"frame": frame}
+        return "MOVE_TO_BRICK", frame, {}
     else:
         # Positive velocity for turning left
         robot.rotate_forever(vel=vel_rot)
-        return "MOVE_TO_BRICK", {"frame": frame}
+        return "MOVE_TO_BRICK", frame, {}
 
 
 def rotation_search(robot, frame, vel=400):
 
     lego_coords = get_lego_piece(frame)
+    print("Coords ", lego_coords)
     if lego_coords:
-        return "MOVE_TO_BRICK", {"frame": frame}
+        return "MOVE_TO_BRICK", frame, {}
     else:
         robot.rotate_forever(vel)
-        return "SEARCH", {"frame": frame}
+        return "SEARCH", frame, {}
 
 
 
@@ -59,10 +60,10 @@ def move_to_brick_blind_and_grip(robot, frame, vel=60):
     if True:
         robot.stop_motors()
         robot.close_grip()
-        return "SEARCH", {"frame": frame}
+        return "SEARCH", frame, {}
     else:
         robot.move_forward()
-        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {"frame": frame}
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
 
 
 

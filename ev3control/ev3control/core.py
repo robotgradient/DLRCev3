@@ -13,17 +13,16 @@ def main_loop(robot, start_state, state_dict):
             raise Exception("The state " + str(state) + "is not of type State.")
 
     state = start_state
-    _, frame = robot.cap.read()
-    kwargs = {"frame": frame}
+    kwargs = {}
 
     while True:
-
+        _, frame = robot.cap.read()
+        print(frame)
         print("Current state: ", state.name, " state args: ", str(kwargs))
-        next_state_name, kwargs = state.act(robot, **kwargs)
+        next_state_name, frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
 
-        draw_lines(kwargs['frame'])
-        cv2.imshow("frame", kwargs['frame'])
+        cv2.imshow("frame", frame)
         if cv2.waitKey(1) & 0xFF == 27:
             print("Stopping motors...")
             robot.stop_all_motors()
