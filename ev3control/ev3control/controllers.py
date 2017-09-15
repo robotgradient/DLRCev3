@@ -17,7 +17,6 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     _, frame = robot.cap.read()
 
     coords = get_lego_piece(frame)
-    print("Coords ", coords)
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
@@ -45,7 +44,6 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
 def rotation_search(robot, frame, vel=400):
 
     lego_coords = get_lego_piece(frame)
-    print("Coords ", lego_coords)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
     else:

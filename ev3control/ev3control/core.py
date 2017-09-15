@@ -17,12 +17,12 @@ def main_loop(robot, start_state, state_dict):
 
     while True:
         _, frame = robot.cap.read()
-        print(frame)
+        draw_lines(frame)
         print("Current state: ", state.name, " state args: ", str(kwargs))
-        next_state_name, frame, kwargs = state.act(robot,frame, **kwargs)
+        next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
 
-        cv2.imshow("frame", frame)
+        cv2.imshow("frame", processed_frame)
         if cv2.waitKey(1) & 0xFF == 27:
             print("Stopping motors...")
             robot.stop_all_motors()
