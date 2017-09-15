@@ -1,12 +1,12 @@
+"""
+    Interaface to EV3 for higher level functions.
+"""
 from collections import deque
 
 from .messages import *
 from .master import *
 from ev3control.utils import decode_mqtt
 
-"""
-    Interaface to EV3 for higher level functions.
-"""
 
 class Robot(object):
 
@@ -36,9 +36,10 @@ class Robot(object):
 
         for device in device_constructors:
             if not device in self.naming_convention:
-                raise Exception("Device " + device + " not known, please follow the naming conventions")
+                raise Exception("Device " + device +
+                                " not known, please follow the naming conventions")
             setattr(self, device, device)
-            print("Adding ", device , " with constructor ", device_constructors[device])
+            print("Adding ", device, " with constructor ", device_constructors[device])
             self.publish(AddObjectMessage(device, device_constructors[device]))
 
         # This stores the messages published via MQTT in an attribute of this class (a deque)
@@ -64,8 +65,6 @@ class Robot(object):
     def publish(self, msg):
         publish_cmd(self.m, msg)
 
-
-
     def rotate(self, deg, vel=500, time=None):
         """
         Rotates the robot around its axis
@@ -85,7 +84,6 @@ class Robot(object):
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": -vel}))
 
-
     def stop_motors(self, action="brake"):
 
         self.publish(RunMethodMessage(self.leftMotor, "stop", {"stop_action": action}))
@@ -95,7 +93,6 @@ class Robot(object):
 
         self.publish(RunMethodMessage(name, "stop", {"stop_action": action}))
 
-
     def stop_all_motors(self):
 
         self.stop_motors()
@@ -103,12 +100,15 @@ class Robot(object):
 
     def close_grip(self, time=4000, vel=1000):
 
-        self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : vel}))
-
+        self.publish(
+            RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
+                                                         "speed_sp": vel}))
 
     def open_grip(self, time=4000, vel=1000):
 
-        self.publish(RunMethodMessage(self.gripper, "run_timed", {"time_sp" : time, "speed_sp" : -vel}))
+        self.publish(
+            RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
+                                                         "speed_sp": -vel}))
 
     def move_forward(self, vel=600):
         """
@@ -119,18 +119,15 @@ class Robot(object):
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
 
-    def move(self, vel_left = 300, vel_right = 300):
+    def move(self, vel_left=300, vel_right=300):
 
-        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp" : vel_left}))
-        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp" : vel_right}))
+        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel_left}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel_right}))
 
-
-    def move_to_target(self,  vec):
+    def move_to_target(self, vec):
         """
         Method for moving to target over a trajectory
         :param vec: Direction vector
         :return:
         """
         pass
-
-

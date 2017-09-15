@@ -20,8 +20,9 @@ def publish_cmd(client, message, delay=0):
 
     :message: should be one of the types defined in messages.py
     """
-    client.publish(topic=MASTER_COMMANDS, payload=repr(message) + ";" +
-                   datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3])
+    client.publish(
+        topic=MASTER_COMMANDS,
+        payload=repr(message) + ";" + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3])
     # If we chain multiple publish commands, we need delays between them
     time.sleep(delay)
 
