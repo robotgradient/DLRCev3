@@ -2,7 +2,6 @@ from collections import deque
 
 from .messages import *
 from .master import *
-import cv2
 
 """
     Interaface to EV3 for higher level functions.
@@ -20,7 +19,7 @@ class Robot(object):
     ]
 
 
-    def __init__(self, device_constructors, camera_id=1):
+    def __init__(self, device_constructors, cap):
         """
         Constructor for the class, adds the devices automatically
         :param ports: List of ports for the devices listed in the naming conventions
@@ -28,7 +27,7 @@ class Robot(object):
         self.m = start_master()
         self.devices = []
 
-        self.cap = cv2.VideoCapture(camera_id)
+        self.cap = cap
 
         for name in self.naming_convention:
             setattr(self, name, None)

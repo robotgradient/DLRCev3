@@ -18,7 +18,7 @@ robot = Robot({
     "gripper": "MediumMotor('outC')",
     "colorSensor": 'ColorSensor("in1")'
 
-}, camera_id=0)
+}, cap=cv2.VideoCapture(0))
 
 
 # Define the state graph, we can do this better, currently each method returns the next state name
