@@ -1,36 +1,70 @@
 import numpy as np
 from ev3control import Robot
+from ev3control.object_detection.opencv_object_detection import get_lego_piece
+from collections import namedtuple
 
-def act(robot, coords, img_res=(640, 480), atol=10):
+
+def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
+                         vel_forward = 400, vel_rot = 60, vel_forward_slow=60):
     """
     Moves the robot towards the brick.
 
     :param robot: The robot instance
-    :param coords: The brick coordinates
     :param img_res: The image resolution
     :param atol: The absolute error tolerance
     :return: Direction string
     """
 
+
+    coords = get_lego_piece(frame)
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
     img_center = img_res / 2
     error = img_center - coords
 
-    vel_forward = 400
-    vel_rot = 60
+    # Move forward till light sensor detects brick if brick is near the bottom of image
+    # and centered
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=10):
+        robot.move_forward
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {"frame": frame}
 
     if np.isclose(coords[0], img_center[0], atol=atol):
         robot.move_forward(vel_forward)
-        return "forward"
-    elif error[0] > 0:
+        return "MOVE_TO_BRICK", {"frame": frame}
         # Positive velocity for turning left
         robot.rotate_forever(vel=vel_rot)
-        return "left"
+        return  "MOVE_TO_BRICK", {"frame": frame}
     elif error[0] < 0:
         robot.rotate_forever(vel=-vel_rot)
-        return "right"
+        return "MOVE_TO_BRICK", {"frame": frame}
+
+
+
+def rotation_search(robot, frame, vel=400):
+
+    lego_coords = get_lego_piece(frame)
+    if lego_coords:
+        return "MOVE_TO_BRICK", {}
+    else:
+        robot.rotate_forever(vel)
+        return "SEARCH", {}
+
+
+
+
+def move_to_brick_blind_and_grip(robot, frame, vel=60):
+    if True:
+        robot.stop_motors()
+        robot.close_grip()
+        return "SEARCH", {}
+    else:
+        robot.move_forward()
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {}
+
+
+
+
 
 def control_PID(robot, coords,K1=0 ,K2 = 0, img_res=(640, 480)):
 
@@ -69,17 +103,6 @@ def pixel_normalized_pos(coords, img_res=(640, 480)):
     print("relative normalized pos:", er)
 
     return er
-
-
-
-
-
-
-
-
-
-
-
 
 
 

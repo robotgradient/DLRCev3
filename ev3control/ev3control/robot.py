@@ -2,6 +2,7 @@ from collections import deque
 
 from .messages import *
 from .master import *
+import cv2
 
 """
     Interaface to EV3 for higher level functions.
@@ -26,6 +27,8 @@ class Robot(object):
         """
         self.m = start_master()
         self.devices = []
+
+        self.cap = cv2.VideoCapture(1)
 
         for name in self.naming_convention:
             setattr(self, name, None)
