@@ -20,7 +20,7 @@ class Robot(object):
     ]
 
 
-    def __init__(self, device_constructors):
+    def __init__(self, device_constructors, camera_id=1):
         """
         Constructor for the class, adds the devices automatically
         :param ports: List of ports for the devices listed in the naming conventions
@@ -28,7 +28,7 @@ class Robot(object):
         self.m = start_master()
         self.devices = []
 
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(camera_id)
 
         for name in self.naming_convention:
             setattr(self, name, None)
@@ -80,8 +80,6 @@ class Robot(object):
         :param vel: Velocity
         :return:
         """
-
-        print("Running ", self.leftMotor)
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": -vel}))
 
