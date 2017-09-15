@@ -14,9 +14,10 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     :param atol: The absolute error tolerance
     :return: Direction string
     """
-
+    _, frame = robot.cap.read()
 
     coords = get_lego_piece(frame)
+
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
@@ -32,35 +33,36 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     if np.isclose(coords[0], img_center[0], atol=atol):
         robot.move_forward(vel_forward)
         return "MOVE_TO_BRICK", {"frame": frame}
-        # Positive velocity for turning left
-        robot.rotate_forever(vel=vel_rot)
-        return  "MOVE_TO_BRICK", {"frame": frame}
     elif error[0] < 0:
         robot.rotate_forever(vel=-vel_rot)
         return "MOVE_TO_BRICK", {"frame": frame}
-
+    else:
+        # Positive velocity for turning left
+        robot.rotate_forever(vel=vel_rot)
+        return "MOVE_TO_BRICK", {"frame": frame}
 
 
 def rotation_search(robot, frame, vel=400):
 
     lego_coords = get_lego_piece(frame)
     if lego_coords:
-        return "MOVE_TO_BRICK", {}
+        return "MOVE_TO_BRICK", {"frame": frame}
     else:
         robot.rotate_forever(vel)
-        return "SEARCH", {}
+        return "SEARCH", {"frame": frame}
 
 
 
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60):
+
     if True:
         robot.stop_motors()
         robot.close_grip()
-        return "SEARCH", {}
+        return "SEARCH", {"frame": frame}
     else:
         robot.move_forward()
-        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {}
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", {"frame": frame}
 
 
 
@@ -96,27 +98,6 @@ def pixel_normalized_pos(coords, img_res=(640, 480)):
     er[2] = -(coords[2]-img_res[2])/img_res[2];
 
     return er
-
-
-
-def main_loop():
-
-    robot = Robot({
-
-        "leftMotor": "LargeMotor('outA')",
-        "rightMotor": "LargeMotor('outB')",
-        "gripper": "MediumMotor('outC')",
-
-    })
-
-    while True:
-
-        # Read from camera
-        # Get coordinates of brick
-        coords = (0,0)
-        # Issue commands to robot
-        act(robot, coords)
-
 
 
 

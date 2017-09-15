@@ -20,7 +20,7 @@ class Robot(object):
     ]
 
 
-    def __init__(self, device_constructors):
+    def __init__(self, device_constructors, camera_id=1):
         """
         Constructor for the class, adds the devices automatically
         :param ports: List of ports for the devices listed in the naming conventions
@@ -28,7 +28,7 @@ class Robot(object):
         self.m = start_master()
         self.devices = []
 
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(camera_id)
 
         for name in self.naming_convention:
             setattr(self, name, None)
@@ -44,7 +44,7 @@ class Robot(object):
         self.m.on_message = self.update_sensor_state
         self._print_messages = deque()
         # This is non-blocking! It starts listening on any topics the client is subscribed to
-        self.m.start_loop()
+        # self.m.start_loop()
 
     def update_sensor_state(self, client, userdata, msg):
         """Bad name, this just adds a message to a deque/queue."""
@@ -79,8 +79,6 @@ class Robot(object):
         :param vel: Velocity
         :return:
         """
-
-        print("Running ", self.leftMotor)
         self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
         self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": -vel}))
 
