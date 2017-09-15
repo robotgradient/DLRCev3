@@ -15,7 +15,7 @@ class Robot(object):
         "leftMotor",
         "rightMotor",
         "gripper",
-        "lightSensor"
+        "colorSensor"
     ]
 
 
@@ -49,11 +49,12 @@ class Robot(object):
         message = eval(msg.payload.decode())
         self._print_messages.append(message)
 
-    def get_light_sensor(self):
-        self.publish(ShowAttrMessage(self.lightSensor, "reflected_light_intensity"))
+    def read_reflected_intensity(self):
+        self.publish(ShowAttrMessage(self.colorSensor, "reflected_light_intensity"))
         while True:
             if self._print_messages:
-                return self._print_messages.pop()
+                intensity_message = self._print_messages.pop()
+                return intensity_message.value
 
     def publish(self, msg):
         publish_cmd(self.m, msg)
@@ -128,6 +129,5 @@ class Robot(object):
         :return:
         """
         pass
-
 
 
