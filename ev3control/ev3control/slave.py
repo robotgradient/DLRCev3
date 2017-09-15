@@ -1,5 +1,6 @@
 """MQTT client that listens for commands from a master and turns them into Ev3 commands"""
 from functools import partial
+from collections import deque
 
 import paho.mqtt.client as mqtt
 from ev3dev.ev3 import *
@@ -61,6 +62,13 @@ def publish_value(client, message, delay=.2):
     time.sleep(delay)
 
 
+def queue_message(q: deque, client, userdata, msg):
+
+    message, time_stamp = _payload_to_message(msg)
+    logging.debug("Receiving message sent at {}".format(time_stamp))
+    q.append(message)
+
+
 def process_message(objects: dict, client, userdata, msg):
     """Callback for processing an MQTT message.
 
@@ -68,8 +76,6 @@ def process_message(objects: dict, client, userdata, msg):
     defined in `messages` module.
     """
 
-    message, time_stamp = _payload_to_message(msg)
-    logging.debug("Receiving message sent at {}".format(time_stamp))
     if isinstance(message, ShowAttrMessage):
         value = print_property(objects, *message)
         print(value)
@@ -97,7 +103,8 @@ def run_slave(host=MASTER_HOST):
     client = mqtt.Client()
     client.connect(host, 1883, keepalive=60)
     all_objects = {}
-    client.on_message = partial(process_message, all_objects)
+    message_q = deque()
+    client.on_message = partial(queue_message, message_q)
     client.subscribe(MASTER_COMMANDS)
     print("Client is set up, gonna start listening now!")
     client.loop_forever()
