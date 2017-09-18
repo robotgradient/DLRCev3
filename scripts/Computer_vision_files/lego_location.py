@@ -125,27 +125,27 @@ def nothing(x):
 
 if __name__ == "__main__":
 	cap = cv2.VideoCapture(1)
-	cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
+	#cap.set(cv2.CAP_PROP_BUFFERSIZE,100)
 	init_trackbars()
-	sleep(1)
+	#sleep(1)
 	while(True):
   # Capture frame-by-frame
 		t0=time()
 		retard=0
-		while(retard<0.1):
-			ret, frame = cap.read()
-			t1=time()
-			retard=t1-t0
-			
+		#while(retard<0.1):
+		#	
+		#	t1=time()
+		#	retard=t1-t0
+		ret, frame = cap.read()	
 		# Get the trackbar poses
 		
-		#objective_center=all_operations(frame)
+		objective_center=all_operations(frame)
 		#print(objective_center)
 		#sleep(2)
 		cv2.imshow("frame",frame)
 		if cv2.waitKey(1) & 0xFF == 27:
 			break
-		sleep(1)
+		#sleep(1)
 		
 		
 		

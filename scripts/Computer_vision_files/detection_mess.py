@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 import cv2
 import numpy as np
+#from ev3control import Robot
+#from ev3control.controllers import act
 
 LowH=0
-HighH=186
-LowS=80
+HighH=183
+LowS=59
 HighS=255
-LowV=100
-HighV=255
+LowV=0
+HighV=236
 LowH2=0
-HighH2=0
+HighH2=123
 LowS2=0
-HighH2=19
-LowV2=235
-HighV2=255
+HighS2=255
+LowV2=147
+HighV2=224
 
 
 def imfill(img):
@@ -25,9 +27,9 @@ def imfill(img):
 	#cv2.imshow("0 in corner",im_flood)
 	cv2.floodFill(im_flood, mask, (0,0), 255);
 	#cv2.imshow("filled",im_flood)
-	cv2.bitwise_not(im_flood,im_flood)
+	cv2.bitwise_not(im_flood,im_flood)	
 	imfilled=cv2.bitwise_or(im_flood,inrangeframe)
-	#cv2.imshow("filledOR",inrangeframe)
+	#cv2.imshow("filledOR",inrangeframe)		
 	return imfilled
 
 def filter_2HSV(img):
@@ -64,13 +66,13 @@ def get_centers(img):
 
 def get_objective(center_list):
 	center_array=np.array(center_list)
-	center_array[:,0]=abs(center_array[:,0]-320)
+	center_array[:,0]=abs(center_array[:,0]-320)	
 	index=np.argmin(center_array,axis=0)
 	return center_list[index[0]]
 
-def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
+def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph):
 
-
+		
 	hsvframe=filter_2HSV(frame)
 	lowerboundcolor=np.array([LowH,LowS,LowV])
 	upperboundcolor=np.array([HighH,HighS,HighV])
@@ -81,12 +83,12 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	#Morphologic operations
 	# Infill
 	inrangeframe=imfill(inrangeframe)
-	#cv2.imshow("filledOR",inrangeframe)
+	#cv2.imshow("filledOR",inrangeframe)		
 
-	#Opening and closing
+	#Opening and closing 
 	morphoimg=open_and_close(inrangeframe,sizemorph)
 	sizemorph2=tuple(reversed(sizemorph))
-	morphoimg=open_and_close(morphoimg,sizemorph2)
+	morphoimg=open_and_close(morphoimg,sizemorph2)	
 	#Getting the centers
 	center_list=get_centers(morphoimg)
 
@@ -94,60 +96,25 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
 	#print (center_list)
-
+		
 		#Draw the lines that determine the action space
 	#cv2.line(frame,(280,0),(260,479),(255,0,0),2)
 	#cv2.line(frame,(360,0),(380,479),(255,0,0),2)
 	#cv2.line(frame,(220,0),(180,479),(0,0,255),2)
 	#cv2.line(frame,(420,0),(460,479),(0,0,255),2)
-
+		
 	if len(center_list)>0:
 		#check which center is more in the center
 		objective_center=get_objective(center_list)
-		if len(set(sizemorph))==1:
+		if len(set(sizemorph1))==1:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
 		else:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
 	else:
 		objective_center=[]
-
+	
 	return objective_center
 
-
-
-def nothing(x):
-	pass
-
-#For detecting the lego pieces the parameters are
-'''LowH=0
-HighH=183
-LowS=80
-HighS=255
-LowV=100
-HighV=251
-morph=(7,7)'''
-
-#For detecting the celo box
-'''
-LowH2=0
-HighH2=123
-LowS2=0
-HighH2=255
-LowV2=147
-HighV2=224
-morph=11,3
-'''
-
-#For detecting the white box
-'''
-LowH2=0
-HighH2=0
-LowS2=0
-HighH2=19
-LowV2=235
-HighV2=255
-morph=11,3
-'''
 def detection_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0,HighV=236\
 	,LowH2=0,HighH2=123,LowS2=0,HighS2=255,LowV2=147\
 	,HighV2=224,sizemorph1=(7,7),sizemorph2=(3,11)):
@@ -202,21 +169,51 @@ def detection_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0,High
 		objective_center=[]
 	
 	return objective_center
+def nothing(x):
+	pass 
 
-def get_lego_piece(frame):
-	lego_piece = detection(frame, LowH, HighH, LowS, HighV, LowV, (7, 7))
-	return lego_piece
+#For detecting the lego pieces the parameters are
+'''LowH=0
+HighH=183
+LowS=59
+HighS=255
+LowV=0
+HighV=236
+morph=(7,7)'''
 
+#For detecting the celo box
+'''
+LowH2=0
+HighH2=123
+LowS2=0
+HighH2=255
+LowV2=147
+HighV2=224
+morph=11,3
+'''
+if __name__ == "__main__":
+	cap = cv2.VideoCapture(1)
+	
+	while(True):
+		ret, frame = cap.read()
+		# Get the trackbar poses
+		
+		#lego_piece=detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,(7,7))
+		
+		#white_box=detection(frame,LowH2,HighH2,LowS2,HighS2,LowV2,HighV2,(3,11))
+		lego_no_box=detection_outside_white(frame)
+		#if lego_piece:
+			# determine direction
+			# move robot in direction
+		#	act(robot,lego_piece,atol=40)
+		#else:
+			#robot rotate
+		#print("Direction of robot: ", act(robot,lego_piece,atol=40))
+		cv2.imshow("frame",frame)
+		if cv2.waitKey(100) & 0xFF == 27:
+			break
 
-def get_white_box(frame):
-	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
-	return white_box
-
-
-def draw_lines(frame, atol=50):
-	cv2.line(frame, (320 - atol, 0), (320 - atol, 479), (255, 0, 0), 2)
-	cv2.line(frame, (320 + atol, 0), (320 + atol, 479), (255, 0, 0), 2)
-	cv2.line(frame, (220, 0), (180, 479), (0, 0, 255), 2)
-	cv2.line(frame, (420, 0), (460, 479), (0, 0, 255), 2)
-
+	# When everything done, release the capture
+	cap.release()
+	cv2.destroyAllWindows()
 
