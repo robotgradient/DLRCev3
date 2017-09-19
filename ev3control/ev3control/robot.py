@@ -16,7 +16,7 @@ class Robot(object):
         "leftMotor",
         "rightMotor",
         "gripper",
-        "elevator"
+        "elevator",
         "colorSensor",
         "infraredSensor"
     ]
