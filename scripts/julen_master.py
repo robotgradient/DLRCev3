@@ -12,9 +12,9 @@ else:
 print("Creating robot...")
 robot = Robot({
 
-    "leftMotor": "LargeMotor('outA')",
+    "leftMotor": "LargeMotor('outD')",
     "rightMotor": "LargeMotor('outB')",
-    "gripper": "MediumMotor('outC')",
+    "gripper": "LargeMotor('outA')",
 
 }, None)
 
@@ -30,7 +30,7 @@ robot = Robot({
 
 
 robot.open_grip(vel=vel, time=time2)
-time.sleep(5)
+time.sleep(3)
 
 #robot.close_grip(vel=300, time=1500)
 #time.sleep(3)
