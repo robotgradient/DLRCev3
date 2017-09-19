@@ -61,19 +61,31 @@ def get_centers(img,Arearef=130):
 	img2 = cv2.drawContours(img2, contours, -1, (0,255,0), 3)
 		  # Display the resulting frame
 	center_list=[]
+	closest_list=[]
 	for i in range(len(contours)):
 		if  cv2.contourArea(contours[i])>Arearef:
 			(x,y),radius = cv2.minEnclosingCircle(contours[i])
 			center_list.append([int(x),int(y)])
-			print (cv2.contourArea(contours[i]))
-	return center_list
+			contourfigure=contours[i]
+			print (contourfigure.shape)
+			closecontour=np.argmax(contourfigure[:,:,1],axis=0)
+			print("close contour:",closecontour,contourfigure[closecontour,0,:])
+
+			closest_list.append(contourfigure[closecontour,0,:])
+
+	return center_list,closest_list
 
 
-def get_objective(center_list):
+def get_objective(center_list,closest_list=[]):
 	center_array=np.array(center_list)
 	center_array[:,0]=abs(center_array[:,0]-320)	
 	index=np.argmin(center_array,axis=0)
-	return center_list[index[0]]
+	objective_center=center_list[index[0]]
+	if len(closest_list)>0:
+		objective_closest=closest_list[index[0]]
+	else:
+		objective_closest=[]
+	return objective_center,objective_closest
 
 def all_operations(frame):
 	LowH2=cv2.getTrackbarPos("LowH","frame")
@@ -100,11 +112,13 @@ def all_operations(frame):
 	morphoimg=open_and_close(morphoimg,(3,11))
 	cv2.imshow("after morphology",morphoimg)	
 	#Getting the centers
-	center_list=get_centers(morphoimg)
+	center_list,closest_list=get_centers(morphoimg)
 
 	#plotting
 	for i in range(len(center_list)):
-		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+		#cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+		#
+		print(len(closest_list))
 	print (center_list)
 		
 		#Draw the lines that determine the action space
@@ -130,7 +144,7 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	upperboundcolor=np.array([HighH,HighS,HighV])
 	# Binarization
 	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
-	cv2.imshow("Before morphology",inrangeframe)
+	#cv2.imshow("Before morphology",inrangeframe)
 
 	#Morphologic operations
 	# Infill
@@ -142,12 +156,18 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list=get_centers(morphoimg,10000)
-
-	cv2.imshow("morpho image",morphoimg)
+	center_list,closest_list=get_centers(morphoimg,10000)
+	closest_list=np.array(closest_list)
+	#print(closest_list.shape)
+	if len(closest_list.shape)>2:
+		closest_list=np.squeeze(closest_list,axis=1)
+	#print("After squeezing.",closest_list.shape)
+	#cv2.imshow("morpho image",morphoimg)
 	#plotting
+	#print(closest_list[0,0])
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+		cv2.circle(frame,(closest_list[i][0],closest_list[i][1]),2,(0,0,255),thickness=2)
 	#print (center_list)
 
 		#Draw the lines that determine the action space
@@ -158,15 +178,17 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 
 	if len(center_list)>0:
 		#check which center is more in the center
-		objective_center=get_objective(center_list)
+		objective_center,objective_closest=get_objective(center_list,closest_list)
 		if len(set(sizemorph))==1:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+			cv2.circle(frame,(objective_closest[0],objective_closest[1]),4,(0,0,0),thickness=2)
 		else:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
 	else:
 		objective_center=[]
+		objective_closest=[]
 
-	return objective_center
+	return objective_center,objective_closest
 
 def init_trackbars():
 	
@@ -188,21 +210,21 @@ if __name__ == "__main__":
 	init_trackbars()
 	#sleep(1)
 	LowH2=0
-	HighH2=123
-	LowS2=0
-	HighH2=255
-	LowV2=147
-	HighV2=224
+	HighH2=50
+	LowS2=10
+	HighS2=1
+	LowV2=0
+	HighV2=237
 	while(True):
   # Capture frame-by-frame
 		t0=time()
 		retard=0
-		LowH2=cv2.getTrackbarPos("LowH","frame")
-		HighH2=cv2.getTrackbarPos("HighH","frame")
-		LowS2=cv2.getTrackbarPos("LowS","frame")
-		HighS2=cv2.getTrackbarPos("HighS","frame")
-		LowV2=cv2.getTrackbarPos("LowV","frame")
-		HighV2=cv2.getTrackbarPos("HighV","frame")
+		'''	LowH2=cv2.getTrackbarPos("LowH","frame")
+			HighH2=cv2.getTrackbarPos("HighH","frame")
+			LowS2=cv2.getTrackbarPos("LowS","frame")
+			HighS2=cv2.getTrackbarPos("HighS","frame")
+			LowV2=cv2.getTrackbarPos("LowV","frame")
+			HighV2=cv2.getTrackbarPos("HighV","frame")'''
 	
 		#while(retard<0.1):
 		#	
@@ -211,11 +233,11 @@ if __name__ == "__main__":
 		ret, frame = cap.read()	
 		# Get the trackbar poses
 		
-		white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 9))
-		print("Box:",white_box)
+		white_box, closes_point = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 9))
+		print("Box:",white_box,closes_point)
 		#print(objective_center)
 		#sleep(2)
-		cv2.imshow("frame",frame)
+		cv2.imshow("newframe",frame)
 		if cv2.waitKey(1) & 0xFF == 27:
 			break
 		#sleep(1)

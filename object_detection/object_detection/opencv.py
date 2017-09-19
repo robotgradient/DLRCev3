@@ -53,20 +53,31 @@ def get_centers(img,Arearef=130):
 	img2 = cv2.drawContours(img2, contours, -1, (0,255,0), 3)
 		  # Display the resulting frame
 	center_list=[]
-
+	closest_list=[]
 	for i in range(len(contours)):
 		if  cv2.contourArea(contours[i])>Arearef:
 			(x,y),radius = cv2.minEnclosingCircle(contours[i])
 			center_list.append([int(x),int(y)])
+			contourfigure=contours[i]
+			print (contourfigure.shape)
+			closecontour=np.argmax(contourfigure[:,:,1],axis=0)
+			print("close contour:",closecontour,contourfigure[closecontour,0,:])
 
-	return center_list
+			closest_list.append(contourfigure[closecontour,0,:])
+
+	return center_list,closest_list
 
 
-def get_objective(center_list):
+def get_objective(center_list,closest_list=[]):
 	center_array=np.array(center_list)
-	center_array[:,0]=abs(center_array[:,0]-320)
+	center_array[:,0]=abs(center_array[:,0]-320)	
 	index=np.argmin(center_array,axis=0)
-	return center_list[index[0]]
+	objective_center=center_list[index[0]]
+	if len(closest_list)>0:
+		objective_closest=closest_list[index[0]]
+	else:
+		objective_closest=[]
+	return objective_center,objective_closest
 
 def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 
@@ -88,11 +99,18 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list=get_centers(morphoimg)
-
+	center_list,closest_list=get_centers(morphoimg,10000)
+	closest_list=np.array(closest_list)
+	#print(closest_list.shape)
+	if len(closest_list.shape)>2:
+		closest_list=np.squeeze(closest_list,axis=1)
+	#print("After squeezing.",closest_list.shape)
+	#cv2.imshow("morpho image",morphoimg)
 	#plotting
+	#print(closest_list[0,0])
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+		cv2.circle(frame,(closest_list[i][0],closest_list[i][1]),2,(0,0,255),thickness=2)
 	#print (center_list)
 
 		#Draw the lines that determine the action space
@@ -103,15 +121,17 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 
 	if len(center_list)>0:
 		#check which center is more in the center
-		objective_center=get_objective(center_list)
+		objective_center,objective_closest=get_objective(center_list,closest_list)
 		if len(set(sizemorph))==1:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+			cv2.circle(frame,(objective_closest[0],objective_closest[1]),4,(0,0,0),thickness=2)
 		else:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
 	else:
 		objective_center=[]
+		objective_closest=[]
 
-	return objective_center
+	return objective_center,objective_closest
 
 
 
