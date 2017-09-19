@@ -1,0 +1,1116 @@
+Help on module cv2:
+
+NNAAMMEE
+    cv2 - Python wrapper for OpenCV.
+
+SSUUBBMMOODDUULLEESS
+    Error
+    aruco
+    bgsegm
+    bioinspired
+    cuda
+    datasets
+    detail
+    dnn
+    face
+    fisheye
+    flann
+    freetype
+    ft
+    hdf
+    instr
+    line_descriptor
+    ml
+    motempl
+    multicalib
+    ocl
+    ogl
+    omnidir
+    optflow
+    plot
+    ppf_match_3d
+    rgbd
+    saliency
+    structured_light
+    text
+    videostab
+    xfeatures2d
+    ximgproc
+    xphoto
+
+CCLLAASSSSEESS
+    builtins.Exception(builtins.BaseException)
+        error
+    builtins.object
+        UMat
+    
+    class UUMMaatt(builtins.object)
+     |  OpenCV 3 UMat wrapper. Used for T-API support.
+     |  
+     |  Methods defined here:
+     |  
+     |  ____iinniitt____(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  ____nneeww____(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ggeett(...)
+     |      Returns numpy array
+    
+    class eerrrroorr(builtins.Exception)
+     |  Common base class for all non-exit exceptions.
+     |  
+     |  Method resolution order:
+     |      error
+     |      builtins.Exception
+     |      builtins.BaseException
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  ____wweeaakkrreeff____
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.Exception:
+     |  
+     |  ____iinniitt____(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  ____nneeww____(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.BaseException:
+     |  
+     |  ____ddeellaattttrr____(self, name, /)
+     |      Implement delattr(self, name).
+     |  
+     |  ____ggeettaattttrriibbuuttee____(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  ____rreedduuccee____(...)
+     |      helper for pickle
+     |  
+     |  ____rreepprr____(self, /)
+     |      Return repr(self).
+     |  
+     |  ____sseettaattttrr____(self, name, value, /)
+     |      Implement setattr(self, name, value).
+     |  
+     |  ____sseettssttaattee____(...)
+     |  
+     |  ____ssttrr____(self, /)
+     |      Return str(self).
+     |  
+     |  wwiitthh__ttrraacceebbaacckk(...)
+     |      Exception.with_traceback(tb) --
+     |      set self.__traceback__ to tb and return self.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from builtins.BaseException:
+     |  
+     |  ____ccaauussee____
+     |      exception cause
+     |  
+     |  ____ccoonntteexxtt____
+     |      exception context
+     |  
+     |  ____ddiicctt____
+     |  
+     |  ____ssuupppprreessss__ccoonntteexxtt____
+     |  
+     |  ____ttrraacceebbaacckk____
+     |  
+     |  aarrggss
+
+FFUUNNCCTTIIOONNSS
+    AAKKAAZZEE__ccrreeaattee(...)
+        AKAZE_create([, descriptor_type[, descriptor_size[, descriptor_channels[, threshold[, nOctaves[, nOctaveLayers[, diffusivity]]]]]]]) -> retval
+    
+    AAggaassttFFeeaattuurreeDDeetteeccttoorr__ccrreeaattee(...)
+        AgastFeatureDetector_create([, threshold[, nonmaxSuppression[, type]]]) -> retval
+    
+    BBFFMMaattcchheerr(...)
+        BFMatcher([, normType[, crossCheck]]) -> <BFMatcher object>
+    
+    BBFFMMaattcchheerr__ccrreeaattee(...)
+        BFMatcher_create([, normType[, crossCheck]]) -> retval
+    
+    BBOOWWIImmggDDeessccrriippttoorrEExxttrraaccttoorr(...)
+        BOWImgDescriptorExtractor(dextractor, dmatcher) -> <BOWImgDescriptorExtractor object>
+    
+    BBOOWWKKMMeeaannssTTrraaiinneerr(...)
+        BOWKMeansTrainer(clusterCount[, termcrit[, attempts[, flags]]]) -> <BOWKMeansTrainer object>
+    
+    BBRRIISSKK__ccrreeaattee(...)
+        BRISK_create([, thresh[, octaves[, patternScale]]]) -> retval  or  BRISK_create(radiusList, numberList[, dMax[, dMin[, indexChange]]]) -> retval
+    
+    CCaammSShhiifftt(...)
+        CamShift(probImage, window, criteria) -> retval, window
+    
+    CCaannnnyy(...)
+        Canny(image, threshold1, threshold2[, edges[, apertureSize[, L2gradient]]]) -> edges  or  Canny(dx, dy, threshold1, threshold2[, edges[, L2gradient]]) -> edges
+    
+    CCaassccaaddeeCCllaassssiiffiieerr(...)
+        CascadeClassifier([filename]) -> <CascadeClassifier object>
+    
+    CCaassccaaddeeCCllaassssiiffiieerr__ccoonnvveerrtt(...)
+        CascadeClassifier_convert(oldcascade, newcascade) -> retval
+    
+    DDMMaattcchh(...)
+        DMatch() -> <DMatch object>  or  DMatch(_queryIdx, _trainIdx, _distance) -> <DMatch object>  or  DMatch(_queryIdx, _trainIdx, _imgIdx, _distance) -> <DMatch object>
+    
+    DDeessccrriippttoorrMMaattcchheerr__ccrreeaattee(...)
+        DescriptorMatcher_create(descriptorMatcherType) -> retval  or  DescriptorMatcher_create(matcherType) -> retval
+    
+    DDuuaallTTVVLL11OOppttiiccaallFFllooww__ccrreeaattee(...)
+        DualTVL1OpticalFlow_create([, tau[, lambda[, theta[, nscales[, warps[, epsilon[, innnerIterations[, outerIterations[, scaleStep[, gamma[, medianFiltering[, useInitialFlow]]]]]]]]]]]]) -> retval
+    
+    FFaarrnneebbaacckkOOppttiiccaallFFllooww__ccrreeaattee(...)
+        FarnebackOpticalFlow_create([, numLevels[, pyrScale[, fastPyramids[, winSize[, numIters[, polyN[, polySigma[, flags]]]]]]]]) -> retval
+    
+    FFaassttFFeeaattuurreeDDeetteeccttoorr__ccrreeaattee(...)
+        FastFeatureDetector_create([, threshold[, nonmaxSuppression[, type]]]) -> retval
+    
+    FFiilleeNNooddee(...)
+        FileNode() -> <FileNode object>
+    
+    FFiilleeSSttoorraaggee(...)
+        FileStorage([source, flags[, encoding]]) -> <FileStorage object>
+    
+    FFllaannnnBBaasseeddMMaattcchheerr(...)
+        FlannBasedMatcher([, indexParams[, searchParams]]) -> <FlannBasedMatcher object>
+    
+    FFllaannnnBBaasseeddMMaattcchheerr__ccrreeaattee(...)
+        FlannBasedMatcher_create() -> retval
+    
+    GGFFTTTTDDeetteeccttoorr__ccrreeaattee(...)
+        GFTTDetector_create([, maxCorners[, qualityLevel[, minDistance[, blockSize[, useHarrisDetector[, k]]]]]]) -> retval
+    
+    GGaauussssiiaannBBlluurr(...)
+        GaussianBlur(src, ksize, sigmaX[, dst[, sigmaY[, borderType]]]) -> dst
+    
+    HHOOGGDDeessccrriippttoorr(...)
+        HOGDescriptor() -> <HOGDescriptor object>  or  HOGDescriptor(_winSize, _blockSize, _blockStride, _cellSize, _nbins[, _derivAperture[, _winSigma[, _histogramNormType[, _L2HysThreshold[, _gammaCorrection[, _nlevels[, _signedGradient]]]]]]]) -> <HOGDescriptor object>  or  HOGDescriptor(filename) -> <HOGDescriptor object>
+    
+    HHOOGGDDeessccrriippttoorr__ggeettDDaaiimmlleerrPPeeoopplleeDDeetteeccttoorr(...)
+        HOGDescriptor_getDaimlerPeopleDetector() -> retval
+    
+    HHOOGGDDeessccrriippttoorr__ggeettDDeeffaauullttPPeeoopplleeDDeetteeccttoorr(...)
+        HOGDescriptor_getDefaultPeopleDetector() -> retval
+    
+    HHoouugghhCCiirrcclleess(...)
+        HoughCircles(image, method, dp, minDist[, circles[, param1[, param2[, minRadius[, maxRadius]]]]]) -> circles
+    
+    HHoouugghhLLiinneess(...)
+        HoughLines(image, rho, theta, threshold[, lines[, srn[, stn[, min_theta[, max_theta]]]]]) -> lines
+    
+    HHoouugghhLLiinneessPP(...)
+        HoughLinesP(image, rho, theta, threshold[, lines[, minLineLength[, maxLineGap]]]) -> lines
+    
+    HHuuMMoommeennttss(...)
+        HuMoments(m[, hu]) -> hu
+    
+    KKAAZZEE__ccrreeaattee(...)
+        KAZE_create([, extended[, upright[, threshold[, nOctaves[, nOctaveLayers[, diffusivity]]]]]]) -> retval
+    
+    KKaallmmaannFFiilltteerr(...)
+        KalmanFilter([dynamParams, measureParams[, controlParams[, type]]]) -> <KalmanFilter object>
+    
+    KKeeyyPPooiinntt(...)
+        KeyPoint([x, y, _size[, _angle[, _response[, _octave[, _class_id]]]]]) -> <KeyPoint object>
+    
+    KKeeyyPPooiinntt__ccoonnvveerrtt(...)
+        KeyPoint_convert(keypoints[, keypointIndexes]) -> points2f  or  KeyPoint_convert(points2f[, size[, response[, octave[, class_id]]]]) -> keypoints
+    
+    KKeeyyPPooiinntt__oovveerrllaapp(...)
+        KeyPoint_overlap(kp1, kp2) -> retval
+    
+    LLUUTT(...)
+        LUT(src, lut[, dst]) -> dst
+    
+    LLaappllaacciiaann(...)
+        Laplacian(src, ddepth[, dst[, ksize[, scale[, delta[, borderType]]]]]) -> dst
+    
+    MMSSEERR__ccrreeaattee(...)
+        MSER_create([, _delta[, _min_area[, _max_area[, _max_variation[, _min_diversity[, _max_evolution[, _area_threshold[, _min_margin[, _edge_blur_size]]]]]]]]]) -> retval
+    
+    MMaahhaallaannoobbiiss(...)
+        Mahalanobis(v1, v2, icovar) -> retval
+    
+    MMuullttiiTTrraacckkeerr(...)
+        MultiTracker([, trackerType]) -> <MultiTracker object>
+    
+    OORRBB__ccrreeaattee(...)
+        ORB_create([, nfeatures[, scaleFactor[, nlevels[, edgeThreshold[, firstLevel[, WTA_K[, scoreType[, patchSize[, fastThreshold]]]]]]]]]) -> retval
+    
+    PPCCAABBaacckkPPrroojjeecctt(...)
+        PCABackProject(data, mean, eigenvectors[, result]) -> result
+    
+    PPCCAACCoommppuuttee(...)
+        PCACompute(data, mean[, eigenvectors[, maxComponents]]) -> mean, eigenvectors  or  PCACompute(data, mean, retainedVariance[, eigenvectors]) -> mean, eigenvectors
+    
+    PPCCAAPPrroojjeecctt(...)
+        PCAProject(data, mean, eigenvectors[, result]) -> result
+    
+    PPSSNNRR(...)
+        PSNR(src1, src2) -> retval
+    
+    RRQQDDeeccoommpp33xx33(...)
+        RQDecomp3x3(src[, mtxR[, mtxQ[, Qx[, Qy[, Qz]]]]]) -> retval, mtxR, mtxQ, Qx, Qy, Qz
+    
+    RRooddrriigguueess(...)
+        Rodrigues(src[, dst[, jacobian]]) -> dst, jacobian
+    
+    SSVVBBaacckkSSuubbsstt(...)
+        SVBackSubst(w, u, vt, rhs[, dst]) -> dst
+    
+    SSVVDDeeccoommpp(...)
+        SVDecomp(src[, w[, u[, vt[, flags]]]]) -> w, u, vt
+    
+    SScchhaarrrr(...)
+        Scharr(src, ddepth, dx, dy[, dst[, scale[, delta[, borderType]]]]) -> dst
+    
+    SSiimmpplleeBBlloobbDDeetteeccttoorr__PPaarraammss(...)
+        SimpleBlobDetector_Params() -> <SimpleBlobDetector_Params object>
+    
+    SSiimmpplleeBBlloobbDDeetteeccttoorr__ccrreeaattee(...)
+        SimpleBlobDetector_create([, parameters]) -> retval
+    
+    SSoobbeell(...)
+        Sobel(src, ddepth, dx, dy[, dst[, ksize[, scale[, delta[, borderType]]]]]) -> dst
+    
+    SSppaarrsseePPyyrrLLKKOOppttiiccaallFFllooww__ccrreeaattee(...)
+        SparsePyrLKOpticalFlow_create([, winSize[, maxLevel[, crit[, flags[, minEigThreshold]]]]]) -> retval
+    
+    SStteerreeooBBMM__ccrreeaattee(...)
+        StereoBM_create([, numDisparities[, blockSize]]) -> retval
+    
+    SStteerreeooSSGGBBMM__ccrreeaattee(...)
+        StereoSGBM_create(minDisparity, numDisparities, blockSize[, P1[, P2[, disp12MaxDiff[, preFilterCap[, uniquenessRatio[, speckleWindowSize[, speckleRange[, mode]]]]]]]]) -> retval
+    
+    SSuubbddiivv22DD(...)
+        Subdiv2D([rect]) -> <Subdiv2D object>
+    
+    TTiicckkMMeetteerr(...)
+        TickMeter() -> <TickMeter object>
+    
+    TTrraacckkeerr__ccrreeaattee(...)
+        Tracker_create(trackerType) -> retval
+    
+    VViiddeeooCCaappttuurree(...)
+        VideoCapture() -> <VideoCapture object>  or  VideoCapture(filename) -> <VideoCapture object>  or  VideoCapture(filename, apiPreference) -> <VideoCapture object>  or  VideoCapture(index) -> <VideoCapture object>
+    
+    VViiddeeooWWrriitteerr(...)
+        VideoWriter([filename, fourcc, fps, frameSize[, isColor]]) -> <VideoWriter object>
+    
+    VViiddeeooWWrriitteerr__ffoouurrcccc(...)
+        VideoWriter_fourcc(c1, c2, c3, c4) -> retval
+    
+    aabbssddiiffff(...)
+        absdiff(src1, src2[, dst]) -> dst
+    
+    aaccccuummuullaattee(...)
+        accumulate(src, dst[, mask]) -> dst
+    
+    aaccccuummuullaatteePPrroodduucctt(...)
+        accumulateProduct(src1, src2, dst[, mask]) -> dst
+    
+    aaccccuummuullaatteeSSqquuaarree(...)
+        accumulateSquare(src, dst[, mask]) -> dst
+    
+    aaccccuummuullaatteeWWeeiigghhtteedd(...)
+        accumulateWeighted(src, dst, alpha[, mask]) -> dst
+    
+    aaddaappttiivveeTThhrreesshhoolldd(...)
+        adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C[, dst]) -> dst
+    
+    aadddd(...)
+        add(src1, src2[, dst[, mask[, dtype]]]) -> dst
+    
+    aaddddTTeexxtt(...)
+        addText(img, text, org, nameFont[, pointSize[, color[, weight[, style[, spacing]]]]]) -> None
+    
+    aaddddWWeeiigghhtteedd(...)
+        addWeighted(src1, alpha, src2, beta, gamma[, dst[, dtype]]) -> dst
+    
+    aappppllyyCCoolloorrMMaapp(...)
+        applyColorMap(src, colormap[, dst]) -> dst
+    
+    aapppprrooxxPPoollyyDDPP(...)
+        approxPolyDP(curve, epsilon, closed[, approxCurve]) -> approxCurve
+    
+    aarrccLLeennggtthh(...)
+        arcLength(curve, closed) -> retval
+    
+    aarrrroowweeddLLiinnee(...)
+        arrowedLine(img, pt1, pt2, color[, thickness[, line_type[, shift[, tipLength]]]]) -> img
+    
+    bbaattcchhDDiissttaannccee(...)
+        batchDistance(src1, src2, dtype[, dist[, nidx[, normType[, K[, mask[, update[, crosscheck]]]]]]]) -> dist, nidx
+    
+    bbiillaatteerraallFFiilltteerr(...)
+        bilateralFilter(src, d, sigmaColor, sigmaSpace[, dst[, borderType]]) -> dst
+    
+    bbiittwwiissee__aanndd(...)
+        bitwise_and(src1, src2[, dst[, mask]]) -> dst
+    
+    bbiittwwiissee__nnoott(...)
+        bitwise_not(src[, dst[, mask]]) -> dst
+    
+    bbiittwwiissee__oorr(...)
+        bitwise_or(src1, src2[, dst[, mask]]) -> dst
+    
+    bbiittwwiissee__xxoorr(...)
+        bitwise_xor(src1, src2[, dst[, mask]]) -> dst
+    
+    bblluurr(...)
+        blur(src, ksize[, dst[, anchor[, borderType]]]) -> dst
+    
+    bboorrddeerrIInntteerrppoollaattee(...)
+        borderInterpolate(p, len, borderType) -> retval
+    
+    bboouunnddiinnggRReecctt(...)
+        boundingRect(points) -> retval
+    
+    bbooxxFFiilltteerr(...)
+        boxFilter(src, ddepth, ksize[, dst[, anchor[, normalize[, borderType]]]]) -> dst
+    
+    bbooxxPPooiinnttss(...)
+        boxPoints(box[, points]) -> points
+    
+    bbuuiillddOOppttiiccaallFFlloowwPPyyrraammiidd(...)
+        buildOpticalFlowPyramid(img, winSize, maxLevel[, pyramid[, withDerivatives[, pyrBorder[, derivBorder[, tryReuseInputImage]]]]]) -> retval, pyramid
+    
+    ccaallccBBaacckkPPrroojjeecctt(...)
+        calcBackProject(images, channels, hist, ranges, scale[, dst]) -> dst
+    
+    ccaallccCCoovvaarrMMaattrriixx(...)
+        calcCovarMatrix(samples, mean, flags[, covar[, ctype]]) -> covar, mean
+    
+    ccaallccHHiisstt(...)
+        calcHist(images, channels, mask, histSize, ranges[, hist[, accumulate]]) -> hist
+    
+    ccaallccOOppttiiccaallFFlloowwFFaarrnneebbaacckk(...)
+        calcOpticalFlowFarneback(prev, next, flow, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags) -> flow
+    
+    ccaallccOOppttiiccaallFFlloowwPPyyrrLLKK(...)
+        calcOpticalFlowPyrLK(prevImg, nextImg, prevPts, nextPts[, status[, err[, winSize[, maxLevel[, criteria[, flags[, minEigThreshold]]]]]]]) -> nextPts, status, err
+    
+    ccaalliibbrraatteeCCaammeerraa(...)
+        calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs[, rvecs[, tvecs[, flags[, criteria]]]]) -> retval, cameraMatrix, distCoeffs, rvecs, tvecs
+    
+    ccaalliibbrraatteeCCaammeerraaEExxtteennddeedd(...)
+        calibrateCameraExtended(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs[, rvecs[, tvecs[, stdDeviationsIntrinsics[, stdDeviationsExtrinsics[, perViewErrors[, flags[, criteria]]]]]]]) -> retval, cameraMatrix, distCoeffs, rvecs, tvecs, stdDeviationsIntrinsics, stdDeviationsExtrinsics, perViewErrors
+    
+    ccaalliibbrraattiioonnMMaattrriixxVVaalluueess(...)
+        calibrationMatrixValues(cameraMatrix, imageSize, apertureWidth, apertureHeight) -> fovx, fovy, focalLength, principalPoint, aspectRatio
+    
+    ccaarrttTTooPPoollaarr(...)
+        cartToPolar(x, y[, magnitude[, angle[, angleInDegrees]]]) -> magnitude, angle
+    
+    cchheecckkHHaarrddwwaarreeSSuuppppoorrtt(...)
+        checkHardwareSupport(feature) -> retval
+    
+    cchheecckkRRaannggee(...)
+        checkRange(a[, quiet[, minVal[, maxVal]]]) -> retval, pos
+    
+    cciirrccllee(...)
+        circle(img, center, radius, color[, thickness[, lineType[, shift]]]) -> img
+    
+    cclliippLLiinnee(...)
+        clipLine(imgRect, pt1, pt2) -> retval, pt1, pt2
+    
+    ccoolloorrCChhaannggee(...)
+        colorChange(src, mask[, dst[, red_mul[, green_mul[, blue_mul]]]]) -> dst
+    
+    ccoommppaarree(...)
+        compare(src1, src2, cmpop[, dst]) -> dst
+    
+    ccoommppaarreeHHiisstt(...)
+        compareHist(H1, H2, method) -> retval
+    
+    ccoommpplleetteeSSyymmmm(...)
+        completeSymm(mtx[, lowerToUpper]) -> mtx
+    
+    ccoommppoosseeRRTT(...)
+        composeRT(rvec1, tvec1, rvec2, tvec2[, rvec3[, tvec3[, dr3dr1[, dr3dt1[, dr3dr2[, dr3dt2[, dt3dr1[, dt3dt1[, dt3dr2[, dt3dt2]]]]]]]]]]) -> rvec3, tvec3, dr3dr1, dr3dt1, dr3dr2, dr3dt2, dt3dr1, dt3dt1, dt3dr2, dt3dt2
+    
+    ccoommppuutteeCCoorrrreessppoonnddEEppiilliinneess(...)
+        computeCorrespondEpilines(points, whichImage, F[, lines]) -> lines
+    
+    ccoonnnneecctteeddCCoommppoonneennttss(...)
+        connectedComponents(image[, labels[, connectivity[, ltype]]]) -> retval, labels
+    
+    ccoonnnneecctteeddCCoommppoonneennttssWWiitthhAAllggoorriitthhmm(...)
+        connectedComponentsWithAlgorithm(image, connectivity, ltype, ccltype[, labels]) -> retval, labels
+    
+    ccoonnnneecctteeddCCoommppoonneennttssWWiitthhSSttaattss(...)
+        connectedComponentsWithStats(image[, labels[, stats[, centroids[, connectivity[, ltype]]]]]) -> retval, labels, stats, centroids
+    
+    ccoonnnneecctteeddCCoommppoonneennttssWWiitthhSSttaattssWWiitthhAAllggoorriitthhmm(...)
+        connectedComponentsWithStatsWithAlgorithm(image, connectivity, ltype, ccltype[, labels[, stats[, centroids]]]) -> retval, labels, stats, centroids
+    
+    ccoonnttoouurrAArreeaa(...)
+        contourArea(contour[, oriented]) -> retval
+    
+    ccoonnvveerrttFFpp1166(...)
+        convertFp16(src[, dst]) -> dst
+    
+    ccoonnvveerrttMMaappss(...)
+        convertMaps(map1, map2, dstmap1type[, dstmap1[, dstmap2[, nninterpolation]]]) -> dstmap1, dstmap2
+    
+    ccoonnvveerrttPPooiinnttssFFrroommHHoommooggeenneeoouuss(...)
+        convertPointsFromHomogeneous(src[, dst]) -> dst
+    
+    ccoonnvveerrttPPooiinnttssTTooHHoommooggeenneeoouuss(...)
+        convertPointsToHomogeneous(src[, dst]) -> dst
+    
+    ccoonnvveerrttSSccaalleeAAbbss(...)
+        convertScaleAbs(src[, dst[, alpha[, beta]]]) -> dst
+    
+    ccoonnvveexxHHuullll(...)
+        convexHull(points[, hull[, clockwise[, returnPoints]]]) -> hull
+    
+    ccoonnvveexxiittyyDDeeffeeccttss(...)
+        convexityDefects(contour, convexhull[, convexityDefects]) -> convexityDefects
+    
+    ccooppyyMMaakkeeBBoorrddeerr(...)
+        copyMakeBorder(src, top, bottom, left, right, borderType[, dst[, value]]) -> dst
+    
+    ccoorrnneerrEEiiggeennVVaallssAAnnddVVeeccss(...)
+        cornerEigenValsAndVecs(src, blockSize, ksize[, dst[, borderType]]) -> dst
+    
+    ccoorrnneerrHHaarrrriiss(...)
+        cornerHarris(src, blockSize, ksize, k[, dst[, borderType]]) -> dst
+    
+    ccoorrnneerrMMiinnEEiiggeennVVaall(...)
+        cornerMinEigenVal(src, blockSize[, dst[, ksize[, borderType]]]) -> dst
+    
+    ccoorrnneerrSSuubbPPiixx(...)
+        cornerSubPix(image, corners, winSize, zeroZone, criteria) -> corners
+    
+    ccoorrrreeccttMMaattcchheess(...)
+        correctMatches(F, points1, points2[, newPoints1[, newPoints2]]) -> newPoints1, newPoints2
+    
+    ccoouunnttNNoonnZZeerroo(...)
+        countNonZero(src) -> retval
+    
+    ccrreeaatteeAAffffiinneeTTrraannssffoorrmmeerr(...)
+        createAffineTransformer(fullAffine) -> retval
+    
+    ccrreeaatteeAAlliiggnnMMTTBB(...)
+        createAlignMTB([, max_bits[, exclude_range[, cut]]]) -> retval
+    
+    ccrreeaatteeBBaacckkggrroouunnddSSuubbttrraaccttoorrKKNNNN(...)
+        createBackgroundSubtractorKNN([, history[, dist2Threshold[, detectShadows]]]) -> retval
+    
+    ccrreeaatteeBBaacckkggrroouunnddSSuubbttrraaccttoorrMMOOGG22(...)
+        createBackgroundSubtractorMOG2([, history[, varThreshold[, detectShadows]]]) -> retval
+    
+    ccrreeaatteeBBuuttttoonn(...)
+        createButton(buttonName, onChange [, userData, buttonType, initialButtonState]) -> None
+    
+    ccrreeaatteeCCLLAAHHEE(...)
+        createCLAHE([, clipLimit[, tileGridSize]]) -> retval
+    
+    ccrreeaatteeCCaalliibbrraatteeDDeebbeevveecc(...)
+        createCalibrateDebevec([, samples[, lambda[, random]]]) -> retval
+    
+    ccrreeaatteeCCaalliibbrraatteeRRoobbeerrttssoonn(...)
+        createCalibrateRobertson([, max_iter[, threshold]]) -> retval
+    
+    ccrreeaatteeCChhiiHHiissttooggrraammCCoossttEExxttrraaccttoorr(...)
+        createChiHistogramCostExtractor([, nDummies[, defaultCost]]) -> retval
+    
+    ccrreeaatteeEEMMDDHHiissttooggrraammCCoossttEExxttrraaccttoorr(...)
+        createEMDHistogramCostExtractor([, flag[, nDummies[, defaultCost]]]) -> retval
+    
+    ccrreeaatteeEEMMDDLL11HHiissttooggrraammCCoossttEExxttrraaccttoorr(...)
+        createEMDL1HistogramCostExtractor([, nDummies[, defaultCost]]) -> retval
+    
+    ccrreeaatteeHHaannnniinnggWWiinnddooww(...)
+        createHanningWindow(winSize, type[, dst]) -> dst
+    
+    ccrreeaatteeHHaauussddoorrffffDDiissttaanncceeEExxttrraaccttoorr(...)
+        createHausdorffDistanceExtractor([, distanceFlag[, rankProp]]) -> retval
+    
+    ccrreeaatteeLLiinneeSSeeggmmeennttDDeetteeccttoorr(...)
+        createLineSegmentDetector([, _refine[, _scale[, _sigma_scale[, _quant[, _ang_th[, _log_eps[, _density_th[, _n_bins]]]]]]]]) -> retval
+    
+    ccrreeaatteeMMeerrggeeDDeebbeevveecc(...)
+        createMergeDebevec() -> retval
+    
+    ccrreeaatteeMMeerrggeeMMeerrtteennss(...)
+        createMergeMertens([, contrast_weight[, saturation_weight[, exposure_weight]]]) -> retval
+    
+    ccrreeaatteeMMeerrggeeRRoobbeerrttssoonn(...)
+        createMergeRobertson() -> retval
+    
+    ccrreeaatteeNNoorrmmHHiissttooggrraammCCoossttEExxttrraaccttoorr(...)
+        createNormHistogramCostExtractor([, flag[, nDummies[, defaultCost]]]) -> retval
+    
+    ccrreeaatteeOOppttFFllooww__DDuuaallTTVVLL11(...)
+        createOptFlow_DualTVL1() -> retval
+    
+    ccrreeaatteeSShhaappeeCCoonntteexxttDDiissttaanncceeEExxttrraaccttoorr(...)
+        createShapeContextDistanceExtractor([, nAngularBins[, nRadialBins[, innerRadius[, outerRadius[, iterations[, comparer[, transformer]]]]]]]) -> retval
+    
+    ccrreeaatteeSSttiittcchheerr(...)
+        createStitcher([, try_use_gpu]) -> retval
+    
+    ccrreeaatteeTThhiinnPPllaatteeSSpplliinneeSShhaappeeTTrraannssffoorrmmeerr(...)
+        createThinPlateSplineShapeTransformer([, regularizationParameter]) -> retval
+    
+    ccrreeaatteeTToonneemmaapp(...)
+        createTonemap([, gamma]) -> retval
+    
+    ccrreeaatteeTToonneemmaappDDrraaggoo(...)
+        createTonemapDrago([, gamma[, saturation[, bias]]]) -> retval
+    
+    ccrreeaatteeTToonneemmaappDDuurraanndd(...)
+        createTonemapDurand([, gamma[, contrast[, saturation[, sigma_space[, sigma_color]]]]]) -> retval
+    
+    ccrreeaatteeTToonneemmaappMMaannttiiuukk(...)
+        createTonemapMantiuk([, gamma[, scale[, saturation]]]) -> retval
+    
+    ccrreeaatteeTToonneemmaappRReeiinnhhaarrdd(...)
+        createTonemapReinhard([, gamma[, intensity[, light_adapt[, color_adapt]]]]) -> retval
+    
+    ccrreeaatteeTTrraacckkbbaarr(...)
+        createTrackbar(trackbarName, windowName, value, count, onChange) -> None
+    
+    ccuubbeeRRoooott(...)
+        cubeRoot(val) -> retval
+    
+    ccvvttCCoolloorr(...)
+        cvtColor(src, code[, dst[, dstCn]]) -> dst
+    
+    ddcctt(...)
+        dct(src[, dst[, flags]]) -> dst
+    
+    ddeeccoolloorr(...)
+        decolor(src[, grayscale[, color_boost]]) -> grayscale, color_boost
+    
+    ddeeccoommppoosseeEEsssseennttiiaallMMaatt(...)
+        decomposeEssentialMat(E[, R1[, R2[, t]]]) -> R1, R2, t
+    
+    ddeeccoommppoosseeHHoommooggrraapphhyyMMaatt(...)
+        decomposeHomographyMat(H, K[, rotations[, translations[, normals]]]) -> retval, rotations, translations, normals
+    
+    ddeeccoommppoosseePPrroojjeeccttiioonnMMaattrriixx(...)
+        decomposeProjectionMatrix(projMatrix[, cameraMatrix[, rotMatrix[, transVect[, rotMatrixX[, rotMatrixY[, rotMatrixZ[, eulerAngles]]]]]]]) -> cameraMatrix, rotMatrix, transVect, rotMatrixX, rotMatrixY, rotMatrixZ, eulerAngles
+    
+    ddeemmoossaaiicciinngg(...)
+        demosaicing(_src, code[, _dst[, dcn]]) -> _dst
+    
+    ddeennooiissee__TTVVLL11(...)
+        denoise_TVL1(observations, result[, lambda[, niters]]) -> None
+    
+    ddeessttrrooyyAAllllWWiinnddoowwss(...)
+        destroyAllWindows() -> None
+    
+    ddeessttrrooyyWWiinnddooww(...)
+        destroyWindow(winname) -> None
+    
+    ddeettaaiillEEnnhhaannccee(...)
+        detailEnhance(src[, dst[, sigma_s[, sigma_r]]]) -> dst
+    
+    ddeetteerrmmiinnaanntt(...)
+        determinant(mtx) -> retval
+    
+    ddfftt(...)
+        dft(src[, dst[, flags[, nonzeroRows]]]) -> dst
+    
+    ddiillaattee(...)
+        dilate(src, kernel[, dst[, anchor[, iterations[, borderType[, borderValue]]]]]) -> dst
+    
+    ddiissppllaayyOOvveerrllaayy(...)
+        displayOverlay(winname, text[, delayms]) -> None
+    
+    ddiissppllaayySSttaattuussBBaarr(...)
+        displayStatusBar(winname, text[, delayms]) -> None
+    
+    ddiissttaanncceeTTrraannssffoorrmm(...)
+        distanceTransform(src, distanceType, maskSize[, dst[, dstType]]) -> dst
+    
+    ddiissttaanncceeTTrraannssffoorrmmWWiitthhLLaabbeellss(...)
+        distanceTransformWithLabels(src, distanceType, maskSize[, dst[, labels[, labelType]]]) -> dst, labels
+    
+    ddiivviiddee(...)
+        divide(src1, src2[, dst[, scale[, dtype]]]) -> dst  or  divide(scale, src2[, dst[, dtype]]) -> dst
+    
+    ddrraawwCChheessssbbooaarrddCCoorrnneerrss(...)
+        drawChessboardCorners(image, patternSize, corners, patternWasFound) -> image
+    
+    ddrraawwCCoonnttoouurrss(...)
+        drawContours(image, contours, contourIdx, color[, thickness[, lineType[, hierarchy[, maxLevel[, offset]]]]]) -> image
+    
+    ddrraawwKKeeyyppooiinnttss(...)
+        drawKeypoints(image, keypoints, outImage[, color[, flags]]) -> outImage
+    
+    ddrraawwMMaarrkkeerr(...)
+        drawMarker(img, position, color[, markerType[, markerSize[, thickness[, line_type]]]]) -> img
+    
+    ddrraawwMMaattcchheess(...)
+        drawMatches(img1, keypoints1, img2, keypoints2, matches1to2, outImg[, matchColor[, singlePointColor[, matchesMask[, flags]]]]) -> outImg
+    
+    ddrraawwMMaattcchheessKKnnnn(...)
+        drawMatchesKnn(img1, keypoints1, img2, keypoints2, matches1to2, outImg[, matchColor[, singlePointColor[, matchesMask[, flags]]]]) -> outImg
+    
+    eeddggeePPrreesseerrvviinnggFFiilltteerr(...)
+        edgePreservingFilter(src[, dst[, flags[, sigma_s[, sigma_r]]]]) -> dst
+    
+    eeiiggeenn(...)
+        eigen(src[, eigenvalues[, eigenvectors]]) -> retval, eigenvalues, eigenvectors
+    
+    eelllliippssee(...)
+        ellipse(img, center, axes, angle, startAngle, endAngle, color[, thickness[, lineType[, shift]]]) -> img  or  ellipse(img, box, color[, thickness[, lineType]]) -> img
+    
+    eelllliippssee22PPoollyy(...)
+        ellipse2Poly(center, axes, angle, arcStart, arcEnd, delta) -> pts
+    
+    eeqquuaalliizzeeHHiisstt(...)
+        equalizeHist(src[, dst]) -> dst
+    
+    eerrooddee(...)
+        erode(src, kernel[, dst[, anchor[, iterations[, borderType[, borderValue]]]]]) -> dst
+    
+    eessttiimmaatteeAAffffiinnee22DD(...)
+        estimateAffine2D(from, to[, inliers[, method[, ransacReprojThreshold[, maxIters[, confidence[, refineIters]]]]]]) -> retval, inliers
+    
+    eessttiimmaatteeAAffffiinnee33DD(...)
+        estimateAffine3D(src, dst[, out[, inliers[, ransacThreshold[, confidence]]]]) -> retval, out, inliers
+    
+    eessttiimmaatteeAAffffiinneePPaarrttiiaall22DD(...)
+        estimateAffinePartial2D(from, to[, inliers[, method[, ransacReprojThreshold[, maxIters[, confidence[, refineIters]]]]]]) -> retval, inliers
+    
+    eessttiimmaatteeRRiiggiiddTTrraannssffoorrmm(...)
+        estimateRigidTransform(src, dst, fullAffine) -> retval
+    
+    eexxpp(...)
+        exp(src[, dst]) -> dst
+    
+    eexxttrraaccttCChhaannnneell(...)
+        extractChannel(src, coi[, dst]) -> dst
+    
+    ffaassttAAttaann22(...)
+        fastAtan2(y, x) -> retval
+    
+    ffaassttNNllMMeeaannssDDeennooiissiinngg(...)
+        fastNlMeansDenoising(src[, dst[, h[, templateWindowSize[, searchWindowSize]]]]) -> dst  or  fastNlMeansDenoising(src, h[, dst[, templateWindowSize[, searchWindowSize[, normType]]]]) -> dst
+    
+    ffaassttNNllMMeeaannssDDeennooiissiinnggCCoolloorreedd(...)
+        fastNlMeansDenoisingColored(src[, dst[, h[, hColor[, templateWindowSize[, searchWindowSize]]]]]) -> dst
+    
+    ffaassttNNllMMeeaannssDDeennooiissiinnggCCoolloorreeddMMuullttii(...)
+        fastNlMeansDenoisingColoredMulti(srcImgs, imgToDenoiseIndex, temporalWindowSize[, dst[, h[, hColor[, templateWindowSize[, searchWindowSize]]]]]) -> dst
+    
+    ffaassttNNllMMeeaannssDDeennooiissiinnggMMuullttii(...)
+        fastNlMeansDenoisingMulti(srcImgs, imgToDenoiseIndex, temporalWindowSize[, dst[, h[, templateWindowSize[, searchWindowSize]]]]) -> dst  or  fastNlMeansDenoisingMulti(srcImgs, imgToDenoiseIndex, temporalWindowSize, h[, dst[, templateWindowSize[, searchWindowSize[, normType]]]]) -> dst
+    
+    ffiillllCCoonnvveexxPPoollyy(...)
+        fillConvexPoly(img, points, color[, lineType[, shift]]) -> img
+    
+    ffiillllPPoollyy(...)
+        fillPoly(img, pts, color[, lineType[, shift[, offset]]]) -> img
+    
+    ffiilltteerr22DD(...)
+        filter2D(src, ddepth, kernel[, dst[, anchor[, delta[, borderType]]]]) -> dst
+    
+    ffiilltteerrSSppeecckklleess(...)
+        filterSpeckles(img, newVal, maxSpeckleSize, maxDiff[, buf]) -> img, buf
+    
+    ffiinnddCChheessssbbooaarrddCCoorrnneerrss(...)
+        findChessboardCorners(image, patternSize[, corners[, flags]]) -> retval, corners
+    
+    ffiinnddCCiirrcclleessGGrriidd(...)
+        findCirclesGrid(image, patternSize[, centers[, flags[, blobDetector]]]) -> retval, centers
+    
+    ffiinnddCCoonnttoouurrss(...)
+        findContours(image, mode, method[, contours[, hierarchy[, offset]]]) -> image, contours, hierarchy
+    
+    ffiinnddEEsssseennttiiaallMMaatt(...)
+        findEssentialMat(points1, points2, cameraMatrix[, method[, prob[, threshold[, mask]]]]) -> retval, mask  or  findEssentialMat(points1, points2[, focal[, pp[, method[, prob[, threshold[, mask]]]]]]) -> retval, mask
+    
+    ffiinnddFFuunnddaammeennttaallMMaatt(...)
+        findFundamentalMat(points1, points2[, method[, param1[, param2[, mask]]]]) -> retval, mask
+    
+    ffiinnddHHoommooggrraapphhyy(...)
+        findHomography(srcPoints, dstPoints[, method[, ransacReprojThreshold[, mask[, maxIters[, confidence]]]]]) -> retval, mask
+    
+    ffiinnddNNoonnZZeerroo(...)
+        findNonZero(src[, idx]) -> idx
+    
+    ffiinnddTTrraannssffoorrmmEECCCC(...)
+        findTransformECC(templateImage, inputImage, warpMatrix[, motionType[, criteria[, inputMask]]]) -> retval, warpMatrix
+    
+    ffiittEElllliippssee(...)
+        fitEllipse(points) -> retval
+    
+    ffiittLLiinnee(...)
+        fitLine(points, distType, param, reps, aeps[, line]) -> line
+    
+    fflliipp(...)
+        flip(src, flipCode[, dst]) -> dst
+    
+    ffllooooddFFiillll(...)
+        floodFill(image, mask, seedPoint, newVal[, loDiff[, upDiff[, flags]]]) -> retval, image, mask, rect
+    
+    ggeemmmm(...)
+        gemm(src1, src2, alpha, src3, beta[, dst[, flags]]) -> dst
+    
+    ggeettAAffffiinneeTTrraannssffoorrmm(...)
+        getAffineTransform(src, dst) -> retval
+    
+    ggeettBBuuiillddIInnffoorrmmaattiioonn(...)
+        getBuildInformation() -> retval
+    
+    ggeettCCPPUUTTiicckkCCoouunntt(...)
+        getCPUTickCount() -> retval
+    
+    ggeettDDeeffaauullttNNeewwCCaammeerraaMMaattrriixx(...)
+        getDefaultNewCameraMatrix(cameraMatrix[, imgsize[, centerPrincipalPoint]]) -> retval
+    
+    ggeettDDeerriivvKKeerrnneellss(...)
+        getDerivKernels(dx, dy, ksize[, kx[, ky[, normalize[, ktype]]]]) -> kx, ky
+    
+    ggeettGGaabboorrKKeerrnneell(...)
+        getGaborKernel(ksize, sigma, theta, lambd, gamma[, psi[, ktype]]) -> retval
+    
+    ggeettGGaauussssiiaannKKeerrnneell(...)
+        getGaussianKernel(ksize, sigma[, ktype]) -> retval
+    
+    ggeettNNuummTThhrreeaaddss(...)
+        getNumThreads() -> retval
+    
+    ggeettNNuummbbeerrOOffCCPPUUss(...)
+        getNumberOfCPUs() -> retval
+    
+    ggeettOOppttiimmaallDDFFTTSSiizzee(...)
+        getOptimalDFTSize(vecsize) -> retval
+    
+    ggeettOOppttiimmaallNNeewwCCaammeerraaMMaattrriixx(...)
+        getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha[, newImgSize[, centerPrincipalPoint]]) -> retval, validPixROI
+    
+    ggeettPPeerrssppeeccttiivveeTTrraannssffoorrmm(...)
+        getPerspectiveTransform(src, dst) -> retval
+    
+    ggeettRReeccttSSuubbPPiixx(...)
+        getRectSubPix(image, patchSize, center[, patch[, patchType]]) -> patch
+    
+    ggeettRRoottaattiioonnMMaattrriixx22DD(...)
+        getRotationMatrix2D(center, angle, scale) -> retval
+    
+    ggeettSSttrruuccttuurriinnggEElleemmeenntt(...)
+        getStructuringElement(shape, ksize[, anchor]) -> retval
+    
+    ggeettTTeexxttSSiizzee(...)
+        getTextSize(text, fontFace, fontScale, thickness) -> retval, baseLine
+    
+    ggeettTThhrreeaaddNNuumm(...)
+        getThreadNum() -> retval
+    
+    ggeettTTiicckkCCoouunntt(...)
+        getTickCount() -> retval
+    
+    ggeettTTiicckkFFrreeqquueennccyy(...)
+        getTickFrequency() -> retval
+    
+    ggeettTTrraacckkbbaarrPPooss(...)
+        getTrackbarPos(trackbarname, winname) -> retval
+    
+    ggeettVVaalliiddDDiissppaarriittyyRROOII(...)
+        getValidDisparityROI(roi1, roi2, minDisparity, numberOfDisparities, SADWindowSize) -> retval
+    
+    ggeettWWiinnddoowwPPrrooppeerrttyy(...)
+        getWindowProperty(winname, prop_id) -> retval
+    
+    ggooooddFFeeaattuurreessTTooTTrraacckk(...)
+        goodFeaturesToTrack(image, maxCorners, qualityLevel, minDistance[, corners[, mask[, blockSize[, useHarrisDetector[, k]]]]]) -> corners
+    
+    ggrraabbCCuutt(...)
+        grabCut(img, mask, rect, bgdModel, fgdModel, iterCount[, mode]) -> mask, bgdModel, fgdModel
+    
+    ggrroouuppRReeccttaanngglleess(...)
+        groupRectangles(rectList, groupThreshold[, eps]) -> rectList, weights
+    
+    hhaavveeOOppeennVVXX(...)
+        haveOpenVX() -> retval
+    
+    hhccoonnccaatt(...)
+        hconcat(src[, dst]) -> dst
+    
+    iiddcctt(...)
+        idct(src[, dst[, flags]]) -> dst
+    
+    iiddfftt(...)
+        idft(src[, dst[, flags[, nonzeroRows]]]) -> dst
+    
+    iilllluummiinnaattiioonnCChhaannggee(...)
+        illuminationChange(src, mask[, dst[, alpha[, beta]]]) -> dst
+    
+    iimmddeeccooddee(...)
+        imdecode(buf, flags) -> retval
+    
+    iimmeennccooddee(...)
+        imencode(ext, img[, params]) -> retval, buf
+    
+    iimmrreeaadd(...)
+        imread(filename[, flags]) -> retval
+    
+    iimmrreeaaddmmuullttii(...)
+        imreadmulti(filename, mats[, flags]) -> retval
+    
+    iimmsshhooww(...)
+        imshow(winname, mat) -> None
+    
+    iimmwwrriittee(...)
+        imwrite(filename, img[, params]) -> retval
+    
+    iinnRRaannggee(...)
+        inRange(src, lowerb, upperb[, dst]) -> dst
+    
+    iinniittCCaammeerraaMMaattrriixx22DD(...)
+        initCameraMatrix2D(objectPoints, imagePoints, imageSize[, aspectRatio]) -> retval
+    
+    iinniittUUnnddiissttoorrttRReeccttiiffyyMMaapp(...)
+        initUndistortRectifyMap(cameraMatrix, distCoeffs, R, newCameraMatrix, size, m1type[, map1[, map2]]) -> map1, map2
+    
+    iinniittWWiiddeeAAnngglleePPrroojjMMaapp(...)
+        initWideAngleProjMap(cameraMatrix, distCoeffs, imageSize, destImageWidth, m1type[, map1[, map2[, projType[, alpha]]]]) -> retval, map1, map2
+    
+    iinnppaaiinntt(...)
+        inpaint(src, inpaintMask, inpaintRadius, flags[, dst]) -> dst
+    
+    iinnsseerrttCChhaannnneell(...)
+        insertChannel(src, dst, coi) -> dst
+    
+    iinntteeggrraall(...)
+        integral(src[, sum[, sdepth]]) -> sum
+    
+    iinntteeggrraall22(...)
+        integral2(src[, sum[, sqsum[, sdepth[, sqdepth]]]]) -> sum, sqsum
+    
+    iinntteeggrraall33(...)
+        integral3(src[, sum[, sqsum[, tilted[, sdepth[, sqdepth]]]]]) -> sum, sqsum, tilted
+    
+    iinntteerrsseeccttCCoonnvveexxCCoonnvveexx(...)
+        intersectConvexConvex(_p1, _p2[, _p12[, handleNested]]) -> retval, _p12
+    
+    iinnvveerrtt(...)
+        invert(src[, dst[, flags]]) -> retval, dst
+    
+    iinnvveerrttAAffffiinneeTTrraannssffoorrmm(...)
+        invertAffineTransform(M[, iM]) -> iM
+    
+    iissCCoonnttoouurrCCoonnvveexx(...)
+        isContourConvex(contour) -> retval
+    
+    kkmmeeaannss(...)
+        kmeans(data, K, bestLabels, criteria, attempts, flags[, centers]) -> retval, bestLabels, centers
+    
+    lliinnee(...)
+        line(img, pt1, pt2, color[, thickness[, lineType[, shift]]]) -> img
+    
+    lliinneeaarrPPoollaarr(...)
+        linearPolar(src, center, maxRadius, flags[, dst]) -> dst
+    
+    lloogg(...)
+        log(src[, dst]) -> dst
+    
+    llooggPPoollaarr(...)
+        logPolar(src, center, M, flags[, dst]) -> dst
+    
+    mmaaggnniittuuddee(...)
+        magnitude(x, y[, magnitude]) -> magnitude
+    
+    mmaattMMuullDDeerriivv(...)
+        matMulDeriv(A, B[, dABdA[, dABdB]]) -> dABdA, dABdB
+    
+    mmaattcchhSShhaappeess(...)
+        matchShapes(contour1, contour2, method, parameter) -> retval
+    
+    mmaattcchhTTeemmppllaattee(...)
+        matchTemplate(image, templ, method[, result[, mask]]) -> result
+    
+    mmaaxx(...)
+        max(src1, src2[, dst]) -> dst
+    
+    mmeeaann(...)
+        mean(src[, mask]) -> retval
+    
+    mmeeaannSShhiifftt(...)
+        meanShift(probImage, window, criteria) -> retval, window
+    
+    mmeeaannSSttddDDeevv(...)
+        meanStdDev(src[, mean[, stddev[, mask]]]) -> mean, stddev
+    
+    mmeeddiiaannBBlluurr(...)
+        medianBlur(src, ksize[, dst]) -> dst
+    
+    mmeerrggee(...)
+        merge(mv[, dst]) -> dst
+    
+    mmiinn(...)
+        min(src1, src2[, dst]) -> dst
+    
+    mmiinnAArreeaaRReecctt(...)
+        minAreaRect(points) -> retval
+    
+    mmiinnEEnncclloossiinnggCCiirrccllee(...)
+        minEnclosingCircle(points) -> center, radius
+    
+    mmiinnEEnncclloossiinnggTTrriiaannggllee(...)
+        minEnclosingTriangle(points[, triangle]) -> retval, triangle
+    
+    mmiinnMMaaxxLLoocc(...)
+        minMaxLoc(src[, mask]) -> minVal, maxVal, minLoc, maxLoc
+    
+    mmiixxCChhaannnneellss(...)
+        mixChannels(src, dst, fromTo) -> dst
+    
+    mmoommeennttss(...)
+        moments(array[, binaryImage]) -> retval
+    
+    mmoorrpphhoollooggyyEExx(...)
+        morphologyEx(src, op, kernel[, dst[, anchor[, iterations[, borderType[, borderValue]]]]]) -> dst
+    
+    mmoovveeWWiinnddooww(...)
+        moveWindow(winname, x, y) -> None
+    
+    mmuullSSppeeccttrruummss(...)
+        mulSpectrums(a, b, flags[, c[, conjB]]) -> c
+    
+    mmuullTTrraannssppoosseedd(...)
+        mulTransposed(src, aTa[, dst[, delta[, scale[, dtype]]]]) -> dst
+    
+    mmuullttiippllyy(...)
+        multiply(src1, src2[, dst[, scale[, dtype]]]) -> dst
+    
+    nnaammeeddWWiinnddooww(...)
+        namedWindow(winname[, flags]) -> None
+    
+    nnoorrmm(...)
+        norm(src1[, normType[, mask]]) -> retval  or  norm(src1, src2[, normType[, mask]]) -> retval
+    
+    nnoorrmmaalliizzee(...)
+        normalize(src, dst[, alpha[, beta[, norm_type[, dtype[, mask]]]]]) -> dst
+    
+    ppaattcchhNNaaNNss(...)
+        patchNaNs(a[, val]) -> a
+    
+    ppeenncciillSSkkeettcchh(...)
+        pencilSketch(src[, dst1[, dst2[, sigma_s[, sigma_r[, shade_factor]]]]]) -> dst1, dst2
+    
+    ppeerrssppeeccttiivveeTTrraannssffoorrmm(...)
+        perspectiveTransform(src, m[, dst]) -> dst
+    
+    pphhaassee(...)
+        phase(x, y[, angle[, angleInDegrees]]) -> angle
+    
+    pphhaasseeCCoorrrreellaattee(...)
+        phaseCorrelate(src1, src2[, window]) -> retval, response
+    
+    ppooiinnttPPoollyyggoonnTTeesstt(...)
+        pointPolygonTest(contour, pt, measureDist) -> retval
+    
+    ppoollaarrTTooCCaarrtt(...)
+        polarToCart(magnitude, angle[, x[, y[, angleInDegrees]]]) -> x, y
+    
+    ppoollyylliinneess(...)
+        polylines(img, pts, isClosed, color[, thickness[, lineType[, shift]]]) -> img
+    
+    ppooww(...)
+        pow(src, power[, dst]) -> dst
+    
+    pprreeCCoorrnneerrDDeetteecctt(...)
+        preCornerDetect(src, ksize[, dst[, borderType]]) -> dst
+    
+    pprroojjeeccttPPooiinnttss(...)
+        projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs[, imagePoints[, jacobian[, aspectRatio]]]) -> imagePoints, jacobian
+    
+    ppuuttTTeexxtt(...)
+        putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]]) -> img
+    
+    ppyyrrDDoowwnn(...)
+        pyrDown(src[, dst[, dstsize[, borderType]]]) -> dst
+    
+    ppyyrrMMeeaannSShhiiffttFFiilltteerriinngg(...)
+        pyrMeanShiftFiltering(src, sp, sr[, dst[, maxLevel[, termcrit]]]) -> dst
+    
+    ppyyrrUUpp(...)
+        pyrUp(src[, dst[, dstsize[, borderType]]]) -> dst
+    
+    rraannddSShhuuffffllee(...)
+        randShuffle(dst[, iterFactor]) -> dst
+    
+    rraannddnn(...)
+        randn(dst, mean, stddev) -> dst
+    
+    rraanndduu(...)
+        randu(dst, low, high) -> dst
+    
+    rreeccoovveerrPPoossee(...)
+        recoverPose(E, points1, points2, cameraMatrix[, R[, t[, mask]]]) -> retval, R, t, mask  or  recoverPose(E, points1, points2[, R[, t[, focal[, pp[, mask]]]]]) -> retval, R, t, mask
+    
+    rreeccttaannggllee(...)
+        rectangle(img, pt1, pt2, color[, thickness[, lineType[, shift]]]) -> img
+    
+    rreeccttiiffyy33CCoolllliinneeaarr(...)
+        rectify3Collinear(cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, cameraMatrix3, distCoeffs3, imgpt1, imgpt3, imageSize, R12, T12, R13, T13, alpha, newImgSize, flags[, R1[, R2[, R3[, P1[, P2[, P3[, Q]]]]]]]) -> retval, R1, R2, R3, P1, P2, P3, Q, roi1, roi2
+    
+    rreedduuccee(...)
+        reduce(src, dim, rtype[, dst[, dtype]]) -> dst
+    
+    rreemmaapp(...)
+        remap(src, map1, map2, interpolation[, dst[, borderMode[, borderValue]]]) -> dst
+    
+    rreeppeeaatt(...)
+        repeat(src, ny, nx[, dst]) -> dst
+    
+    rreepprroojjeeccttIImmaaggeeTToo33DD(...)
+        reprojectImageTo3D(disparity, Q[, _3dImage[, handleMissingValues[, ddepth]]]) -> _3dImage
+    
+    rreessiizzee(...)
+        resize(src, dsize[, dst[, fx[, fy[, interpolation]]]]) -> dst
+    
+    rreessiizzeeWWiinnddooww(...)
+        resizeWindow(winname, width, height) -> None
+    
+    rroottaattee(...)
+        rotate(src, rotateCode[, dst]) -> dst
+    
+    rroottaatteeddRReeccttaanngglleeIInntteerrsseeccttiioonn(...)
+        rotatedRectangleIntersection(rect1, rect2[, intersectingRegion]) -> retval, intersectingRegion
+    
+    ssaammppssoonnDDiissttaannccee(...)
+        sampsonDistance(pt1, pt2, F) -> retval
+    
+    ssccaalleeAAdddd(...)
+        scaleAdd(src1, alpha, src2[, dst]) -> dst
+    
+    sseeaammlleessssCClloonnee(...)
+        seamlessClone(src, dst, mask, p, flags[, blend]) -> blend
+    
+    sseelleeccttRROOII(...)
+        selectROI(img[, fromCenter]) -> retval  or  selectROI(windowName, img[, showCrossair[, fromCenter]]) -> retval  or  selectROI(windowName, img, boundingBox[, fromCenter]) -> None
+    
+    sseeppFFiilltteerr22DD(...)
+        sepFilter2D(src, ddepth, kernelX, kernelY[, dst[, anchor[, delta[, borderType]]]]) -> dst
+    
+    sseettIIddeennttiittyy(...)
+        setIdentity(mtx[, s]) -> mtx
+    
+    sseettMMoouusseeCCaallllbbaacckk(...)
+        setMouseCallback(windowName, onMouse [, param]) -> None
+    
+    sseettNNuummTThhrreeaaddss(...)
+        setNumThreads(nthreads) -> None
+    
+    sseettRRNNGGSSeeeedd(...)
+        setRNGSeed(seed) -> None
+    
+    sseettTT
