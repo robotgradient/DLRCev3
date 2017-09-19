@@ -53,22 +53,30 @@ def get_centers(img,Arearef=130):
 	img2 = cv2.drawContours(img2, contours, -1, (0,255,0), 3)
 		  # Display the resulting frame
 	center_list=[]
-
+	closest_list=[]
 	for i in range(len(contours)):
 		if  cv2.contourArea(contours[i])>Arearef:
 			(x,y),radius = cv2.minEnclosingCircle(contours[i])
 			center_list.append([int(x),int(y)])
+			contourfigure=contours[i]
+			closecontour=np.argmax(contourfigure[:,:,1],axis=0)
+			closest_list.append(contourfigure[closecontour,0,:])
 
-	return center_list
+	return center_list,closest_list
 
 
-def get_objective(center_list):
+def get_objective(center_list,closest_list=[]):
 	center_array=np.array(center_list)
-	center_array[:,0]=abs(center_array[:,0]-320)
+	center_array[:,0]=abs(center_array[:,0]-320)	
 	index=np.argmin(center_array,axis=0)
-	return center_list[index[0]]
+	objective_center=center_list[index[0]]
+	if len(closest_list)>0:
+		objective_closest=closest_list[index[0]]
+	else:
+		objective_closest=[]
+	return objective_center,objective_closest
 
-def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
+def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 
 
 	hsvframe=filter_2HSV(frame)
@@ -88,11 +96,18 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list=get_centers(morphoimg)
-
+	center_list,closest_list=get_centers(morphoimg,Arearef)
+	closest_list=np.array(closest_list)
+	#print(closest_list.shape)
+	if len(closest_list.shape)>2:
+		closest_list=np.squeeze(closest_list,axis=1)
+	#print("After squeezing.",closest_list.shape)
+	#cv2.imshow("morpho image",morphoimg)
 	#plotting
+	#print(closest_list[0,0])
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+		cv2.circle(frame,(closest_list[i][0],closest_list[i][1]),2,(0,0,255),thickness=2)
 	#print (center_list)
 
 		#Draw the lines that determine the action space
@@ -103,15 +118,17 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 
 	if len(center_list)>0:
 		#check which center is more in the center
-		objective_center=get_objective(center_list)
+		objective_center,objective_closest=get_objective(center_list,closest_list)
 		if len(set(sizemorph))==1:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+			cv2.circle(frame,(objective_closest[0],objective_closest[1]),4,(0,0,0),thickness=2)
 		else:
 			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
 	else:
 		objective_center=[]
+		objective_closest=[]
 
-	return objective_center
+	return objective_center,objective_closest
 
 
 
@@ -204,14 +221,22 @@ def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0
 	return objective_center
 
 def get_lego_piece(frame):
-	lego_piece = detection(frame, LowH, HighH, LowS, HighV, LowV, (7, 7))
+	lego_piece = detection(frame, LowH=0, HighH=186, LowS=80 \
+		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7))
 	return lego_piece
 
 
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
 	return white_box
-
+def get_purple_lego(frame):
+	green_center,green_closest=detection(frame, LowH=113, HighH=142, LowS=72 \
+		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7))
+	return green_center,green_closest
+def get_brown_box(frame):
+	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
+	 LowV=90,HighV=255, sizemorph=(3, 11),Arearef=10000)
+	return brown_box_center,brown_box_closest
 
 def draw_lines(frame, atol=50):
 	cv2.line(frame, (320 - atol, 0), (320 - atol, 479), (255, 0, 0), 2)
