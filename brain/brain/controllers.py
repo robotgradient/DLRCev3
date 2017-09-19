@@ -84,9 +84,17 @@ def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
     # Move forward till light sensor detects brick if brick is near the bottom of image
     # and centered
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=10):
+        #leave the piece and go little bit backwards
+        robot.elevator_down()
+        time.sleep(2.5)
         robot.move_forward(vel_forward)
         time.sleep(0.3)
         robot.open_grip()
+        robot.elevator_up()
+        time.sleep(3)
+        robot.move_forward(vel=-200)
+        time.sleep(2)
+
         return "SEARCH", {}
 
     if np.isclose(coords[0], img_center[0], atol=atol):
@@ -133,9 +141,15 @@ def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
 
 def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 
+    robot.elevator_down()
+    time.sleep(2.5)
     robot.move_forward(vel)
-    time.sleep(0.3)
+    time.sleep(0.5)
     robot.close_grip(150)
+    time.sleep(3)
+    robot.elevator_up()
+    time.sleep(2.5)
+
     return "SEARCH_BOX", frame, {}
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60, proximity_threshold=5):

@@ -45,7 +45,7 @@ def open_and_close(img,size):
 	return morphoimage
 
 
-def get_centers(img):
+def get_centers(img,Arearef=130):
 	#Apply contours to get the properties of the images
 	contourimage, contours, hierarchy = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	#matrix to draw the contours
@@ -55,7 +55,7 @@ def get_centers(img):
 	center_list=[]
 
 	for i in range(len(contours)):
-		if  cv2.contourArea(contours[i])>130:
+		if  cv2.contourArea(contours[i])>Arearef:
 			(x,y),radius = cv2.minEnclosingCircle(contours[i])
 			center_list.append([int(x),int(y)])
 

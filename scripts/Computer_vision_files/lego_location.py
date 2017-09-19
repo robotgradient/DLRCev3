@@ -13,6 +13,17 @@ LowV=0
 HighV=236
 
 
+morph=11,3
+
+'''LowH2=0
+HighH2=0
+LowS2=0
+HighS2=19
+LowV2=235
+HighV2=255'''
+morph=(11,3)
+
+
 def imfill(img):
 	ret,im_flood = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
 	th,inrangeframe = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
@@ -42,7 +53,7 @@ def open_and_close(img,size):
 	return morphoimage
 
 
-def get_centers(img):
+def get_centers(img,Arearef=130):
 	#Apply contours to get the properties of the images
 	contourimage, contours, hierarchy = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	#matrix to draw the contours
@@ -51,8 +62,10 @@ def get_centers(img):
 		  # Display the resulting frame
 	center_list=[]
 	for i in range(len(contours)):
-		(x,y),radius = cv2.minEnclosingCircle(contours[i])
-		center_list.append([int(x),int(y)])
+		if  cv2.contourArea(contours[i])>Arearef:
+			(x,y),radius = cv2.minEnclosingCircle(contours[i])
+			center_list.append([int(x),int(y)])
+			print (cv2.contourArea(contours[i]))
 	return center_list
 
 
@@ -63,12 +76,12 @@ def get_objective(center_list):
 	return center_list[index[0]]
 
 def all_operations(frame):
-	LowH=cv2.getTrackbarPos("LowH","frame")
-	HighH=cv2.getTrackbarPos("HighH","frame")
-	LowS=cv2.getTrackbarPos("LowS","frame")
-	HighS=cv2.getTrackbarPos("HighS","frame")
-	LowV=cv2.getTrackbarPos("LowV","frame")
-	HighV=cv2.getTrackbarPos("HighV","frame")
+	LowH2=cv2.getTrackbarPos("LowH","frame")
+	HighH2=cv2.getTrackbarPos("HighH","frame")
+	LowS2=cv2.getTrackbarPos("LowS","frame")
+	HighS2=cv2.getTrackbarPos("HighS","frame")
+	LowV2=cv2.getTrackbarPos("LowV","frame")
+	HighV2=cv2.getTrackbarPos("HighV","frame")
 		
 	hsvframe=filter_2HSV(frame)
 	lowerboundcolor=np.array([LowH,LowS,LowV])
@@ -109,6 +122,52 @@ def all_operations(frame):
 		objective_center=[]
 	return objective_center
 
+def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
+
+
+	hsvframe=filter_2HSV(frame)
+	lowerboundcolor=np.array([LowH,LowS,LowV])
+	upperboundcolor=np.array([HighH,HighS,HighV])
+	# Binarization
+	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
+	cv2.imshow("Before morphology",inrangeframe)
+
+	#Morphologic operations
+	# Infill
+	inrangeframe=imfill(inrangeframe)
+	#cv2.imshow("filledOR",inrangeframe)
+
+	#Opening and closing
+	morphoimg=open_and_close(inrangeframe,sizemorph)
+	sizemorph2=tuple(reversed(sizemorph))
+	morphoimg=open_and_close(morphoimg,sizemorph2)
+	#Getting the centers
+	center_list=get_centers(morphoimg,10000)
+
+	cv2.imshow("morpho image",morphoimg)
+	#plotting
+	for i in range(len(center_list)):
+		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
+	#print (center_list)
+
+		#Draw the lines that determine the action space
+	#cv2.line(frame,(280,0),(260,479),(255,0,0),2)
+	#cv2.line(frame,(360,0),(380,479),(255,0,0),2)
+	#cv2.line(frame,(220,0),(180,479),(0,0,255),2)
+	#cv2.line(frame,(420,0),(460,479),(0,0,255),2)
+
+	if len(center_list)>0:
+		#check which center is more in the center
+		objective_center=get_objective(center_list)
+		if len(set(sizemorph))==1:
+			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(255,0,0),thickness=2)
+		else:
+			cv2.circle(frame,(objective_center[0],objective_center[1]),3,(0,0,255),thickness=2)
+	else:
+		objective_center=[]
+
+	return objective_center
+
 def init_trackbars():
 	
 	cv2.namedWindow('frame')
@@ -128,10 +187,23 @@ if __name__ == "__main__":
 	#cap.set(cv2.CAP_PROP_BUFFERSIZE,100)
 	init_trackbars()
 	#sleep(1)
+	LowH2=0
+	HighH2=123
+	LowS2=0
+	HighH2=255
+	LowV2=147
+	HighV2=224
 	while(True):
   # Capture frame-by-frame
 		t0=time()
 		retard=0
+		LowH2=cv2.getTrackbarPos("LowH","frame")
+		HighH2=cv2.getTrackbarPos("HighH","frame")
+		LowS2=cv2.getTrackbarPos("LowS","frame")
+		HighS2=cv2.getTrackbarPos("HighS","frame")
+		LowV2=cv2.getTrackbarPos("LowV","frame")
+		HighV2=cv2.getTrackbarPos("HighV","frame")
+	
 		#while(retard<0.1):
 		#	
 		#	t1=time()
@@ -139,7 +211,8 @@ if __name__ == "__main__":
 		ret, frame = cap.read()	
 		# Get the trackbar poses
 		
-		objective_center=all_operations(frame)
+		white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 9))
+		print("Box:",white_box)
 		#print(objective_center)
 		#sleep(2)
 		cv2.imshow("frame",frame)
