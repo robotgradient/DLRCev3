@@ -16,6 +16,7 @@ class Robot(object):
         "leftMotor",
         "rightMotor",
         "gripper",
+        "elevator"
         "colorSensor",
         "infraredSensor"
     ]
@@ -109,6 +110,16 @@ class Robot(object):
         self.publish(
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
                                                          "speed_sp": -vel}))
+
+    def elevator_up(self,vel=100,time=2500)
+        self.publish(
+            RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
+                                                         "speed_sp": -vel}))
+
+    def elevator_down(self,vel=100,time=2500)
+        self.publish(
+            RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
+                                                         "speed_sp": vel}))
 
     def move_forward(self, vel=600):
         """

@@ -1,4 +1,6 @@
 import numpy as np
+from ev3control import Robot
+from object_detection.opencv import get_lego_piece
 from object_detection.opencv import detection_lego_outside_white
 import time
 
@@ -134,7 +136,7 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
     robot.move_forward(vel)
     time.sleep(0.3)
     robot.close_grip(150)
-    return "MOVE_TO_BOX", frame, {}
+    return "SEARCH_BOX", frame, {}
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60, proximity_threshold=5):
 

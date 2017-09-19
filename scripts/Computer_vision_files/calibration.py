@@ -51,7 +51,14 @@ newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 print(newcameramtx)
 
 ## GET BORDERS
-img = cv2.imread('Chessboard_9.jpg')
+cap = cv2.VideoCapture(1)
+#img = cv2.imread('Chessboard_9.jpg')
+while True:
+    ret,img=cap.read()
+    cv2.imshow("actual image",img)
+    if cv2.waitKey(10) & 0xFF==32:
+        break
+
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
 ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
@@ -76,7 +83,7 @@ cv2.imshow('img',img)
 cv2.waitKey(20)
 
 H = cv2.getPerspectiveTransform(objPts,imgPts)
-H[2,2] = 50
+H[2,2] = 20
 
 print("image size : ", img.shape)
 dst = cv2.warpPerspective(img,H,img.shape[0:2],flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
@@ -85,5 +92,5 @@ cv2.imshow('img',img)
 cv2.waitKey()
 
 
-cv2.imshow('img',dst)
+cv2.imshow('distorsion',dst)
 cv2.waitKey()
