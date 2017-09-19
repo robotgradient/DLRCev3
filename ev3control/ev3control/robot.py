@@ -103,11 +103,11 @@ class Robot(object):
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
                                                          "speed_sp": vel}))
 
-    def close_grip(self, vel=350, time=2500):
-        self._move_grip(vel, time)
-
-    def open_grip(self, vel=350, time=2500):
+    def close_grip(self, vel=100, time=3500):
         self._move_grip(-vel, time)
+
+    def open_grip(self, vel=100, time=3500):
+        self._move_grip(vel, time)
 
     def _move_elevator(self, vel, time):
         assert abs(vel * time) <= 250000
