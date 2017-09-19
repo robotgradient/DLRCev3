@@ -10,7 +10,6 @@ from ev3control.utils import decode_mqtt
 
 class Robot(object):
 
-
     naming_convention = [
 
         "leftMotor",
@@ -20,7 +19,6 @@ class Robot(object):
         "colorSensor",
         "infraredSensor"
     ]
-
 
     def __init__(self, device_constructors, cap):
         """
@@ -99,17 +97,17 @@ class Robot(object):
         self.stop_motors()
         self.stop_motor("gripper")
 
-    def close_grip(self, time=2500, vel=-300):
-
+    def _move_grip(self, vel, time):
+        assert abs(vel * time) <= 350 * 2500
         self.publish(
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
                                                          "speed_sp": vel}))
 
-    def open_grip(self, time=2500, vel=300):
+    def close_grip(self, vel=350, time=2500):
+        self._move_grip(vel, time)
 
-        self.publish(
-            RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
-                                                         "speed_sp": -vel}))
+    def open_grip(self, vel=350, time=2500):
+        self._move_grip(-vel, time)
 
     def _move_elevator(self, vel, time):
         assert abs(vel * time) <= 250000
