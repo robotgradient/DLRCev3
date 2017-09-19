@@ -98,7 +98,6 @@ class Robot(object):
         self.stop_motor("gripper")
 
     def _move_grip(self, vel, time):
-        assert abs(vel * time) <= 350 * 2500
         self.publish(
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
                                                          "speed_sp": vel}))
@@ -110,16 +109,15 @@ class Robot(object):
         self._move_grip(vel, time)
 
     def _move_elevator(self, vel, time):
-        assert abs(vel * time) <= 250000
         self.publish(
             RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
                                                           "speed_sp": -vel}))
 
-    def elevator_up(self, vel=100, time=2500):
-        self._move_elevator(vel, time)
+    def elevator_up(self):
+        self._move_elevator(100, 3000)
 
-    def elevator_down(self, vel=100, time=2500):
-        self._move_elevator(-vel, time)
+    def elevator_down(self):
+        self._move_elevator(-100, 3000)
 
     def move_forward(self, vel=600, time=None):
         """
