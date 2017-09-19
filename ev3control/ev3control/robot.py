@@ -121,14 +121,21 @@ class Robot(object):
             RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
                                                          "speed_sp": vel}))
 
-    def move_forward(self, vel=600):
+    def move_forward(self, vel=600, time=None):
         """
         Move forward with given speed, top speed is default
         :param vel: Velocity
+        :param time: Time
         :return:
         """
-        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
-        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
+
+        if not time:
+            self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
+            self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
+        else:
+            self.publish(RunMethodMessage(self.leftMotor, "run_timed", {"speed_sp": vel, "time_sp": time}))
+            self.publish(RunMethodMessage(self.rightMotor, "run_timed", {"speed_sp": vel, "time_sp": time}))
+
 
     def move(self, vel_left=300, vel_right=300):
 
