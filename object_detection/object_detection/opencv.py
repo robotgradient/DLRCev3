@@ -59,10 +59,7 @@ def get_centers(img,Arearef=130):
 			(x,y),radius = cv2.minEnclosingCircle(contours[i])
 			center_list.append([int(x),int(y)])
 			contourfigure=contours[i]
-			print (contourfigure.shape)
 			closecontour=np.argmax(contourfigure[:,:,1],axis=0)
-			print("close contour:",closecontour,contourfigure[closecontour,0,:])
-
 			closest_list.append(contourfigure[closecontour,0,:])
 
 	return center_list,closest_list
@@ -79,7 +76,7 @@ def get_objective(center_list,closest_list=[]):
 		objective_closest=[]
 	return objective_center,objective_closest
 
-def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
+def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 
 
 	hsvframe=filter_2HSV(frame)
@@ -99,7 +96,7 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list,closest_list=get_centers(morphoimg,10000)
+	center_list,closest_list=get_centers(morphoimg,Arearef)
 	closest_list=np.array(closest_list)
 	#print(closest_list.shape)
 	if len(closest_list.shape)>2:
@@ -224,7 +221,8 @@ def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0
 	return objective_center
 
 def get_lego_piece(frame):
-	lego_piece = detection(frame, LowH, HighH, LowS, HighV, LowV, (7, 7))
+	lego_piece = detection(frame, LowH=0, HighH=186, LowS=59 \
+		,HighS=255,LowV=0,HighV=236,sizemorph=(7, 7))
 	return lego_piece
 
 
@@ -232,6 +230,10 @@ def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
 	return white_box
 
+def get_brown_box(frame):
+	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
+	 LowV=90,HighV=255, sizemorph=(3, 11),Arearef=10000)
+	return brown_box_center,brown_box_closest
 
 def draw_lines(frame, atol=50):
 	cv2.line(frame, (320 - atol, 0), (320 - atol, 479), (255, 0, 0), 2)

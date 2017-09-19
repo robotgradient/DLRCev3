@@ -136,7 +136,7 @@ def all_operations(frame):
 		objective_center=[]
 	return objective_center
 
-def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
+def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 
 
 	hsvframe=filter_2HSV(frame)
@@ -144,7 +144,7 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	upperboundcolor=np.array([HighH,HighS,HighV])
 	# Binarization
 	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
-	#cv2.imshow("Before morphology",inrangeframe)
+	cv2.imshow("Before morphology",inrangeframe)
 
 	#Morphologic operations
 	# Infill
@@ -162,7 +162,7 @@ def detection(frame,LowH,HighH,LowS,HighV,LowV,sizemorph):
 	if len(closest_list.shape)>2:
 		closest_list=np.squeeze(closest_list,axis=1)
 	#print("After squeezing.",closest_list.shape)
-	#cv2.imshow("morpho image",morphoimg)
+	cv2.imshow("morpho image",morphoimg)
 	#plotting
 	#print(closest_list[0,0])
 	for i in range(len(center_list)):
@@ -219,12 +219,12 @@ if __name__ == "__main__":
   # Capture frame-by-frame
 		t0=time()
 		retard=0
-		'''	LowH2=cv2.getTrackbarPos("LowH","frame")
-			HighH2=cv2.getTrackbarPos("HighH","frame")
-			LowS2=cv2.getTrackbarPos("LowS","frame")
-			HighS2=cv2.getTrackbarPos("HighS","frame")
-			LowV2=cv2.getTrackbarPos("LowV","frame")
-			HighV2=cv2.getTrackbarPos("HighV","frame")'''
+		LowH2=cv2.getTrackbarPos("LowH","frame")
+		HighH2=cv2.getTrackbarPos("HighH","frame")
+		LowS2=cv2.getTrackbarPos("LowS","frame")
+		HighS2=cv2.getTrackbarPos("HighS","frame")
+		LowV2=cv2.getTrackbarPos("LowV","frame")
+		HighV2=cv2.getTrackbarPos("HighV","frame")
 	
 		#while(retard<0.1):
 		#	
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 		ret, frame = cap.read()	
 		# Get the trackbar poses
 		
-		white_box, closes_point = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 9))
+		white_box, closes_point = detection(frame, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9))
 		print("Box:",white_box,closes_point)
 		#print(objective_center)
 		#sleep(2)
