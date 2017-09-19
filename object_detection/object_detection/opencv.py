@@ -148,7 +148,7 @@ LowV2=235
 HighV2=255
 morph=11,3
 '''
-def detection_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0,HighV=236\
+def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0,HighV=236\
 	,LowH2=0,HighH2=123,LowS2=0,HighS2=255,LowV2=147\
 	,HighV2=224,sizemorph1=(7,7),sizemorph2=(3,11)):
 	

@@ -1,6 +1,7 @@
 import numpy as np
 from ev3control import Robot
 from object_detection.opencv import get_lego_piece
+from object_detection.opencv import detection_lego_outside_white
 from collections import namedtuple
 
 
@@ -16,7 +17,8 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     """
     _, frame = robot.cap.read()
 
-    coords = get_lego_piece(frame)
+    #coords = get_lego_piece(frame)
+		coords=detection_lego_outside_white(frame)
     img_res = np.asarray(img_res)
     coords = np.asarray(coords)
 
@@ -43,7 +45,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
 
 def rotation_search(robot, frame, vel=400):
 
-    lego_coords = get_lego_piece(frame)
+    lego_coords = detection_lego_outside_white(frame)(frame)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
     else:
@@ -66,17 +68,6 @@ def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
     rotationMat = np.matrix([K1/2,K1/2],[K2,K2])
 
     velWheels = np.matmul(rotationMat,relObjCir)
-
-
-def rotation_search(robot, frame, vel=100):
-
-    lego_coords = get_lego_piece(frame)
-    if lego_coords:
-        return "MOVE_TO_BRICK", frame, {}
-    else:
-        robot.rotate_forever(vel)
-        return "SEARCH", frame, {}
-
 
 
 
