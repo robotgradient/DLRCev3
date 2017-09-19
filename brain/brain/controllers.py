@@ -152,14 +152,9 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 
     return "SEARCH_BOX", frame, {}
 
-def move_to_brick_blind_and_grip(robot, frame, vel=60, proximity_threshold=5):
+def move_to_brick_blind_and_grip(robot, frame, vel=60):
 
-    if int(robot.read_proximity_sensor()) > proximity_threshold:
-        robot.stop_motors()
-        robot.close_grip()
-        return "SEARCH", frame, {}
-    else:
-        robot.move_forward(vel=vel)
+        robot.move_forward(vel=vel, time=500)
         return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
 
 
