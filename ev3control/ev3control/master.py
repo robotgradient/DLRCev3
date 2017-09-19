@@ -20,6 +20,7 @@ def publish_cmd(client, message, delay=0):
 
     :message: should be one of the types defined in messages.py
     """
+    print("published")
     client.publish(
         topic=MASTER_COMMANDS,
         payload=repr(message) + ";" + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3])

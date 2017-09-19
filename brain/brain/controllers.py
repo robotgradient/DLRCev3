@@ -1,7 +1,7 @@
 import numpy as np
 from ev3control import Robot
 from object_detection.opencv import get_lego_piece
-from object_detection.opencv import detection_lego_outside_white
+from object_detection.opencv import get_purple_lego
 import time
 
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
@@ -17,7 +17,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     _, frame = robot.cap.read()
 
 
-    coords=detection_lego_outside_white(frame)
+    coords, closest=get_purple_lego(frame)
 
 
     if not coords:
@@ -49,7 +49,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
 
 def rotation_search_brick(robot, frame, vel=400):
 
-    lego_coords = detection_lego_outside_white(frame)(frame)
+    lego_coords, center = get_purple_lego(frame)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
     else:
