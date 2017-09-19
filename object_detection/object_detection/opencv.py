@@ -221,15 +221,18 @@ def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0
 	return objective_center
 
 def get_lego_piece(frame):
-	lego_piece = detection(frame, LowH=0, HighH=186, LowS=59 \
-		,HighS=255,LowV=0,HighV=236,sizemorph=(7, 7))
+	lego_piece = detection(frame, LowH=0, HighH=186, LowS=80 \
+		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7))
 	return lego_piece
 
 
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
 	return white_box
-
+def get_purple_lego(frame):
+	green_center,green_closest=detection(frame, LowH=113, HighH=142, LowS=72 \
+		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7))
+	return green_center,green_closest
 def get_brown_box(frame):
 	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
 	 LowV=90,HighV=255, sizemorph=(3, 11),Arearef=10000)

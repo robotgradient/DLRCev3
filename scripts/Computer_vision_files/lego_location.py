@@ -156,7 +156,7 @@ def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list,closest_list=get_centers(morphoimg,10000)
+	center_list,closest_list=get_centers(morphoimg)
 	closest_list=np.array(closest_list)
 	#print(closest_list.shape)
 	if len(closest_list.shape)>2:
