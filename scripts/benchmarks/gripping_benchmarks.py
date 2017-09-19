@@ -19,7 +19,7 @@ robot = Robot({
     "gripper": "MediumMotor('outC')",
     "elevator": "LargeMotor('outD')"
 
-}, cap=cv2.VideoCapture(0))
+}, cap=cv2.VideoCapture(1))
 
 def stop_after_dec(controller):
 
@@ -32,7 +32,7 @@ def stop_after_dec(controller):
 
 # Define the state graph, we can do this better, currently each method returns the next state name
 states = [
-    State(name="MOVE_TO_BRICK_BLIND_AND_GRIP", act=stop_after_dec(move_to_brick_blind_and_grip)),
+    State(name="MOVE_TO_BRICK_BLIND_AND_GRIP", act=move_to_brick_blind_and_grip),
     State(name="FINAL_STATE", act=lambda x,y:None)
 ]
 state_dict = {}
