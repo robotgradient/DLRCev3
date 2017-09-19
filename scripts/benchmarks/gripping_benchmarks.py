@@ -6,10 +6,10 @@ import time
 import cv2
 import ev3control
 from ev3control import Robot
-from ev3control.controllers import move_to_brick_simple, \
-    move_to_brick_blind_and_grip, rotation_search, rotation_search_box, move_to_box_simple
-from ev3control import State
-from ev3control import main_loop
+from brain.controllers import move_to_brick_simple, \
+    move_to_brick_blind_and_grip, rotation_search_brick, rotation_search_box, move_to_box_simple
+from brain.core import State
+from brain.core import main_loop
 
 print("Creating robot...")
 robot = Robot({
