@@ -111,12 +111,12 @@ class Robot(object):
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
                                                          "speed_sp": -vel}))
 
-    def elevator_up(self,vel=100,time=2500)
+    def elevator_up(self,vel=100,time=2500):
         self.publish(
             RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
                                                          "speed_sp": -vel}))
 
-    def elevator_down(self,vel=100,time=2500)
+    def elevator_down(self,vel=100,time=2500):
         self.publish(
             RunMethodMessage(self.elevator, "run_timed", {"time_sp": time,
                                                          "speed_sp": vel}))
