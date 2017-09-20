@@ -30,8 +30,17 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	angle =  math.atan2(target[1]-pos_rob[1], target[0]-pos_rob[0]) 
 	angle = math.degrees(angle)
 
+	if angle < 0:
+		angle = 360-angle
+
+	print("angle: ", angle)
+
 	error_ang = angle - pos_rob[2]
 
+	if error_ang > 180:
+		error_ang = error_ang - 180
+
+	print("error angle",error_ang)
 
 	vel_x = K_x*error_x
 	vel_y = K_y*error_y
@@ -80,8 +89,8 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 
 	if new_pos_rob[2] >360:
 		new_pos_rob[2] = new_pos_rob[2] - 360
-	else if new_pos_rob[2] < 0 :
-		new_pos_rob[2] = 
+	elif new_pos_rob[2] < 0 :
+		new_pos_rob[2] = 360 + new_pos_rob[2]
 
 	#print(new_pos_rob)
 	return new_pos_rob
@@ -116,7 +125,7 @@ def main(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path 
 
 	target, new_path = select_target(pos_rob, path,points)
 
-	vel_wheels = robot_control(pos_rob, target, K_x,K_y,K_an)
+	vel_wheels = robot_control(pos_rob, target, K_x,K_y,K_an = 10)
 
 	estim_rob_pos= forward_localization(pos_rob,vel_wheels,Ts)
 
@@ -137,7 +146,7 @@ R = []
 plotc = 0
 while 1:
 	
-	obj = [-10,0]
+	obj = [0,10]
 	Ts = 0.1
 
 	rob,vel_wheels,path = main(rob,obj, Ts, path=path,iter = itera)
@@ -150,7 +159,7 @@ while 1:
 	R.append(rob)
 	robot_pos = np.array(R)
 
-	if plotc>20:
+	if plotc>1:
 
 		plt.figure(1) 
 		plt.plot(robot_pos[:,0],robot_pos[:,1])
