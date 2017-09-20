@@ -18,3 +18,7 @@ class GearBox:
 
     def rotate(self, vel, time):
         self.drive(vel, -vel, time)
+
+    def stop(self):
+        self.left_motor.stop(stop_action="brake")
+        self.right_motor.stop(stop_action="brake")

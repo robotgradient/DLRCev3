@@ -11,16 +11,7 @@ from ev3control.utils import decode_mqtt
 
 class Robot(object):
 
-    naming_convention = [
-
-        "leftMotor",
-        "rightMotor",
-        "gearBox",
-        "gripper",
-        "elevator",
-        "colorSensor",
-        "infraredSensor"
-    ]
+    naming_convention = ["gearBox", "gripper", "elevator", "colorSensor", "infraredSensor"]
 
     def __init__(self, device_constructors, cap):
         """
@@ -66,37 +57,23 @@ class Robot(object):
     def publish(self, msg):
         publish_cmd(self.m, msg)
 
-    def rotate(self, deg, vel=500, time=None):
-        """
-        Rotates the robot around its axis
-        :param deg: Degrees
-        :param vel: Velocity
-        :param time:
-        :return:
-        """
-        pass
-
-    def rotate_forever(self, vel):
+    def rotate(self, vel):
         """
         Rotates the robot forever with given velocity
         :param vel: Velocity
         :return:
         """
-        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": -vel}))
-        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
+        self.publish(RunMethodMessage(self.gearBox, "rotate", {"vel": vel, "time": 300}))
 
-    def stop_motors(self, action="brake"):
-
-        self.publish(RunMethodMessage(self.leftMotor, "stop", {"stop_action": action}))
-        self.publish(RunMethodMessage(self.rightMotor, "stop", {"stop_action": action}))
+    def stop_driving(self, action="brake"):
+        self.publish(RunMethodMessage(self.gearBox, "stop"))
 
     def stop_motor(self, name, action="brake"):
 
         self.publish(RunMethodMessage(name, "stop", {"stop_action": action}))
 
     def stop_all_motors(self):
-
-        self.stop_motors()
+        self.stop_driving()
         self.stop_motor("gripper")
 
     def _move_grip(self, vel, time):
@@ -121,21 +98,14 @@ class Robot(object):
     def elevator_down(self):
         self._move_elevator(-100, 3000)
 
-    def move_forward(self, vel=600, time=None):
+    def move_straight(self, vel=600, time=None):
         """
-        Move forward with given speed, top speed is default
+        Move straight (forwards/backwards) with given speed, top speed is default
         :param vel: Velocity
         :param time: Time
         :return:
         """
-
-        if not time:
-            self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
-            self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
-        else:
-            self.publish(RunMethodMessage(self.leftMotor, "run_timed", {"speed_sp": vel, "time_sp": time}))
-            self.publish(RunMethodMessage(self.rightMotor, "run_timed", {"speed_sp": vel, "time_sp": time}))
-
+        self.publish(RunMethodMessage(self.gearBox, "move_straight", {"vel": vel, "time": time}))
 
     def move(self, vel_left=300, vel_right=300):
 
