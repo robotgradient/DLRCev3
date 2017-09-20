@@ -10,10 +10,18 @@ def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matri
 	x = np.linspace(pos_rob[0], pos_obj[0], num=points)
 	y = np.linspace(pos_rob[1], pos_obj[1], num=points)
 
+	angle =  math.atan2(pos_obj[1]-pos_rob[1], pos_obj[0]-pos_rob[0]) 
+	angle = math.degrees(angle)
 
-	path = np.array([x,y])
+	if angle < 0:
+		angle = 360-angle
 
-	#print(path)
+	angle_vec = np.ones(points)
+	angle_vec.fill(angle)
+
+	path = np.array([x,y,angle_vec])
+
+	print(path)
 	
 	return path
 
@@ -24,18 +32,11 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	L = 14.5
 	R = 1.7   
 
-	error_x = target[0] - pos_rob[0]
+	'''error_x = target[0] - pos_rob[0]
 	error_y = target[1] - pos_rob[1]
 
-	angle =  math.atan2(target[1]-pos_rob[1], target[0]-pos_rob[0]) 
-	angle = math.degrees(angle)
+	error_ang = target[2] - pos_rob[2]
 
-	if angle < 0:
-		angle = 360-angle
-
-	print("angle: ", angle)
-
-	error_ang = angle - pos_rob[2]
 
 	if error_ang > 180:
 		error_ang = error_ang - 180
@@ -46,6 +47,9 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	vel_y = K_y*error_y
 	vel_ang = K_an*error_ang
 
+
+
+
 	vel_r= np.sqrt(np.power(vel_x,2)+np.power(vel_y,2))
 
 	vel_teta= vel_ang
@@ -55,7 +59,32 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 	M_r2wheels= np.array([[1/R, -L/(2*R) ],[1/R, L/(2*R)]]) # --> (Vr,Vteta) = M * (w_rigth, w_left)
 
-	vel_wheels= np.matmul(M_r2wheels,vel_robot)
+	vel_wheels= np.matmul(M_r2wheels,vel_robot)'''
+
+
+	# GET wheel velocities through curvature 
+	M_r2wheels= np.array([[1/R, -L/(2*R) ],[1/R, L/(2*R)]]) # --> (Vr,Vteta) = M * (w_rigth, w_left)
+
+
+
+	vel_wheels = np.ones(2)
+	distance_x = (target[0]-pos_rob[0])*np.sin(pos_rob[2]) - (target[1]-pos_rob[1])*np.cos(pos_rob[2])
+
+	l= np.sqrt(np.power(target[0]-pos_rob[0],2)+np.power(target[1]-pos_rob[1],2))
+	l = 0.2
+	
+	C  = -2*distance_x/np.power(l,2)
+	w = 1;
+
+	A = (1-(C*L)/2)/(1+(C*L)/2)
+	vel_wheels[0] = w*L/(R*(1+A))
+	vel_wheels[1] = vel_wheels[0]*A
+
+	vel_robot = np.array([w, w*C])
+	vel_wheels =np.matmul(M_r2wheels,vel_robot)
+
+	print(vel_wheels)
+
 
 	if np.absolute(vel_wheels[0]) >300 : 
 		vel_wheels[0] = np.sign(vel_wheels[0])*300
@@ -102,15 +131,18 @@ def select_target(pos_rob,path,points):
 	for i in range (0,np.size(path[1,:])): #compute the euclidean distance for all the possible points to go
 
 		#distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
-		distance = (path[0,i]-pos_rob[0])*np.cos(pos_rob[2]) + (path[1,i]-pos_rob[1])*sin(pos_rob[2])
-
-		if distance < shortest_dist and distance >0.2:
+		distance = np.absolute((path[0,i]-pos_rob[0])*np.sin(pos_rob[2]) - (path[1,i]-pos_rob[1])*np.cos(pos_rob[2]))
+		print(i," : i : ",distance)
+		if distance < shortest_dist :
 
 			shortest_dist = distance
 			output = i
+			if output == np.size(path[1,:])-1:
+				print("hola")
+				output = i-1
 
 	new_path = path[:,output:]
-	target = path[:,output]
+	target = path[:,output+1]
 	print('target : ',target)
 	#print('new path : ',new_path)
 
@@ -126,7 +158,7 @@ def main(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path 
 
 	target, new_path = select_target(pos_rob, path,points)
 
-	vel_wheels = robot_control(pos_rob, target, K_x,K_y,K_an = 10)
+	vel_wheels = robot_control(pos_rob, target, K_x,K_y,K_an)
 
 	estim_rob_pos= forward_localization(pos_rob,vel_wheels,Ts)
 
@@ -140,15 +172,20 @@ def main(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path 
 
 
 
-rob = [0,0,0]
+'''rob = [0,0,0]
 path = []
 itera = 0
 R = []
 plotc = 0
+obj = [10,10]
+
+camino = np.array([np.array(rob[0:2]),np.array(obj)])
+print(camino)
+
 while 1:
 	
-	obj = [0,10]
-	Ts = 0.1
+	
+	Ts = 0.2
 
 	rob,vel_wheels,path = main(rob,obj, Ts, path=path,iter = itera)
 	print('robot_position: ',rob)
@@ -160,10 +197,11 @@ while 1:
 	R.append(rob)
 	robot_pos = np.array(R)
 
-	if plotc>1:
+	if plotc>100:
 
 		plt.figure(1) 
 		plt.plot(robot_pos[:,0],robot_pos[:,1])
+		plt.plot(camino[:,0],camino[:,1])
 		plt.axis([-10, 30, -10, 10])
 		plt.show()
 		plotc = 0
@@ -176,4 +214,4 @@ while 1:
 
 	
 	#time.sleep(0.5)
-
+'''
