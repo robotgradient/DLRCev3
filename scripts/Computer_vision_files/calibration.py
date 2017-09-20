@@ -78,19 +78,27 @@ objPts[1,0] = board_w -1; objPts[1,1] = 0;
 objPts[2,0] = 0; objPts[2,1] = board_h -1;
 objPts[3,0] = board_w -1; objPts[3,1] = board_h -1;
 
-#img = cv2.drawChessboardCorners(img, (9,6), objPts,ret)
+img = cv2.drawChessboardCorners(img, (9,6), imgPts,ret)
 cv2.imshow('img',img)
 cv2.waitKey(20)
 
 H = cv2.getPerspectiveTransform(objPts,imgPts)
-H[2,2] = 20
+H[2,2] = 30
 
 print("image size : ", img.shape)
-dst = cv2.warpPerspective(img,H,img.shape[0:2],flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+img
+dst = cv2.warpPerspective(img,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
-cv2.imshow('img',img)
-cv2.waitKey()
+print(dst.shape,type(dst))
 
+while True:
+    ret,frame=cap.read()
+    dst = cv2.warpPerspective(frame,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+    dst2= cv2.undistort(frame, mtx, dist, None, newcameramtx)
+    x,y,w,h = roi
+    dst2 = dst2[y:y+h, x:x+w]
+    cv2.imshow('distorsion',dst)
+    cv2.imshow('distorsion2',dst2)
+    if cv2.waitKey(10) & 0xFF==27:
+        break
 
-cv2.imshow('distorsion',dst)
-cv2.waitKey()
