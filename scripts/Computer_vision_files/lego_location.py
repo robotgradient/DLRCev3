@@ -112,7 +112,7 @@ def all_operations(frame):
 	morphoimg=open_and_close(morphoimg,(3,11))
 	cv2.imshow("after morphology",morphoimg)	
 	#Getting the centers
-	center_list,closest_list=get_centers(morphoimg)
+	center_list,closest_list=get_centers(morphoimg,1)
 
 	#plotting
 	for i in range(len(center_list)):
@@ -136,7 +136,7 @@ def all_operations(frame):
 		objective_center=[]
 	return objective_center
 
-def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
+def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=10):
 
 
 	hsvframe=filter_2HSV(frame)
@@ -156,7 +156,7 @@ def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 	sizemorph2=tuple(reversed(sizemorph))
 	morphoimg=open_and_close(morphoimg,sizemorph2)
 	#Getting the centers
-	center_list,closest_list=get_centers(morphoimg)
+	center_list,closest_list=get_centers(morphoimg,1)
 	closest_list=np.array(closest_list)
 	#print(closest_list.shape)
 	if len(closest_list.shape)>2:
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 		ret, frame = cap.read()	
 		# Get the trackbar poses
 		
-		white_box, closes_point = detection(frame, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9))
+		white_box, closes_point = detection(frame, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),1)
 		print("Box:",white_box,closes_point)
 		#print(objective_center)
 		#sleep(2)

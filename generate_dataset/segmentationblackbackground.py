@@ -83,8 +83,10 @@ while 1:
 	mask_name="Mask_{}".format(image_complete_name)
 	cv2.imwrite(mask_name,colours)
 
+BB_name="BB_{}.{}".format(image_name,"txt")
+print(BB_name)
 print (BBcoords)
-with open("heloloasdfaafsda.txt", 'w') as outf:
+with open(BB_name, 'w') as outf:
 	outf.write(repr(BBcoords))
 print(colours.shape)
 sleep(2)

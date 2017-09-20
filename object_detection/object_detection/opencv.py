@@ -231,7 +231,7 @@ def get_white_box(frame):
 	return white_box
 def get_purple_lego(frame):
 	green_center,green_closest=detection(frame, LowH=113, HighH=142, LowS=72 \
-		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7))
+		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7),Arearef=1)
 	return green_center,green_closest
 def get_brown_box(frame):
 	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
