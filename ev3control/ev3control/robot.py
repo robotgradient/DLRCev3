@@ -80,8 +80,8 @@ class Robot(object):
         :param vel: Velocity
         :return:
         """
-        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": vel}))
-        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": -vel}))
+        self.publish(RunMethodMessage(self.leftMotor, "run_forever", {"speed_sp": -vel}))
+        self.publish(RunMethodMessage(self.rightMotor, "run_forever", {"speed_sp": vel}))
 
     def stop_motors(self, action="brake"):
 
