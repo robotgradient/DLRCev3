@@ -3,6 +3,7 @@ from ev3control import Robot
 from object_detection.opencv import get_lego_piece
 from object_detection.opencv import get_purple_lego
 import time
+from .motion_control import euclidian_path_planning_control
 
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
                          vel_forward = 400, vel_rot = 60, vel_forward_slow=60):
@@ -47,12 +48,34 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
         robot.rotate_left(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
 
+def euclidian_move_to_brick(robot, frame,
+                            path=[], iteration=0):
+
+    brick_position = robot.map[0]
+    estim_rob_pos, vel_wheels, new_path = euclidian_path_planning_control(robot.position,
+                                                                          brick_position, robot.sampling_rate,
+                                                                          iteration=iteration, path=path)
+    robot.position = estim_rob_pos
+    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
+    iteration += 1
+
+    print("Path: ", path)
+    print("Iteration: ", iteration)
+    print("Robot position: ", robot.position)
+    print("Velocities rl: ", vel_wheels)
+    print("##" *20)
+
+
+    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path}
+
 
 def rotation_search_brick(robot, frame, vel=400):
 
     lego_coords, center = get_purple_lego(frame)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
+    elif len(robot.map) > 0 :
+        return "MOVE_BY_MAP", frame, {"iteration": 0, "path": []}
     else:
         robot.rotate_right(vel)
         return "SEARCH", frame, {}

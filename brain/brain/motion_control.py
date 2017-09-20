@@ -124,7 +124,7 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	#print(new_pos_rob)
 	return new_pos_rob
 
-def select_target(pos_rob,path,points):
+def select_target(pos_rob,path):
 
 	print(np.size(path))
 	shortest_dist  = 100000000000;
@@ -151,12 +151,12 @@ def select_target(pos_rob,path,points):
 
 
 
-def main(pos_rob,pos_obj, Ts, points=10,K_x=1,K_y = 1, K_an = 1 , iter = 0, path = []):
+def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path = []):
 
 	if iter == 0 : 
 		path = compute_euclidean_path(pos_rob,pos_obj,points)
 
-	target, new_path = select_target(pos_rob, path,points)
+	target, new_path = select_target(pos_rob, path)
 
 	vel_wheels = robot_control(pos_rob, target, K_x,K_y,K_an)
 
