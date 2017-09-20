@@ -32,18 +32,18 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
     # Move forward till light sensor detects brick if brick is near the bottom of image
     # and centered
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=10):
-        robot.move_forward(vel_forward, 500)
+        robot.move_straight(vel_forward, 500)
         return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
 
     if np.isclose(coords[0], img_center[0], atol=atol):
-        robot.move_forward(vel_forward)
+        robot.move_straight(vel_forward)
         return "MOVE_TO_BRICK", frame, {}
     elif error[0] < 0:
-        robot.rotate_forever(vel=-vel_rot)
+        robot.rotate(vel=-vel_rot)
         return "MOVE_TO_BRICK", frame, {}
     else:
         # Positive velocity for turning left
-        robot.rotate_forever(vel=vel_rot)
+        robot.rotate(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
 
 
@@ -53,7 +53,7 @@ def rotation_search_brick(robot, frame, vel=400):
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
     else:
-        robot.rotate_forever(vel)
+        robot.rotate(vel)
         return "SEARCH", frame, {}
 
 def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
@@ -87,25 +87,25 @@ def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
         #leave the piece and go little bit backwards
         robot.elevator_down()
         time.sleep(2.5)
-        robot.move_forward(vel_forward)
+        robot.move_straight(vel_forward)
         time.sleep(0.3)
         robot.open_grip()
         robot.elevator_up()
         time.sleep(3)
-        robot.move_forward(vel=-200)
+        robot.move_straight(vel=-200)
         time.sleep(2)
 
         return "SEARCH", {}
 
     if np.isclose(coords[0], img_center[0], atol=atol):
-        robot.move_forward(vel_forward)
+        robot.move_straight(vel_forward)
         return "MOVE_TO_BOX", frame, {}
     elif error[0] < 0:
-        robot.rotate_forever(vel=-vel_rot)
+        robot.rotate(vel=-vel_rot)
         return "MOVE_TO_BOX", frame, {}
     else:
         # Positive velocity for turning left
-        robot.rotate_forever(vel=vel_rot)
+        robot.rotate(vel=vel_rot)
         return "MOVE_TO_BOX", frame, {}
 
 
@@ -115,7 +115,7 @@ def rotation_search_box(robot, frame, vel=400):
     if box_coords:
         return "MOVE_TO_BOX", frame, {}
     else:
-        robot.rotate_forever(vel)
+        robot.rotate(vel)
         return "SEARCH_BOX", frame, {}
 
 
@@ -143,7 +143,7 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 
     robot.elevator_down()
     time.sleep(2.5)
-    robot.move_forward(vel)
+    robot.move_straight(vel)
     time.sleep(0.5)
     robot.close_grip(150)
     time.sleep(3)
@@ -154,7 +154,7 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60):
     t = 1529
-    robot.move_forward(vel=300, time=t)
+    robot.move_straight(vel=300, time=t)
     time.sleep(t / 1000 + .5)
     robot.elevator_down()
     time.sleep(4)

@@ -6,7 +6,8 @@ from ev3dev.ev3 import *
 from ev3dev.core import Motor
 import logging
 
-from .messages import *
+from ev3control.messages import *
+from ev3control.objects import GearBox
 from ev3control.utils import MASTER_COMMANDS, SLAVE_RESPONSES, decode_mqtt
 
 MASTER_HOST = "localhost"
@@ -46,15 +47,13 @@ def run_method(objects, obj_name, method_name, args):
     return getattr(objects[obj_name], method_name)(**args)
 
 
-def publish_value(client, message, delay=0):
+def publish_value(client, message):
     """Convenience wrapper around MQTT's publish method.
 
     :message: should be one of the types defined in messages.py
     """
     print("publishing value now")
     client.publish(topic=SLAVE_RESPONSES, payload=repr(message))
-    # If we chain multiple publish commands, we need delays between them
-    time.sleep(delay)
 
 
 def process_message(objects: dict, client, userdata, msg):
