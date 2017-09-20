@@ -6,7 +6,7 @@ import sys
 if len(sys.argv)>=2:
 	n_backgrounds=int(sys.argv[1])
 else:
-	n_backgrounds=1
+	n_backgrounds=13
 
 if len(sys.argv)>=3:
 	n_lego=int(sys.argv[2])
@@ -49,6 +49,7 @@ for numl in range(n_lego):
 		flag=1
 		images_data=[]
 		box_data=[]
+		#repetitions
 		for reps in range(20):
 			frame=cv2.imread(back_file)
 			Newmask=np.ones(mask.shape,dtype=np.uint8)
@@ -129,10 +130,25 @@ for numl in range(n_lego):
 				mergemask2=cv2.resize(mergemask,(widthscaled,heightscaled))
 
 				#print("mask, Newmask, scale",masktomap2.shape,(heightscaled,widthscaled)\
-				
+				transformation=np.random.randint(4)
+				if transformation==1:
+					#Total mirror
+					Newmask[newy+heightscaled-1:newy-1:-1,newx+widthscaled-1:newx-1:-1,:]=np.copy(masktomap2)
+					merge2[newy+heightscaled-1:newy-1:-1,newx+widthscaled-1:newx-1:-1,:]=np.copy(mergemask2)
+				elif transformation==0:
+					#nothing happens
+					Newmask[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(masktomap2)
+					merge2[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(mergemask2)
+				elif transformation==2:
+					#mirror horizontal
+					Newmask[newy+heightscaled-1:newy-1:-1,newx:newx+widthscaled,:]=np.copy(masktomap2)
+					merge2[newy+heightscaled-1:newy-1:-1,newx:newx+widthscaled,:]=np.copy(mergemask2)
+				else:
+					#mirror vertical
+					Newmask[newy:newy+heightscaled,newx+widthscaled-1:newx-1:-1,:]=np.copy(masktomap2)
+					merge2[newy:newy+heightscaled,newx+widthscaled-1:newx-1:-1,:]=np.copy(mergemask2)
 
-				Newmask[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(masktomap2)
-				merge2[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(mergemask2)
+
 				#cv2.rectangle(frame,(newx,newy),(newx+widthscaled,newy+heightscaled),[0,255,0],thickness=2)
 				
 
@@ -142,7 +158,7 @@ for numl in range(n_lego):
 			kernel = np.ones((5,5),np.float32)/25
 			frame2 = cv2.filter2D(frame2,-1,kernel)
 			cv2.imshow("outputimages",frame2)
-			cv2.waitKey(10)
+			cv2.waitKey()
 
 			#Uncomment to obtain the data in a matrix format
 			#images_data.append(frame2)
