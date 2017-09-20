@@ -57,19 +57,21 @@ class Robot(object):
     def publish(self, msg):
         publish_cmd(self.m, msg)
 
-    def rotate(self, vel):
+    def rotate_left(self, vel, time=300):
         """
-        Rotates the robot forever with given velocity
+        Rotates the robot with given velocity
         :param vel: Velocity
         :return:
         """
-        self.publish(RunMethodMessage(self.gearBox, "rotate", {"vel": vel, "time": 300}))
+        self.publish(RunMethodMessage(self.gearBox, "rotate_left", {"vel": vel, "time": time}))
 
-    def stop_driving(self, action="brake"):
-        self.publish(RunMethodMessage(self.gearBox, "stop"))
+    def rotate_right(self, vel, time=300):
+        self.publish(RunMethodMessage(self.gearBox, "rotate_right", {"vel": vel, "time": time}))
+
+    def stop_driving(self):
+        self.publish(RunMethodMessage(self.gearBox, "stop", {}))
 
     def stop_motor(self, name, action="brake"):
-
         self.publish(RunMethodMessage(name, "stop", {"stop_action": action}))
 
     def stop_all_motors(self):
@@ -98,14 +100,14 @@ class Robot(object):
     def elevator_down(self):
         self._move_elevator(-100, 3000)
 
-    def move_straight(self, vel=600, time=None):
+    def move_straight(self, vel=600, time=4000):
         """
         Move straight (forwards/backwards) with given speed, top speed is default
         :param vel: Velocity
         :param time: Time
         :return:
         """
-        self.publish(RunMethodMessage(self.gearBox, "move_straight", {"vel": vel, "time": time}))
+        self.publish(RunMethodMessage(self.gearBox, "drive_straight", {"vel": vel, "time": time}))
 
     def move(self, vel_left=300, vel_right=300):
 
