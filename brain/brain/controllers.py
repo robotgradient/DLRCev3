@@ -21,6 +21,7 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
 
 
     if not coords:
+        print("I am so stupid, didnt detect")
         return "SEARCH", frame, {}
 
     img_res = np.asarray(img_res)
@@ -39,11 +40,11 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
         robot.move_straight(vel_forward)
         return "MOVE_TO_BRICK", frame, {}
     elif error[0] < 0:
-        robot.rotate(vel=-vel_rot)
+        robot.rotate_right(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
     else:
         # Positive velocity for turning left
-        robot.rotate(vel=vel_rot)
+        robot.rotate_left(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
 
 
@@ -53,7 +54,7 @@ def rotation_search_brick(robot, frame, vel=400):
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
     else:
-        robot.rotate(vel)
+        robot.rotate_right(vel)
         return "SEARCH", frame, {}
 
 def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
