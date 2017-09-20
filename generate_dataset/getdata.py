@@ -6,12 +6,12 @@ import sys
 if len(sys.argv)>=2:
 	n_backgrounds=int(sys.argv[1])
 else:
-	n_backgrounds=10
+	n_backgrounds=1
 
 if len(sys.argv)>=3:
 	n_lego=int(sys.argv[2])
 else:
-	n_lego=10
+	n_lego=1
 
 if len(sys.argv)>=4:
 	lego_name=sys.argv[3]
@@ -37,41 +37,73 @@ for numl in range(n_lego):
 		legos=cv2.imread(Lego_file)
 		merge=cv2.bitwise_and(mask,legos)
 		mask2=cv2.bitwise_not(mask)
-		frame=cv2.imread(back_file)
+		#frame=cv2.imread(back_file)
 		with open(BB_file, 'r') as outf:
 			x=eval(outf.read())
 
-		np.random.shuffle(x)
-		working_data=x
+		
+		#numberlegoperimages=np.random.randint(1,len(x)+1)
+		numberlegoperimages=1
+		working_data=x[:numberlegoperimages]
 
 		flag=1
 		images_data=[]
 		box_data=[]
-		for reps in range(5):
+		for reps in range(20):
+			frame=cv2.imread(back_file)
 			Newmask=np.ones(mask.shape,dtype=np.uint8)
 			Newmask.fill(255)
 			merge2=np.zeros(merge.shape,dtype=np.uint8)
 			xnot=[]
 			ynot=[]
 			boxelements=[]
+			np.random.shuffle(x)
+			numberlegoperimages=np.random.randint(1,len(x)+1)
+			working_data=x[:numberlegoperimages]
 			for num in range(len(working_data)):
 				width=working_data[num][2]-working_data[num][0]
 				height=working_data[num][3]-working_data[num][1]
 				
-				if num==0:
+				'''if num==0:
 					newx=np.random.randint(frame.shape[1]-width)
 					newy=np.random.randint(frame.shape[0]-height)
-					xnot.extend(np.arange(newx,newx+width))
-					ynot.extend(np.arange(newy,newy+height))
-				else:
-					while True:
-						flag=1
-						xnot=set(xnot)
-						ynot=set(ynot)
-						newx=np.random.randint(frame.shape[1]-width)
-						newy=np.random.randint(frame.shape[0]-height)
-						xoccupy=np.arange(newx,newx+width)
-						yoccupy=np.arange(newy,newy+height)
+
+					# The resize ops assumption of total scale is 3 from top botton
+					scale=abs(working_data[num][1]-newy)*3/480
+					if newy > working_data[num][1]:
+						heightscaled=round(height*scale)
+						widthscaled=round(width*scale)
+					elif newy==working_data[num][1]:
+						heightscaled=height
+						widthscaled=width
+					else:
+						heightscaled=round(height/scale)
+						widthscaled=round(width/scale)
+
+					xnot.extend(np.arange(newx,newx+widthscaled))
+					ynot.extend(np.arange(newy,newy+heightscaled))
+				else:'''
+				while True:
+					flag=1
+					xnot=set(xnot)
+					ynot=set(ynot)
+					newx=np.random.randint(frame.shape[1]-width)
+					newy=np.random.randint(frame.shape[0]-height)
+					scale=1+abs(working_data[num][1]-newy)*2/480
+					if newy > working_data[num][1]:
+						heightscaled=round(height*scale)
+						widthscaled=round(width*scale)
+					elif newy==working_data[num][1]:
+						heightscaled=height
+						widthscaled=width
+					else:
+						heightscaled=round(height/scale)
+						widthscaled=round(width/scale)
+					xoccupy=np.arange(newx,newx+widthscaled)
+					yoccupy=np.arange(newy,newy+heightscaled)
+					if newx+widthscaled>=640 or newy+heightscaled>=480:
+						flag=0
+					else:
 						for i in xoccupy:
 							for j in yoccupy:
 								
@@ -80,18 +112,29 @@ for numl in range(n_lego):
 									break
 							if flag==0:
 								break
-						if flag==1:
-							xnot=list(xnot)
-							ynot=list(ynot)
-							xnot.extend(np.arange(newx,newx+width))
-							ynot.extend(np.arange(newy,newy+height))
-							break
+					if flag==1:
+						print("newy, oldy,newlimit, scale",newy,working_data[num][1],newy+heightscaled,scale)
+						xnot=list(xnot)
+						ynot=list(ynot)
+						xnot.extend(np.arange(newx,newx+widthscaled))
+						ynot.extend(np.arange(newy,newy+heightscaled))
+						break
 
 				masktomap=mask2[working_data[num][1]:working_data[num][3],working_data[num][0]:working_data[num][2],:]
 				mergemask=merge[working_data[num][1]:working_data[num][3],working_data[num][0]:working_data[num][2],:]
-				boxelements.append([newx,newy,newx+width,newy+height])
-				Newmask[newy:newy+height,newx:newx+width,:]=np.copy(masktomap)
-				merge2[newy:newy+height,newx:newx+width,:]=np.copy(mergemask)
+				
+				#Here scaled the mask
+				boxelements.append([newx,newy,newx+widthscaled,newy+heightscaled])
+				masktomap2=cv2.resize(masktomap,(widthscaled,heightscaled))
+				mergemask2=cv2.resize(mergemask,(widthscaled,heightscaled))
+
+				#print("mask, Newmask, scale",masktomap2.shape,(heightscaled,widthscaled)\
+					,(newy+heightscaled,newx+widthscaled))
+
+				Newmask[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(masktomap2)
+				merge2[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(mergemask2)
+				#cv2.rectangle(frame,(newx,newy),(newx+widthscaled,newy+heightscaled),[0,255,0],thickness=2)
+				
 
 			Newmask=cv2.morphologyEx(Newmask,cv2.MORPH_OPEN,cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
 			frame2=cv2.bitwise_and(Newmask,frame)
@@ -99,7 +142,7 @@ for numl in range(n_lego):
 			kernel = np.ones((5,5),np.float32)/25
 			frame2 = cv2.filter2D(frame2,-1,kernel)
 			cv2.imshow("outputimages",frame2)
-			cv2.waitKey(10)
+			cv2.waitKey()
 
 			#Uncomment to obtain the data in a matrix format
 			#images_data.append(frame2)
