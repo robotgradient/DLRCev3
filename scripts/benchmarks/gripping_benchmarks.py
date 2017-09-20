@@ -13,22 +13,10 @@ from brain.core import main_loop
 
 print("Creating robot...")
 robot = Robot({
+    "gearBox" : "GearBox('outA', 'outB')",
+    "gripper": "RaisableGrabber('outC', 'outD')",
 
-    "leftMotor": "LargeMotor('outA')",
-    "rightMotor": "LargeMotor('outB')",
-    "gripper": "MediumMotor('outC')",
-    "elevator": "LargeMotor('outD')"
-
-}, cap=cv2.VideoCapture(1))
-
-def stop_after_dec(controller):
-
-    def func(robot,frame, **kwargs):
-        controller(robot,frame)
-        robot.stop_all_motors()
-        return "FINAL_STATE",frame, {}
-    return func
-
+}, None)
 
 # Define the state graph, we can do this better, currently each method returns the next state name
 states = [

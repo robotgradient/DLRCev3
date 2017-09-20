@@ -7,7 +7,7 @@ from .messages import *
 from .master import *
 from ev3control.objects import GearBox
 from ev3control.utils import decode_mqtt
-import numpy as np
+
 
 class Robot(object):
 
@@ -23,7 +23,7 @@ class Robot(object):
 
         self.cap = cap
         self.map = []
-        self.position = np.array([0,0,0])
+        self.position = [0, 0, 0]
         self.sampling_time
 
         for name in self.naming_convention:

@@ -152,8 +152,8 @@ def select_target(pos_rob,path):
 
 
 def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path = []):
-
-	if iter == 0 : 
+	pos_rob = np.array(pos_rob)
+	if iter == 0 :
 		path = compute_euclidean_path(pos_rob,pos_obj,points)
 
 	target, new_path = select_target(pos_rob, path)
