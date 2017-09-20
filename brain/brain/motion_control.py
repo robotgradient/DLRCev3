@@ -71,10 +71,10 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	distance_x = (target[0]-pos_rob[0])*np.sin(pos_rob[2]) - (target[1]-pos_rob[1])*np.cos(pos_rob[2])
 
 	l= np.sqrt(np.power(target[0]-pos_rob[0],2)+np.power(target[1]-pos_rob[1],2))
-	l = 0.2
+	#l = 10
 	
 	C  = -2*distance_x/np.power(l,2)
-	w = 1;
+	w = 100*R ;
 
 	A = (1-(C*L)/2)/(1+(C*L)/2)
 	vel_wheels[0] = w*L/(R*(1+A))
@@ -86,10 +86,10 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	print(vel_wheels)
 
 
-	if np.absolute(vel_wheels[0]) >300 : 
-		vel_wheels[0] = np.sign(vel_wheels[0])*300
-	if np.absolute(vel_wheels[1]) > 300:
-		vel_wheels[1] = np.sign(vel_wheels[1])*300
+	if np.absolute(vel_wheels[0]) > 500 : 
+		vel_wheels[0] = np.sign(vel_wheels[0])*500
+	if np.absolute(vel_wheels[1]) > 500:
+		vel_wheels[1] = np.sign(vel_wheels[1])*500
 
 
 	#print(vel_wheels)
@@ -127,7 +127,7 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 def select_target(pos_rob,path,points):
 
 	print(np.size(path))
-	shortest_dist  = 100;
+	shortest_dist  = 100000000000;
 	for i in range (0,np.size(path[1,:])): #compute the euclidean distance for all the possible points to go
 
 		#distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
@@ -151,7 +151,7 @@ def select_target(pos_rob,path,points):
 
 
 
-def main(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iter = 0, path = []):
+def main(pos_rob,pos_obj, Ts, points=10,K_x=1,K_y = 1, K_an = 1 , iter = 0, path = []):
 
 	if iter == 0 : 
 		path = compute_euclidean_path(pos_rob,pos_obj,points)
@@ -177,7 +177,7 @@ path = []
 itera = 0
 R = []
 plotc = 0
-obj = [10,10]
+obj = [100,100]
 
 camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
@@ -185,12 +185,12 @@ print(camino)
 while 1:
 	
 	
-	Ts = 0.2
+	Ts = 0.02
 
 	rob,vel_wheels,path = main(rob,obj, Ts, path=path,iter = itera)
 	print('robot_position: ',rob)
 	print('wheels vel:', vel_wheels)
-	print('path: ', path)
+	#print('path: ', path)
 	itera = itera+1
 
 
@@ -202,7 +202,7 @@ while 1:
 		plt.figure(1) 
 		plt.plot(robot_pos[:,0],robot_pos[:,1])
 		plt.plot(camino[:,0],camino[:,1])
-		plt.axis([-10, 30, -10, 10])
+		plt.axis([0, 150, 0, 150])
 		plt.show()
 		plotc = 0
 
@@ -214,4 +214,5 @@ while 1:
 
 	
 	#time.sleep(0.5)
-'''
+	'''
+
