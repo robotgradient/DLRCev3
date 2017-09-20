@@ -101,7 +101,8 @@ def select_target(pos_rob,path,points):
 	shortest_dist  = 100;
 	for i in range (0,np.size(path[1,:])): #compute the euclidean distance for all the possible points to go
 
-		distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
+		#distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
+		distance = (path[0,i]-pos_rob[0])*np.cos(pos_rob[2]) + (path[1,i]-pos_rob[1])*sin(pos_rob[2])
 
 		if distance < shortest_dist and distance >0.2:
 
