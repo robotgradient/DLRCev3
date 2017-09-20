@@ -5,6 +5,7 @@ from collections import deque
 
 from .messages import *
 from .master import *
+from ev3control.objects import GearBox
 from ev3control.utils import decode_mqtt
 
 
@@ -14,6 +15,7 @@ class Robot(object):
 
         "leftMotor",
         "rightMotor",
+        "gearBox",
         "gripper",
         "elevator",
         "colorSensor",

@@ -6,7 +6,8 @@ from ev3dev.ev3 import *
 from ev3dev.core import Motor
 import logging
 
-from .messages import *
+from ev3control.messages import *
+from ev3control.objects import GearBox
 from ev3control.utils import MASTER_COMMANDS, SLAVE_RESPONSES, decode_mqtt
 
 MASTER_HOST = "localhost"
