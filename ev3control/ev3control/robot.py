@@ -24,7 +24,6 @@ class Robot(object):
         self.cap = cap
         self.map = []
         self.position = [0, 0, 0]
-        self.sampling_time
 
         for name in self.naming_convention:
             setattr(self, name, None)

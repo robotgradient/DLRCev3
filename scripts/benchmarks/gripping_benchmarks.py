@@ -16,7 +16,7 @@ robot = Robot({
     "gearBox" : "GearBox('outA', 'outB')",
     "gripper": "RaisableGrabber('outC', 'outD')",
 
-}, None)
+}, cv2.VideoCapture(1))
 
 # Define the state graph, we can do this better, currently each method returns the next state name
 states = [
