@@ -1,12 +1,12 @@
 from collections import namedtuple
 import cv2
 from object_detection.opencv import draw_lines
-
+import time
 
 State = namedtuple("State", "name act default_args")
 State.__new__.__defaults__ = tuple([None] * 3)
 
-def main_loop(robot, start_state, state_dict):
+def main_loop(robot, start_state, state_dict, delay=0.02):
 
     print("Checking states...")
     for state in state_dict.values():
@@ -16,6 +16,7 @@ def main_loop(robot, start_state, state_dict):
     kwargs = {}
 
     while True:
+        time.sleep(delay)
         _, frame = robot.cap.read()
         draw_lines(frame)
         print("Current state: ", state.name, " state args: ", str(kwargs))
