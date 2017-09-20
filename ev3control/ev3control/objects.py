@@ -10,8 +10,8 @@ class GearBox:
         self.right_motor = LargeMotor(right_motor_port)
 
     def drive(self, left_vel, right_vel, time):
-        self.left_motor.run_timed(left_vel, time)
-        self.right_motor.run_timed(right_vel, time)
+        self.left_motor.run_timed(speed_sp=left_vel, time_sp=time)
+        self.right_motor.run_timed(speed_sp=right_vel, time_sp=time)
 
     def drive_straight(self, vel, time):
         self.drive(vel, vel, time)
