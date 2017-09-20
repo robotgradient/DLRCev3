@@ -113,7 +113,7 @@ for numl in range(n_lego):
 							if flag==0:
 								break
 					if flag==1:
-						print("newy, oldy,newlimit, scale",newy,working_data[num][1],newy+heightscaled,scale)
+						#print("newy, oldy,newlimit, scale",newy,working_data[num][1],newy+heightscaled,scale)
 						xnot=list(xnot)
 						ynot=list(ynot)
 						xnot.extend(np.arange(newx,newx+widthscaled))
@@ -129,7 +129,7 @@ for numl in range(n_lego):
 				mergemask2=cv2.resize(mergemask,(widthscaled,heightscaled))
 
 				#print("mask, Newmask, scale",masktomap2.shape,(heightscaled,widthscaled)\
-					,(newy+heightscaled,newx+widthscaled))
+				
 
 				Newmask[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(masktomap2)
 				merge2[newy:newy+heightscaled,newx:newx+widthscaled,:]=np.copy(mergemask2)
@@ -142,7 +142,7 @@ for numl in range(n_lego):
 			kernel = np.ones((5,5),np.float32)/25
 			frame2 = cv2.filter2D(frame2,-1,kernel)
 			cv2.imshow("outputimages",frame2)
-			cv2.waitKey()
+			cv2.waitKey(10)
 
 			#Uncomment to obtain the data in a matrix format
 			#images_data.append(frame2)
