@@ -15,7 +15,7 @@ def start_master():
     return client
 
 
-def publish_cmd(client, message, delay=0):
+def publish_cmd(client, message):
     """Convenience wrapper around MQTT's publish method.
 
     :message: should be one of the types defined in messages.py
@@ -24,8 +24,6 @@ def publish_cmd(client, message, delay=0):
     client.publish(
         topic=MASTER_COMMANDS,
         payload=repr(message) + ";" + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3])
-    # If we chain multiple publish commands, we need delays between them
-    time.sleep(delay)
 
 
 if __name__ == '__main__':
