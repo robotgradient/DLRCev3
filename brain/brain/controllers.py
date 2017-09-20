@@ -179,13 +179,9 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 def move_to_brick_blind_and_grip(robot, frame, vel=60):
     t = 1529
     robot.move_straight(vel=300, time=t)
-    time.sleep(t / 1000 + .5)
-    robot.elevator_down()
-    time.sleep(4)
-    robot.close_grip()
-    time.sleep(4)
-    robot.elevator_up()
-    return "END", frame, {}
+    time.sleep(t/1000)
+    robot.pick_up()
+    return "FINAL_STATE", frame, {}
 
 
 

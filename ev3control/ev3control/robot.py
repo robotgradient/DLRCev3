@@ -80,6 +80,9 @@ class Robot(object):
         self.stop_driving()
         self.stop_motor("gripper")
 
+    def pick_up(self):
+        self.publish(RunMethodMessage(self.gripper, "pick_up", {}))
+
     def _move_grip(self, vel, time):
         self.publish(
             RunMethodMessage(self.gripper, "run_timed", {"time_sp": time,
