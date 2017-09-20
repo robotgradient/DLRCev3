@@ -78,8 +78,10 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	new_pos_rob[1] = pos_rob[1] + Ts*vel_world[1]
 	new_pos_rob[2] = pos_rob[2] + Ts*vel_world[2]
 
-	if new_pos_rob[2] >180:
-		new_pos_rob[2] = -180 + (new_pos_rob[2]-180)
+	if new_pos_rob[2] >360:
+		new_pos_rob[2] = new_pos_rob[2] - 360
+	else if new_pos_rob[2] < 0 :
+		new_pos_rob[2] = 
 
 	#print(new_pos_rob)
 	return new_pos_rob
