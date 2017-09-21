@@ -1,7 +1,20 @@
 from contextlib import AbstractContextManager
 
 import rpyc
-conn = rpyc.classic.connect('10.42.0.96')  # host name or IP address of the EV3
+
+
+def robust_connect():
+    for n in (96, 114):
+        try:
+            # host name or IP address of the EV3
+            return rpyc.classic.connect('10.42.0.{}'.format(n))
+        except Exception as e:
+            continue
+    else:
+        raise Exception("Wasn't able to connect to any IPs. Is the brick connected?")
+
+
+conn = robust_connect()
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
 
 # These objects are on the brick!
