@@ -11,9 +11,6 @@ from brain.controllers import move_to_brick_simple, \
 from brain.core import State
 from brain.core import main_loop
 
-print("Creating robot...")
-robot = Robot(cv2.VideoCapture(1))
-
 # Define the state graph, we can do this better, currently each method returns the next state name
 states = [
     State(name="MOVE_TO_BRICK_BLIND_AND_GRIP", act=move_to_brick_blind_and_grip),
@@ -24,5 +21,5 @@ for state in states:
     state_dict[state.name] = state
 
 start_state = states[0]
-main_loop(robot, start_state, state_dict)
+main_loop(cv2.VideoCapture(1), start_state, state_dict)
 

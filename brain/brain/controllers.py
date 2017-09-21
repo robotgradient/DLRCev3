@@ -184,8 +184,6 @@ def move_to_brick_blind_and_grip(robot, frame, vel=60):
     robot.move_straight(vel=300, time=t)
     robot.wait_until_not_moving()
     robot.pick_up()
-    # remove this later!
-    robot.reset()
     return "FINAL_STATE", frame, {}
 
 
