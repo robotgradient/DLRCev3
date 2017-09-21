@@ -43,6 +43,16 @@ rvecs=np.array(rvecs)
 tvecs=np.array(tvecs)
 print(mtx.shape,dist.shape,rvecs.shape,tvecs.shape)
 
+
+## write in a yaml
+data = {"camera_matrix": mtx, "dist_coeff": dist}
+fname = "data.yaml"
+import yaml
+with open(fname, "w") as f:
+    yaml.dump(data, f)
+
+np.savez("camera_parameters",cam_matrix=mtx,dist_coeff=dist)
+
 # Add image to crop
 img = cv2.imread('Chessboard_15.jpg')
 h,  w = img.shape[:2]

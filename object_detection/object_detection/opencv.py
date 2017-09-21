@@ -48,10 +48,7 @@ def open_and_close(img,size):
 def get_centers(img,Arearef=130):
 	#Apply contours to get the properties of the images
 	contourimage, contours, hierarchy = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-	#matrix to draw the contours
-	img2=np.zeros((480,640,3))
-	img2 = cv2.drawContours(img2, contours, -1, (0,255,0), 3)
-		  # Display the resulting frame
+	
 	center_list=[]
 	closest_list=[]
 	for i in range(len(contours)):
@@ -64,6 +61,20 @@ def get_centers(img,Arearef=130):
 
 	return center_list,closest_list
 
+
+def get_BB(img,Arearef=130):
+	#Apply contours to get the properties of the images
+	contourimage, contours, hierarchy = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	#matrix to draw the contours
+	
+	BBcoords=[]
+
+	for i in range(len(contours)):
+		if  cv2.contourArea(contours[i])>Arearef:
+			x,y,w,h = cv2.boundingRect(contours[i])
+			BBcoords.append([x,y,x+w,y+h])
+
+	return BBcoords
 
 def get_objective(center_list,closest_list=[]):
 	center_array=np.array(center_list)
@@ -130,7 +141,30 @@ def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 
 	return objective_center,objective_closest
 
+def detection_BB(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=130):
 
+
+	hsvframe=filter_2HSV(frame)
+	lowerboundcolor=np.array([LowH,LowS,LowV])
+	upperboundcolor=np.array([HighH,HighS,HighV])
+	# Binarization
+	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
+	#cv2.imshow("Before morphology",inrangeframe)
+
+	#Morphologic operations
+	# Infill
+	inrangeframe=imfill(inrangeframe)
+	#cv2.imshow("filledOR",inrangeframe)
+
+	#Opening and closing
+	morphoimg=open_and_close(inrangeframe,sizemorph)
+	sizemorph2=tuple(reversed(sizemorph))
+	morphoimg=open_and_close(morphoimg,sizemorph2)
+	#Getting the centers
+	BB_list=get_BB(morphoimg,Arearef)
+	
+
+	return BB_list
 
 def nothing(x):
 	pass
@@ -237,7 +271,10 @@ def get_brown_box(frame):
 	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
 	 LowV=90,HighV=255, sizemorph=(3, 11),Arearef=10000)
 	return brown_box_center,brown_box_closest
-
+def BB_purple(frame):
+	BB_purple=detection_BB(frame, LowH=113, HighH=142, LowS=72 \
+		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7),Arearef=1)
+	return BB_purple
 def draw_lines(frame, atol=50):
 	cv2.line(frame, (320 - atol, 0), (320 - atol, 479), (255, 0, 0), 2)
 	cv2.line(frame, (320 + atol, 0), (320 + atol, 479), (255, 0, 0), 2)

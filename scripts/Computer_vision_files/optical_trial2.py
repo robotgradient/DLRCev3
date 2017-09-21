@@ -214,6 +214,15 @@ if __name__ == "__main__":
 	cap = cv2.VideoCapture(0)
 	#cap.set(cv2.CAP_PROP_BUFFERSIZE,100)
 	init_trackbars()
+	feature_params = dict( maxCorners = 50,
+                       qualityLevel = 0.3,
+                       minDistance = 7,
+                       blockSize = 7 )
+	lk_params = dict( winSize  = (15,15),
+                  maxLevel = 2,
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+
 	#sleep(1)
 	LowH2=0
 	HighH2=50
@@ -222,15 +231,16 @@ if __name__ == "__main__":
 	LowV2=0
 	HighV2=237
 	ret, oldframe = cap.read()	
-	center_list = detection(oldframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),1)
-	center_list=np.array(center_list)
-
-	old_grey_image=np.zeros([480,640],dtype=np.uint8)
-	print(center_list)
-	#old_grey_image[center_list[:,1],center_list[:,0]]=255
-
-
-	cv2.imshow("Optical",old_grey_image)
+	
+	black_frame_old=np.zeros((480,640,3),dtype=np.uint8)
+	old_list= detection(oldframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),1)
+	old_list=np.array(old_list)
+	for i in range(len(old_list)):
+		cv2.rectangle(black_frame_old,(old_list[i,:]),(old_list[i,0]+30,old_list[i,1]+50),color=[0,255,0])
+	old_gray = cv2.cvtColor(black_frame_old, cv2.COLOR_BGR2GRAY)
+	p0=cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+	
+	cv2.imshow("old_gray",old_gray)
 	cv2.waitKey()
 	while(True):
   # Capture frame-by-frame
@@ -243,39 +253,30 @@ if __name__ == "__main__":
 		LowV2=cv2.getTrackbarPos("LowV","frame")
 		HighV2=cv2.getTrackbarPos("HighV","frame")
 	
-		#while(retard<0.1):
-		#	
-		#	t1=time()
-		#	retard=t1-t0
-		ret, newframe = cap.read()	
-		# Get the trackbar poses
-		#p1, status, err = cv2.calcOpticalFlowPyrLK(oldframe, newframe, p0, None, **lk_params)
-		#good_new = p1[st==1]
-		#good_old = p0[st==1]
-		center_list = detection(newframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),80000)
-		center_list=np.array(center_list)
-		print(center_list)
-		new_grey_image=np.zeros((480,640),dtype=np.uint8)
-		new_grey_image[center_list[:,1],center_list[:,0]]=255
-		both_grey_images=cv2.bitwise_or(new_grey_image,old_grey_image)
-		cv2.imshow("Optical",both_grey_images)
-		flow = cv2.calcOpticalFlowFarneback(old_grey_image,new_grey_image, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-		mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+		ret, newframe = cap.read()
+		black_frame_new=np.zeros((480,640,3),dtype=np.uint8)
 		
-		mask=np.nonzero(mag<10)
-		mag[mask]=0
-		print (np.amax(mag),np.amin(mag),type(mag))
-		#gray_flow=np.zeros((480,640),dtype=np.uint8)
-		gray_flow = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
+		new_list= detection(newframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),1)
+		new_list=np.array(new_list)
+		for i in range(len(new_list)):
+			cv2.rectangle(black_frame_new,(new_list[i,0],new_list[i,1]),(new_list[i,0]+30,new_list[i,1]+50),color=(0,255,0))
+
+		new_gray = cv2.cvtColor(black_frame_new, cv2.COLOR_BGR2GRAY)
+		cv2.imshow("black",new_gray)
+		cv2.waitKey()
+		#p0=cv2.goodFeaturesToTrack(new_gray, mask = None, **feature_params)
+		p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, p0, None, **lk_params)
+	
+		good_new = p1[st==1]
+		good_old = p0[st==1]
+		# Get the trackbar poses
+		p1, status, err = cv2.calcOpticalFlowPyrLK(oldframe, newframe, old_list, None, **lk_params)
+		
 
 		old_grey_image=new_grey_image
-		flow_image=np.array(flow[...,1],dtype=np.uint8)
-		print (np.amax(gray_flow),type(gray_flow))
-		cv2.imshow("flow",gray_flow)
-		cv2.imshow("newimage",newframe)
-		t1=time()-t0
-		print("retard",t1)
-		t0=t1
+		p0 = good_new.reshape(-1,1,2)
+		
+		
 		if cv2.waitKey(1) & 0xFF == 27:
 			break
 		#sleep(1)
