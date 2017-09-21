@@ -3,12 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 rob = [0,0,0]
-path = []
+path = np.ones([5,3])
 itera = 0
 R = []
 plotc = 0
 obj = [100,100]
 vel_wheels = np.array([0,0])
+
+P = np.identity(3)
+
+marker_map = np.array([0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0])
 
 camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
@@ -18,7 +22,8 @@ while 1:
 
     Ts = 0.3
 
-    rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
+    rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map)
+    print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
     print('robot_position: ',rob)
     print('wheels vel:', vel_wheels)
     print("Time last: ", itera*Ts)
@@ -29,7 +34,7 @@ while 1:
     R.append(rob)
     robot_pos = np.array(R)
 
-    if plotc>100:
+    if plotc>10:
 
         plt.figure(1)
         plt.plot(robot_pos[:,0],robot_pos[:,1])
