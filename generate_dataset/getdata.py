@@ -2,6 +2,7 @@ import cv2
 import numpy as np 
 from time import sleep
 import sys
+from tqdm import tqdm
  
 if len(sys.argv)>=2:
 	n_backgrounds=int(sys.argv[1])
@@ -11,7 +12,7 @@ else:
 if len(sys.argv)>=3:
 	n_lego=int(sys.argv[2])
 else:
-	n_lego=1
+	n_lego=9
 
 if len(sys.argv)>=4:
 	lego_name=sys.argv[3]
@@ -20,17 +21,24 @@ else:
 
 BB_name="BB_{}".format(lego_name)
 Mask_name="Mask_{}".format(lego_name)
-
 numberofdata=0
 print (n_lego,n_backgrounds)
-for numl in range(n_lego):
+BBOXES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v2/bboxes"
+IMAGES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v2/images"
+# TODO LABELS_OUTPUT_PATH=""
+
+import os
+files = os.listdir(".")
+background_files = filter(lambda x: "background" in x and "jpeg" in x, files)
+
+
+for numl in tqdm(range(n_lego)):
 	# create names
 	Lego_file="{}{}{}".format(lego_name,numl,".jpeg")
 	BB_file="{}{}{}".format(BB_name,numl,".txt")
 	Mask_file="{}{}{}".format(Mask_name,numl,".jpeg")
-	for numb in range(n_backgrounds):
 
-		back_file="{}{}{}".format("background",numb,".jpeg")
+	for numb,back_file in enumerate(background_files):
 
 		#Open files
 		mask=cv2.imread(Mask_file)
@@ -50,7 +58,7 @@ for numl in range(n_lego):
 		images_data=[]
 		box_data=[]
 		#repetitions
-		for reps in range(20):
+		for reps in tqdm(range(500)):
 			frame=cv2.imread(back_file)
 			Newmask=np.ones(mask.shape,dtype=np.uint8)
 			Newmask.fill(255)
@@ -88,8 +96,8 @@ for numl in range(n_lego):
 					flag=1
 					xnot=set(xnot)
 					ynot=set(ynot)
-					newx=np.random.randint(frame.shape[1]-width)
-					newy=np.random.randint(frame.shape[0]-height)
+					newx=np.random.randint(1,frame.shape[1]-width)
+					newy=np.random.randint(1,frame.shape[0]-height)
 					scale=1+abs(working_data[num][1]-newy)*2/480
 					if newy > working_data[num][1]:
 						heightscaled=round(height*scale)
@@ -157,15 +165,13 @@ for numl in range(n_lego):
 			frame2=cv2.bitwise_or(frame2,merge2)
 			kernel = np.ones((5,5),np.float32)/25
 			frame2 = cv2.filter2D(frame2,-1,kernel)
-			cv2.imshow("outputimages",frame2)
-			cv2.waitKey()
-
+	
 			#Uncomment to obtain the data in a matrix format
 			#images_data.append(frame2)
 			#box_data.append(boxelements)
 
-			output_name="{}/Data_{}{}".format("Generated_data",numberofdata,".jpeg")
-			bounding_name="{}/BB_Data_{}".format("Generated_data",numberofdata)
+			output_name="{}/Data_{}{}".format(IMAGES_OUTPUT_PATH,numberofdata,".jpeg")
+			bounding_name="{}/BB_Data_{}".format(BBOXES_OUTPUT_PATH,numberofdata)
 			np.save(bounding_name,boxelements)
 			cv2.imwrite(output_name,frame2)
 
