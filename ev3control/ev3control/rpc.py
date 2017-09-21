@@ -1,3 +1,5 @@
+from contextlib import AbstractContextManager
+
 import rpyc
 conn = rpyc.classic.connect('10.42.0.96')  # host name or IP address of the EV3
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
@@ -6,7 +8,7 @@ ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
 objects = conn.modules['ev3control.objects']
 
 
-class Robot(object):
+class Robot(AbstractContextManager):
     """This robot rocks!!"""
 
     def __init__(self, camera_capture):
@@ -47,3 +49,6 @@ class Robot(object):
     def reset(self):
         self.grip.open()
         self.elevator.up()
+
+    def __exit__(self, type, value, traceback):
+        self.reset()
