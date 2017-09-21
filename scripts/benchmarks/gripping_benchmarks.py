@@ -5,18 +5,14 @@
 import time
 import cv2
 import ev3control
-from ev3control import Robot
+from ev3control.rpc import Robot
 from brain.controllers import move_to_brick_simple, \
     move_to_brick_blind_and_grip, rotation_search_brick, rotation_search_box, move_to_box_simple
 from brain.core import State
 from brain.core import main_loop
 
 print("Creating robot...")
-robot = Robot({
-    "gearBox" : "GearBox('outA', 'outB')",
-    "gripper": "RaisableGrabber('outC', 'outD')",
-
-}, cv2.VideoCapture(1))
+robot = Robot(cv2.VideoCapture(1))
 
 # Define the state graph, we can do this better, currently each method returns the next state name
 states = [

@@ -109,11 +109,11 @@ def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
     # and centered
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=10):
         #leave the piece and go little bit backwards
-        robot.elevator_down()
+        robot.elevator.down()
         time.sleep(2.5)
         robot.move_straight(vel_forward)
         time.sleep(0.3)
-        robot.open_grip()
+        robot.grip.open()
         robot.elevator_up()
         time.sleep(3)
         robot.move_straight(vel=-200)
@@ -125,11 +125,11 @@ def move_to_box_simple(robot, frame, img_res=(640, 480), atol=10,
         robot.move_straight(vel_forward)
         return "MOVE_TO_BOX", frame, {}
     elif error[0] < 0:
-        robot.rotate(vel=-vel_rot)
+        robot.rotate_right(vel=vel_rot)
         return "MOVE_TO_BOX", frame, {}
     else:
         # Positive velocity for turning left
-        robot.rotate(vel=vel_rot)
+        robot.rotate_left(vel=vel_rot)
         return "MOVE_TO_BOX", frame, {}
 
 
@@ -165,22 +165,27 @@ def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
 
 def move_to_brick_blind_no_sensor(robot, frame, vel=60):
 
-    robot.elevator_down()
+    robot.elevator.down()
     time.sleep(2.5)
     robot.move_straight(vel)
     time.sleep(0.5)
-    robot.close_grip(150)
-    time.sleep(3)
-    robot.elevator_up()
+    robot.pick_up()
     time.sleep(2.5)
 
     return "SEARCH_BOX", frame, {}
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60):
     t = 1529
+    # Make sure the grip is open
+    robot.grip.open()
+    # Make sure the elevator is down
+    robot.elevator.down()
+    robot.elevator.wait_until_not_moving()
     robot.move_straight(vel=300, time=t)
-    time.sleep(t/1000)
+    robot.wait_until_not_moving()
     robot.pick_up()
+    # remove this later!
+    robot.reset()
     return "FINAL_STATE", frame, {}
 
 
