@@ -171,6 +171,7 @@ def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot 
 
 	#print(new_pos_rob)
 	return new_pos_rob
+	
 def select_target(pos_rob,path):
 
 	print(np.size(path))
@@ -198,7 +199,7 @@ def select_target(pos_rob,path):
 
 
 
-def kalman_filter(odom_r,odom_l,pos_rob):
+def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map):
 
 	L = 14.5
 	R = 2  
@@ -208,8 +209,30 @@ def kalman_filter(odom_r,odom_l,pos_rob):
 	increment_teta = R/L(odom_l-odom_l)
 
 	A = np.array([[1 , 0, -increment_R*np.sin(pos_rob[2]+increment_teta/2)],[0,1, increment_R*np.cos(pos_rob[2]+increment_teta/2)],[0,0,1]])
+
 	c = np.cos(pos_rob[2]+increment_teta/2); s = np.sin(pos_rob[2]+increment_teta/2)
-	B = np.array[[R/2*c+R*increment_R]]
+
+	B = np.array[[R/2*c+R*increment_R/(2*L)*s, R/2*c-R*increment_R/(2*L)*s],[R/2*s-increment_R/(2*L)*c, R/2*s+increment_R*R/(2*L)*c ],[-R/L,R/L]]
+
+
+	# H Matrix
+
+	markers = []
+	for i in range (0,marker_list[:,1]):
+
+		if marker_list[i,1] < 900:
+
+			markers.append = i
+
+	#The size of the H array is related with the number of markers we see
+	H = np.array(len(markers)*3,3)
+
+	for i in range(0,len(markers)):
+
+		distance = np.power(marker_map[markers[i],0]-pos_rob[0],2) + np.power(marker_map[markers[i],1]-pos_rob[1],2)
+		h1 = (marker_map[markers[i],1]-pos_rob[1])/distance
+		h2  = 
+
 
 
 
