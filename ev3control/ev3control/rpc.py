@@ -62,6 +62,8 @@ class Robot(AbstractContextManager):
     def reset(self):
         self.grip.open()
         self.elevator.up()
+        self.left_track.stop(stop_action="brake")
+        self.right_track.stop(stop_action="brake")
 
     def __exit__(self, type, value, traceback):
         self.reset()

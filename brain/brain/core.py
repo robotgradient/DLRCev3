@@ -13,7 +13,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         if not isinstance(state, State):
             raise Exception("The state " + str(state) + "is not of type State.")
     state = start_state
-    kwargs = {}
+    kwargs = state.default_args
 
     while True:
         time.sleep(delay)

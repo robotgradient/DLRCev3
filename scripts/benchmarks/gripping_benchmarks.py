@@ -12,17 +12,17 @@ from brain.core import State
 from brain.core import main_loop
 
 print("Creating robot...")
-robot = Robot(cv2.VideoCapture(1))
+with Robot(cv2.VideoCapture(1)) as robot:
 
-# Define the state graph, we can do this better, currently each method returns the next state name
-states = [
-    State(name="MOVE_TO_BRICK_BLIND_AND_GRIP", act=move_to_brick_blind_and_grip),
-    State(name="FINAL_STATE", act=lambda x,y:None)
-]
-state_dict = {}
-for state in states:
-    state_dict[state.name] = state
+    # Define the state graph, we can do this better, currently each method returns the next state name
+    states = [
+        State(name="MOVE_TO_BRICK_BLIND_AND_GRIP", act=move_to_brick_blind_and_grip),
+        State(name="FINAL_STATE", act=lambda x,y:None)
+    ]
+    state_dict = {}
+    for state in states:
+        state_dict[state.name] = state
 
-start_state = states[0]
-main_loop(robot, start_state, state_dict)
+    start_state = states[0]
+    main_loop(robot, start_state, state_dict)
 
