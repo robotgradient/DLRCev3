@@ -6,11 +6,11 @@ from tqdm import tqdm
 import keras as ke
 
 flags = tf.app.flags
-train_output_path = '/home/dlrc/nn_object_detection/tf_train_dir/data/train.record'
-eval_output_path = '/home/dlrc/nn_object_detection/tf_train_dir/data/eval.record'
+train_output_path = '/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/data/train.record'
+eval_output_path = '/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/data/eval.record'
 FLAGS = flags.FLAGS
-IMAGES_DIR = '/home/dlrc/datasets/object_detection_dataset_v1/images'
-BBOXES_DIR ='/home/dlrc/datasets/object_detection_dataset_v1/bboxes'
+IMAGES_DIR = '/home/dlrc/datasets/object_detection_dataset_v2/images'
+BBOXES_DIR ='/home/dlrc/datasets/object_detection_dataset_v2/bboxes'
 
 def create_block_tf_proto(encoded_block_image_data, filename, image_format, image_dim=(640,480), bboxes=None):
     """Creates a tf.Example proto from sample camera image.
@@ -82,8 +82,8 @@ def generate_train_eval():
     image_files = sorted(os.listdir(IMAGES_DIR))
     bbox_files = sorted(os.listdir(BBOXES_DIR))
     
-    train_indices = slice(0,int(0.9*len(image_files)))
-    eval_indices = slice(int(0.9*len(image_files)), -1)
+    train_indices = slice(0,int(0.95*len(image_files)))
+    eval_indices = slice(int(0.95*len(image_files)), -1)
     zipped_files = np.vstack((image_files, bbox_files)).T
     train_files = zipped_files[train_indices]
     eval_files = zipped_files[eval_indices]
