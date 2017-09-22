@@ -2,7 +2,9 @@ import numpy as np
 import cv2
 import glob
 import math as m
-
+import cv2.aruco as aruco
+from time import time
+from time import sleep
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -99,16 +101,41 @@ print("image size : ", img.shape)
 img
 dst = cv2.warpPerspective(img,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
-print(dst.shape,type(dst))
+
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+#board = cv2.aruco.CharucoBoard_create(3,4,.025,.0125,auro_dict)
+#img = board.draw((200*3,200*3))
+
+#loading camera parameters
+data = np.load('camera_parameters.npz')
+mtx=data["cam_matrix"]
+dist=data["dist_coeff"]
+arucoParams = aruco.DetectorParameters_create()
+markerLength = 3.5 
+
 
 while True:
     ret,frame=cap.read()
-    dst = cv2.warpPerspective(frame,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
-    dst2= cv2.undistort(frame, mtx, dist, None, newcameramtx)
-    x,y,w,h = roi
-    dst2 = dst2[y:y+h, x:x+w]
-    cv2.imshow('distorsion',dst)
-    cv2.imshow('distorsion2',dst2)
+    img = cv2.warpPerspective(frame,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)    # aruco.etectMarkers() requires gray image
+    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
+    if ids != None: # if aruco marker detected
+        rvec, tvec = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
+        print("rev and tec:",rvec.shape,tvec.shape)
+        imgWithAruco = aruco.drawDetectedMarkers(img, corners, ids, (0,255,0))
+        
+        for i in range(len(ids)):
+            imgWithAruco = aruco.drawAxis(imgWithAruco, mtx, dist, rvec[i], tvec[i], 15)  
+            
+            print("the marker {} has rotation x:{}, y:{},z:{}".format(ids[i],rvec[i,0,0],rvec[i,0,1],rvec[i,0,2]))
+            print("the marker {} has coordinates x:{}, y:{},z:{}".format(ids[i],tvec[i,0,0],tvec[i,0,1],tvec[i,0,2]))
+    else:   # if aruco marker is NOT detected
+        imgWithAruco = img # assign imRemapped_color to imgWithAruco directly
+    #print("retard",time()-tinit)
+    sleep(0.05)
+    cv2.imshow("aruco", imgWithAruco)   # display
+    if cv2.waitKey(50) & 0xFF == ord('q'):   # if 'q' is pressed, quit.
+        break
     if cv2.waitKey(10) & 0xFF==27:
         break
 

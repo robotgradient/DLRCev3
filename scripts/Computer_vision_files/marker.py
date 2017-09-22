@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from time import time
 from time import sleep
+import scipy.io as sio
 
 
 def draw(img, corners, imgpts):
@@ -23,8 +24,8 @@ data = np.load('camera_parameters.npz')
 mtx=data["cam_matrix"]
 dist=data["dist_coeff"]
 
-
-
+Tc2r=read_Tc2r()
+print("transformation matrix",Tc2r)
 
 #Start capturing images for calibration
 cap = cv2.VideoCapture(1)
@@ -44,10 +45,12 @@ while True:
         imgWithAruco = aruco.drawDetectedMarkers(img, corners, ids, (0,255,0))
         
         for i in range(len(ids)):
-            imgWithAruco = aruco.drawAxis(imgWithAruco, mtx, dist, rvec[i], tvec[i], 20)  
+            imgWithAruco = aruco.drawAxis(imgWithAruco, mtx, dist, rvec[i], tvec[i], 15)  
             
             print("the marker {} has rotation x:{}, y:{},z:{}".format(ids[i],rvec[i,0,0],rvec[i,0,1],rvec[i,0,2]))
             print("the marker {} has coordinates x:{}, y:{},z:{}".format(ids[i],tvec[i,0,0],tvec[i,0,1],tvec[i,0,2]))
+            rotmatrix,_=cv2.Rodrigues(rvec[i])
+            print("rotation matrix",rotmatrix)
     else:   # if aruco marker is NOT detected
         imgWithAruco = img # assign imRemapped_color to imgWithAruco directly
     #print("retard",time()-tinit)
