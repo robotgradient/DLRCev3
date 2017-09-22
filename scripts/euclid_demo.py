@@ -7,7 +7,7 @@ path = np.ones([5,3])
 itera = 0
 R = []
 plotc = 0
-obj = [100,100]
+obj = [0,100]
 vel_wheels = np.array([0,0])
 
 P = np.identity(3)
@@ -20,7 +20,7 @@ print(camino)
 while 1:
 
 
-    Ts = 0.3
+    Ts = 0.1
 
     rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
@@ -34,12 +34,12 @@ while 1:
     R.append(rob)
     robot_pos = np.array(R)
 
-    if plotc>10:
+    if plotc>1000:
 
         plt.figure(1)
         plt.plot(robot_pos[:,0],robot_pos[:,1])
         plt.plot(camino[:,0],camino[:,1])
-        plt.axis([0, 150, 0, 150])
+        plt.axis([-100, 150, -100, 150])
         plt.show()
         plotc = 0
 

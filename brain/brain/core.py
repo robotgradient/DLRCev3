@@ -28,8 +28,6 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
 
         cv2.imshow("frame", processed_frame)
         if cv2.waitKey(1) & 0xFF == 27:
-            print("Stopping motors...")
-            robot.stop_all_motors()
             break
 
     robot.cap.release()

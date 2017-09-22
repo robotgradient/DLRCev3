@@ -2,16 +2,15 @@ import numpy as np
 import math
 import time
 import random
-import matplotlib.pyplot as plt
 from math import pi
 
 
-def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matrix with(x,y,teta) &  pos_obj is a 1x2 matrix with(x,y) 
+def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matrix with(x,y,teta) &  pos_obj is a 1x2 matrix with(x,y)
 
 	x = np.linspace(pos_rob[0], pos_obj[0], num=points)
 	y = np.linspace(pos_rob[1], pos_obj[1], num=points)
 
-	angle =  math.atan2(pos_obj[1]-pos_rob[1], pos_obj[0]-pos_rob[0]) 
+	angle =  math.atan2(pos_obj[1]-pos_rob[1], pos_obj[0]-pos_rob[0])
 	angle = math.degrees(angle)
 
 	if angle < 0:
@@ -23,15 +22,15 @@ def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matri
 	path = np.array([x,y,angle_vec])
 
 	print(path)
-	
+
 	return path
 
 
-def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix with(x,y,teta) &  target is a 1x2 matrix with(x,y) 
-	
+def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix with(x,y,teta) &  target is a 1x2 matrix with(x,y)
+
 	# Radius and wheel width in cm
-	L = 14.5
-	R = 1.7   
+	L = 17
+	R = 1.7
 
 	'''error_x = target[0] - pos_rob[0]
 	error_y = target[1] - pos_rob[1]
@@ -63,7 +62,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	vel_wheels= np.matmul(M_r2wheels,vel_robot)'''
 
 
-	# GET wheel velocities through curvature 
+	# GET wheel velocities through curvature
 	M_r2wheels= np.array([[1/R, -L/(2*R) ],[1/R, L/(2*R)]]) # --> (Vr,Vteta) = M * (w_rigth, w_left)
 
 
@@ -73,9 +72,9 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 	l= np.sqrt(np.power(target[0]-pos_rob[0],2)+np.power(target[1]-pos_rob[1],2))
 
-	
+
 	C  = -2*distance_x/np.power(l,2)
-	w = 10*R;
+	w = 3*R;
 
 	A = (1-(C*L)/2)/(1+(C*L)/2)
 	vel_wheels[0] = w*L/(R*(1+A))
@@ -90,7 +89,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	print(vel_wheels)
 
 
-	if np.absolute(vel_wheels[0]) > 500 : 
+	if np.absolute(vel_wheels[0]) > 500 :
 		vel_wheels[0] = np.sign(vel_wheels[0])*500
 	if np.absolute(vel_wheels[1]) > 500:
 		vel_wheels[1] = np.sign(vel_wheels[1])*500
@@ -98,14 +97,14 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 	#print(vel_wheels)
 
-	
+
 	return vel_wheels
 
 
 def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,teta) , vel_wheels 1x2:(vel_right, vel_left) and Ts(sampling time)
-	
-	L = 14.5
-	R = 1.7  
+
+	L = 17
+	R = 1.7
 
 	vel_wheels[0] = vel_wheels[0] * pi/180
 	vel_wheels[1] = vel_wheels[1] * pi/180
@@ -116,7 +115,7 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	#print(M_rob2w)
 	vel_robot = np.matmul(M_wheels2rob,vel_wheels)
 	#print('vel_robot: ', vel_robot)
-	vel_world = np.matmul(M_rob2w,vel_robot) 
+	vel_world = np.matmul(M_rob2w,vel_robot)
 
 	new_pos_rob = np.zeros(3)
 	#new_pos_rob[0] = pos_rob[0] + Ts*vel_world[0]
@@ -147,9 +146,9 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	return new_pos_rob
 
 def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot (x,y,teta) , vel_wheels 1x2:(vel_right, vel_left) and Ts(sampling time)
-	
-	L = 14.5
-	R = 1.7  
+
+	L = 17
+	R = 1.7
 
 	M_wheels2rob= np.array([[R/2,R/2],[-R/L,R/L]])
 
@@ -162,7 +161,7 @@ def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot 
 
 	vel_robot = np.matmul(M_wheels2rob,vel_wheels)
 	#print('vel_robot: ', vel_robot)
-	vel_world = np.matmul(M_rob2w,vel_robot) 
+	vel_world = np.matmul(M_rob2w,vel_robot)
 
 	new_pos_rob = np.zeros(3)
 	#new_pos_rob[0] = pos_rob[0] + Ts*vel_world[0]
@@ -218,7 +217,7 @@ def select_target(pos_rob,path):
 def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	L = 14.5
-	R = 1.7  
+	R = 1.7
 
 	#From degrees to radians
 
@@ -301,7 +300,7 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	if pos_rob_pred[2] > pi:
 		pos_rob_pred[2] = pos_rob_pred[2]-(2*pi)
 	if pos_rob_pred[2] < -pi:
-		pos_rob_pred[2] = pos_rob_pred[2]+(2*pi)	
+		pos_rob_pred[2] = pos_rob_pred[2]+(2*pi)
 
 	#Measurements prediction & measurements
 
@@ -345,16 +344,16 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	P = np.sum(np.multiply(IKH,np.multiply(P_pred,np.transpose(IKH))),np.multiply(K,np.multiply(R,np.transpose(K))))
 
-	#Kalman's state estimation : 
+	#Kalman's state estimation :
 
-	
+
 
 	pos_incr = np.multiply(K,np.sum(z,-meas_vec))
 
 	pos_rob = np.sum(pos_rob_pred,pos_incr)
 
 
-	
+
 
 
 
@@ -367,14 +366,14 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	return pos_rob,P
 
 
-		
+
 
 
 
 
 def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[]):
-	
-	if iteration == 0 : 
+
+	if iteration == 0 :
 
 		path = compute_euclidean_path(pos_rob,pos_obj,points)
 
@@ -388,7 +387,12 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 
-	#estim_rob_pos = forward_localization(pos_rob, vel_wheels, Ts) 
+	#estim_rob_pos = forward_localization(pos_rob, vel_wheels, Ts)
+	print('odom_r = 0,odom_l',odom_r,odom_l)
+	print('estim_rob_pos',estim_rob_pos)
+	print('vel_wheels',vel_wheels)
+	print(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+
 
 	return estim_rob_pos,vel_wheels,new_path
 
@@ -412,8 +416,8 @@ camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
 
 while 1:
-	
-	
+
+
 	Ts = 0.05
 
 	rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iter = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
@@ -429,7 +433,7 @@ while 1:
 
 	if plotc>100:
 
-		plt.figure(1) 
+		plt.figure(1)
 		plt.plot(robot_pos[:,0],robot_pos[:,1])
 		plt.plot(camino[:,0],camino[:,1])
 		plt.axis([0, 150, 0, 150])
@@ -440,8 +444,8 @@ while 1:
 
 
 
-	
 
-	
+
+
 	#time.sleep(0.5)'''
 
