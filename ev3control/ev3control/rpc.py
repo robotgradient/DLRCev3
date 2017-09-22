@@ -20,7 +20,7 @@ class Robot(AbstractContextManager):
     def __init__(self, camera_capture):
         self.left_track = ev3.LargeMotor("outA")
         self.right_track = ev3.LargeMotor("outB")
-        self.grip = objects.Grip("outC")
+        self.grip = objects.Grip("outC", closed_position=-650)
         self.elevator = objects.Elevator("outD")
 
         self.cap = camera_capture
