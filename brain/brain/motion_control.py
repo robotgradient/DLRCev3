@@ -266,7 +266,7 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	#The size of the H array is related with the number of markers we see
 	H = np.zeros([len(markers)*3,3])
 
-	R = np.zeros([len(markers),len(markers)])
+	R = np.zeros([3*len(markers),3*len(markers)])
 
 	for i in range(0,len(markers)):
 
@@ -297,15 +297,17 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	var_noise_enc = np.power(noise_enc/Ts,2)
 	#noise variance of the model
 	Q = np.zeros([3,3])
-	Q[0,0] = np.power(10,-4)
-	Q[1,1] = np.power(10,-4)
-	Q[2,2] = np.power(7.62,-5)
+	Q[0,0] = 1/np.power(10,4)
+	Q[1,1] = 1/np.power(10,4)
+	Q[2,2] = 1/np.power(7.62,5)
 
 	# Kalman init
 
 	#Prediction step
 
-	P_pred = np.sum(np.sum(np.multiply(A,np.multiply(P,np.transpose(A))), var_noise_enc*np.multiply(B,np.transpose(B))),Q)
+	P_pred = np.add(np.add(np.multiply(A,np.multiply(P,np.transpose(A))), var_noise_enc*np.dot(B,np.transpose(B))),Q)
+
+	pos_rob_pred = np.ones(3)
 
 	pos_rob_pred[0] = pos_rob[0] + incr_r*np.cos((pos_rob[2]+incr_teta/2)*pi/180)
 	pos_rob_pred[1] = pos_rob[1] + incr_r*np.sin((pos_rob[2]+incr_teta/2)*pi/180)
@@ -319,10 +321,10 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	#Measurements prediction & measurements
 
 
-	meas_vec = np.array([len(markers)*3])
+	meas_vec = np.zeros(len(markers)*3)
 
 
-
+	z = np.zeros(3*len(markers))
 	for i in range(0,len(markers)):
 
 		z[i*3] = np.arctan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
@@ -349,23 +351,23 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 
 
-	HPHR = np.sum(np.multiply(H,np.multiply(P_pred,np.transpose(H)))+R)
+	HPHR = np.add(np.dot(H,np.dot(P_pred,np.transpose(H))),R)
 
-	K = np.multiply(P_pred,np.multiply(np.transpose(H),np.inverse(HPHR)))
+	K = np.dot(P_pred,np.dot(np.transpose(H),np.linalg.inv(HPHR)))
 
 
 
-	IKH = np.sum(np.identity(3),-np.multiply(K,H))
+	IKH = np.add(np.identity(3),-np.dot(K,H))
 
-	P = np.sum(np.multiply(IKH,np.multiply(P_pred,np.transpose(IKH))),np.multiply(K,np.multiply(R,np.transpose(K))))
+	P = np.add(np.dot(IKH,np.dot(P_pred,np.transpose(IKH))),np.dot(K,np.dot(R,np.transpose(K))))
 
 	#Kalman's state estimation :
 
 
 
-	pos_incr = np.multiply(K,np.sum(z,-meas_vec))
+	pos_incr = np.dot(K,np.add(z,-meas_vec))
 
-	pos_rob = np.sum(pos_rob_pred,pos_incr)
+	pos_rob = np.add(pos_rob_pred,pos_incr)
 
 
 
@@ -457,14 +459,14 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 	target, new_path = select_target(pos_rob, path)
 
 	#Only Odometry
-	#estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
+	estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
 
 
 	
 
-	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 
-	#return estim_rob_pos,vel_wheels,new_path
+	return estim_rob_pos,vel_wheels,new_path
 
 
 
@@ -480,70 +482,21 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 	#print('odom_r = 0,odom_l',odom_r,odom_l)
 	#print('estim_rob_pos',estim_rob_pos)
 	#print('vel_wheels',vel_wheels)
-	print(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+	#print(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
 
 
-	real_robot_pos, marker_list = create_fake_measurements(pos_rob, odom_l,odom_r , marker_map)
+	'''real_robot_pos, marker_list = create_fake_measurements(pos_rob, odom_l,odom_r , marker_map)
 
 	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
-
+	
 	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
+	'''
 
 
 
 
 
 
-
-
-
-
-
-
-'''rob = [50,50,180]
-path = []
-itera = 0
-R = []
-plotc = 0
-obj = [100,100]
-vel_wheels = np.array([0,0])
-
-camino = np.array([np.array(rob[0:2]),np.array(obj)])
-print(camino)
-
-while 1:
-
-
-	Ts = 0.05
-
-	rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iter = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
-	print('robot_position: ',rob)
-	print('wheels vel:', vel_wheels)
-	print("Time last: ", itera*Ts)
-	#print('path: ', path)
-	itera = itera+1
-
-
-	R.append(rob)
-	robot_pos = np.array(R)
-
-	if plotc>100:
-
-		plt.figure(1)
-		plt.plot(robot_pos[:,0],robot_pos[:,1])
-		plt.plot(camino[:,0],camino[:,1])
-		plt.axis([0, 150, 0, 150])
-		plt.show()
-		plotc = 0
-
-	plotc = plotc +1
-
-
-
-
-
-
-	#time.sleep(0.5)'''
 
