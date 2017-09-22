@@ -3,12 +3,11 @@ from contextlib import AbstractContextManager
 
 import rpyc
 
-
 with open(Path.home() / "brick_ip") as ipfile:
     ip = ipfile.read().strip()
     conn = rpyc.classic.connect(ip)
 
-ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+ev3 = conn.modules['ev3dev.ev3']  # import ev3dev.ev3 remotely
 
 # These objects are on the brick!
 objects = conn.modules['ev3control.objects']

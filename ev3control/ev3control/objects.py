@@ -2,34 +2,6 @@
 from ev3dev.core import LargeMotor, MediumMotor
 
 
-class GearBox:
-    """Controls two motors responsible for driving."""
-
-    def __init__(self, left_motor_port, right_motor_port):
-        self.left_motor = LargeMotor(left_motor_port)
-        self.right_motor = LargeMotor(right_motor_port)
-
-    def drive(self, left_vel, right_vel, time):
-        self.left_motor.run_timed(speed_sp=left_vel, time_sp=time)
-        self.right_motor.run_timed(speed_sp=right_vel, time_sp=time)
-
-    def drive_straight(self, vel, time):
-        self.drive(vel, vel, time)
-
-    def rotate(self, vel, time):
-        self.drive(vel, -vel, time)
-
-    def rotate_right(self, vel, time=1000):
-        self.rotate(vel, time)
-
-    def rotate_left(self, vel, time=1000):
-        self.rotate(-vel, time)
-
-    def stop(self):
-        self.left_motor.stop(stop_action="brake")
-        self.right_motor.stop(stop_action="brake")
-
-
 class Grip(MediumMotor):
     """Controls the motor responsible for driving."""
 
@@ -79,46 +51,3 @@ class Elevator(LargeMotor):
         print("test raised", self.is_raised, self.position)
         if self.is_raised:
             self.run_to_abs_pos(position_sp=self.lowered_position)
-
-
-class RaisableGrabber:
-    """Controls the elevator and the grip.
-
-    Makes the following assumptions about the construction:
-    - two motors, large one for elevator, medium for gripper
-    - the elevator has two states, Raised and Lowered
-    - the grip has two states, Open and Closed
-    - the system starts in with elevator raised and grip open
-    """
-
-    def __init__(self, grip_port, elevator_port):
-        self.grip = Grip(grip_port)
-        self.elevator = Elevator(elevator_port)
-
-    def pick_up(self):
-        self.elevator.down()
-        self.elevator.wait_until_not_moving()
-        self.grip.close()
-        self.grip.wait_until_not_moving()
-        self.elevator.up()
-
-    def put_down(self):
-        self.elevator.down()
-        self.elevator.wait_until_not_moving()
-        self.grip.open()
-        self.grip.wait_until_not_moving()
-        self.elevator.up()
-
-    def drop(self):
-        self.grip.open()
-
-    def reset(self):
-        self.grip.open()
-        self.elevator.up()
-
-
-if __name__ == '__main__':
-    rg = RaisableGrabber("outC", "outD")
-    for _ in range(3):
-        rg.pick_up()
-        rg.drop()
