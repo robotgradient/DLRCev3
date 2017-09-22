@@ -35,7 +35,7 @@ def wait_for_brick_nn(robot,frame):
 
 
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
-                         vel_forward = 400, vel_rot = 60, atol_move_blind=30):
+                         vel_forward = 100, vel_rot = 60, atol_move_blind=90):
     """
     Moves the robot towards the brick.
 
@@ -77,11 +77,19 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
         return "MOVE_TO_BRICK", frame, {}
 
 def euclidian_move_to_brick(robot, frame,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0):
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
+
+    img_res = np.asarray((640,480))
+
+    lego_coords, center = get_purple_lego(frame)
+    if lego_coords and np.isclose(lego_coords[1], img_res[1], atol=200):
+        return "MOVE_TO_BRICK", frame, {}
 
     brick_position = robot.map[0]
-    t1 = time.time()
-    print('ime',t1)
+    t0 = time.time()
+    print('t0 ', t0, 'TIME', TIME)
+    time_diff = t0 - TIME
+    print('time',time_diff)
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
@@ -95,23 +103,22 @@ def euclidian_move_to_brick(robot, frame,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
 
-    # print("Path: ", path)
-    # print("Iteration: ", iteration)
-    # print("Robot position: ", robot.position)
+    # print("Path: ", pat, iteration)
+    # print("Robot positij "ffefrobot.position)
     # print("Velocities rl: ", vel_wheels)
     # print("##" *20)
 
 
-    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos}
+    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
 
 
-def rotation_search_brick(robot, frame, vel=400):
+def rotation_search_brick(robot, frame, vel=60):
 
     lego_coords, center = get_purple_lego(frame)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
-    elif len(robot.map) > 0 :
-        return "MOVE_BY_MAP", frame, {"iteration": 0, "path": []}
+  #  elif len(robot.map) > 0 :
+        #return "MOVE_BY_MAP", frame, {"iteration": 0, "path": []}
     else:
         robot.rotate_right(vel)
         return "SEARCH", frame, {}

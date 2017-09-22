@@ -23,9 +23,6 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
 
-        if state.default_args:
-            kwargs.update(state.default_args)
-
         cv2.imshow("frame", processed_frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break
