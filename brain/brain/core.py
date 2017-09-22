@@ -4,7 +4,7 @@ from object_detection.opencv import draw_lines
 import time
 
 State = namedtuple("State", "name act default_args")
-State.__new__.__defaults__ = tuple([None] * 3)
+State.__new__.__defaults__ = tuple([None] * 2) + ({},)
 
 def main_loop(robot, start_state, state_dict, delay=0.02):
 
