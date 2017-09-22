@@ -19,7 +19,9 @@ with Robot(cv2.VideoCapture(1)) as robot:
         State(
             name="MOVE_TO_BRICK",
             act=move_to_brick_simple,
-            default_args={"atol" : 30}
+            default_args={"atol": 30,
+                          "atol_move_blind" : 30
+                          }
         ),
         State(
             name="MOVE_TO_BRICK_BLIND_AND_GRIP",
