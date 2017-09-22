@@ -1,9 +1,7 @@
 import numpy as np
-from ev3control import Robot
-from object_detection.opencv import get_lego_piece
 from object_detection.opencv import get_purple_lego
 import time
-from .motion_control import euclidian_path_planning_control
+from rick.motion_control import euclidian_path_planning_control
 
 
 def wait_for_brick(robot, frame, vel=400):
@@ -23,8 +21,8 @@ def wait_for_brick_nn(robot,frame):
     if res:
         img_res = np.asarray([640,480])
         box, score = res
-        cv2.rectangle(frame, (int(box[1]*img_res[0]), int(box[0]*img_res[1])), 
-                (int(box[3]*img_res[0]), int(box[2]*img_res[1])), (0, 255, 0), thickness=3)    
+        cv2.rectangle(frame, (int(box[1]*img_res[0]), int(box[0]*img_res[1])),
+                (int(box[3]*img_res[0]), int(box[2]*img_res[1])), (0, 255, 0), thickness=3)
         cv2.putText(frame, str(score) + "%", (int(box[1]*img_res[0]),
          int(box[0]*img_res[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
 
