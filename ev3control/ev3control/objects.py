@@ -61,7 +61,7 @@ class Elevator(LargeMotor):
         self.reset()
         self.raised_position = 0
         self.lowered_position = lowered_position
-        self.speed_sp = 150
+        self.speed_sp = 100
 
     @property
     def is_raised(self):
