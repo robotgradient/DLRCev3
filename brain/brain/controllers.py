@@ -15,6 +15,25 @@ def wait_for_brick(robot, frame, vel=400):
         return "WAIT_FOR_BRICK", frame, {}
 
 
+def wait_for_brick_nn(robot,frame):
+    img = frame
+    kernel = np.ones((5,5),np.float32)/25
+    img = cv2.filter2D(img,-1,kernel)
+    res = robot.object_detector.detect_with_threshold(img,threshold=0.95, return_closest=True)
+    if res:
+        img_res = np.asarray([640,480])
+        box, score = res
+        cv2.rectangle(frame, (int(box[1]*img_res[0]), int(box[0]*img_res[1])), 
+                (int(box[3]*img_res[0]), int(box[2]*img_res[1])), (0, 255, 0), thickness=3)    
+        cv2.putText(frame, str(score) + "%", (int(box[1]*img_res[0]),
+         int(box[0]*img_res[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
+
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+    else:
+        # robot.rotate_right(vel)
+        return "WAIT_FOR_BRICK", frame, {}
+
+
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
                          vel_forward = 400, vel_rot = 60, atol_move_blind=30):
     """
