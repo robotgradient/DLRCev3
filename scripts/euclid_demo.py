@@ -12,7 +12,7 @@ vel_wheels = np.array([0,0])
 
 P = np.identity(3)
 
-marker_map = np.array([0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0])
+marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
 
 camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
@@ -22,7 +22,7 @@ while 1:
 
     Ts = 0.3
 
-    rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map)
+    rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
     print('robot_position: ',rob)
     print('wheels vel:', vel_wheels)
