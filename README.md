@@ -31,6 +31,6 @@ cmake -DBUILD_TIFF=ON -DBUILD_opencv_java=OFF -DWITH_CUDA=OFF \
 -DPYTHON_EXECUTABLE=$(which python) \
 -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
 -DPYTHON_PACKAGES_PATH=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
--DWITH_LIBV4L=ON ..
+-DWITH_LIBV4L=ON -DOPENCV_EXTRA_MODULES_PATH=<opencv_contrib>/modules ..
 
 ```
