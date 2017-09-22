@@ -56,7 +56,7 @@ class Grip(MediumMotor):
 class Elevator(LargeMotor):
     """Raises and lowers the grip"""
 
-    def __init__(self, port, lowered_position=400):
+    def __init__(self, port, lowered_position=390):
         super(Elevator, self).__init__(port)
         self.reset()
         self.raised_position = 0
@@ -65,7 +65,8 @@ class Elevator(LargeMotor):
 
     @property
     def is_raised(self):
-        return self.position <= self.raised_position
+        print("position", self.position)
+        return self.position <= (self.raised_position + 40)
 
     def up(self):
         if not self.is_raised:
@@ -75,6 +76,7 @@ class Elevator(LargeMotor):
             self.stop(stop_action="hold")
 
     def down(self):
+        print("test raised", self.is_raised, self.position)
         if self.is_raised:
             self.run_to_abs_pos(position_sp=self.lowered_position)
 

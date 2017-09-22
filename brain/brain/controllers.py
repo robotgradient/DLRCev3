@@ -5,6 +5,16 @@ from object_detection.opencv import get_purple_lego
 import time
 from .motion_control import euclidian_path_planning_control
 
+
+def wait_for_brick(robot, frame, vel=400):
+    lego_coords, center = get_purple_lego(frame)
+    if lego_coords:
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+    else:
+        # robot.rotate_right(vel)
+        return "WAIT_FOR_BRICK", frame, {}
+
+
 def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=10,
                          vel_forward = 400, vel_rot = 60, atol_move_blind=30):
     """
@@ -170,11 +180,11 @@ def control_PID(robot, coords, img_res=(640, 480),K1=0 ,K2 = 0):
 
 
 
-def move_to_brick_blind_no_sensor(robot, frame, vel=60):
+def move_to_brick_blind_no_sensor(robot, frame, vel=60, time=500):
 
     robot.elevator.down()
     time.sleep(2.5)
-    robot.move_straight(vel)
+    robot.move_straight(vel, time)
     time.sleep(0.5)
     robot.pick_up()
     time.sleep(2.5)
@@ -182,10 +192,12 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60):
     return "SEARCH_BOX", frame, {}
 
 def move_to_brick_blind_and_grip(robot, frame, vel=60):
-    t = 1529
+    t = 1500
     # Make sure the grip is open
     robot.grip.open()
     # Make sure the elevator is down
+    print(robot.elevator.is_raised)
+    print(robot.elevator.position)
     robot.elevator.down()
     robot.elevator.wait_until_not_moving()
     robot.move_straight(vel=300, time=t)
