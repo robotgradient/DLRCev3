@@ -17,7 +17,7 @@ objects = conn.modules['ev3control.objects']
 class Robot(AbstractContextManager):
     """This robot rocks!!"""
 
-    def __init__(self, camera_capture):
+    def __init__(self, camera_capture, object_detector=None):
         self.left_track = ev3.LargeMotor("outA")
         self.right_track = ev3.LargeMotor("outB")
         self.grip = objects.Grip("outC", closed_position=-650)
@@ -26,6 +26,7 @@ class Robot(AbstractContextManager):
         self.cap = camera_capture
         self.map = []
         self.position = [0, 0, 0]
+        self.object_detector = object_detector
 
     def move(self, vel_left, vel_right, time=4000):
         self.left_track.run_timed(speed_sp=vel_left, time_sp=time)
