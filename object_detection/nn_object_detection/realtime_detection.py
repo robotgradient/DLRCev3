@@ -23,7 +23,7 @@ import numpy as np
 # Actual detection.
 
 cap = cv2.VideoCapture(0)
-res = np.asarray([640,480])
+img_res = np.asarray([640,480])
 
 try:
     while(True):
@@ -31,17 +31,14 @@ try:
         kernel = np.ones((5,5),np.float32)/25
         img = cv2.filter2D(img,-1,kernel)
         #image_np_expanded = np.expand_dims(img, axis=0)
-        (boxes, scores, classes, num) = detector.detect(img)
-        boxes = boxes.reshape(-1,4)
-        scores = scores.reshape(-1)
-        for i,box in enumerate(boxes):
-            if scores[i] < 0.8:
-                break
-            print("Box shape: ", box, " Scores shape: ", scores.shape)
-            cv2.rectangle(img, (int(box[1]*res[0]), int(box[0]*res[1])), 
-                (int(box[3]*res[0]), int(box[2]*res[1])), (0, 255, 0), thickness=3)    
-            cv2.putText(img, str(scores[i]) + "%", (int(box[1]*res[0]),
-             int(box[0]*res[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
+        res = detector.detect_with_threshold(img, threshold=0.9, return_closest=True)
+        if res:
+            box, score = res
+            print("Main loop: ", box[0], len(box), score)
+            cv2.rectangle(img, (int(box[1]*img_res[0]), int(box[0]*img_res[1])), 
+                (int(box[3]*img_res[0]), int(box[2]*img_res[1])), (0, 255, 0), thickness=3)    
+            cv2.putText(img, str(score) + "%", (int(box[1]*img_res[0]),
+             int(box[0]*img_res[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
 
         cv2.imshow("Camera", img)
         if cv2.waitKey(10) & 0xFF==27:

@@ -20,6 +20,13 @@ label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 
+
+def sorting_key(element1):
+    bbox1=element1[0]
+    return bbox1[2]/2
+
+
+
 class NNObjectDetector(object):
   
   def __init__(self, frozen_graph_path, path_to_labels):
@@ -57,4 +64,26 @@ class NNObjectDetector(object):
         [detection_boxes, detection_scores, detection_classes, num_detections],
         feed_dict={image_tensor: image_np_expanded})
 
+    boxes = boxes.reshape((-1,4))
+    scores = scores.reshape(-1)
+
     return boxes, scores, classes, num
+
+
+
+  def detect_with_threshold(self, image, threshold=0.95, return_closest=False):
+
+    results = self.detect(image)
+    results = list(zip(results[0], results[1]))
+    results = filter(lambda x: x[1] > threshold, results)    
+
+    print(results)
+    if not return_closest:
+        return results
+    else:
+        sorted_boxes = sorted(results, key=sorting_key, reverse=True)
+        return sorted_boxes[0] if not len(sorted_boxes) == 0 else None
+ 
+
+
+
