@@ -22,7 +22,12 @@ while 1:
 
     Ts = 0.1
 
-    rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
+    #rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
+    
+    #KALMAN
+    rob,vel_wheels,path, P ,real_rob_pos = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
+    
+
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
     print('robot_position: ',rob)
     print('wheels vel:', vel_wheels)

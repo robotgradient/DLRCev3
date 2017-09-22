@@ -231,26 +231,40 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	## A and B matrixes
 	increment_R = R/2*(odom_r + odom_l)
-	increment_teta = R/L(odom_l-odom_l) * 180/pi # We want the increment in teta in degrees
+	increment_teta = R/L*(odom_l-odom_r) * 180/pi # We want the increment in teta in degrees
 
-	A = np.array([[1 , 0, -increment_R*np.sin((pos_rob[2]+increment_teta/2)*pi/180)],[0,1, increment_R*np.cos((pos_rob[2]+increment_teta/2)*pi/180)],[0,0,1]])
+	
+	A = np.identity(3)
+	A[0,2] = -increment_R*np.sin((pos_rob[2]+increment_teta/2)*pi/180)
+	A[1,2] =  increment_R*np.cos((pos_rob[2]+increment_teta/2)*pi/180)
 
-	c = np.cos(pos_rob[2]+increment_teta/2); s = np.sin(pos_rob[2]+increment_teta/2)
+	c = np.cos((pos_rob[2]+increment_teta/2)*pi/180); s = np.sin((pos_rob[2]+increment_teta/2)*pi/180)
 
-	B = np.array[[R/2*c+R*increment_R/(2*L)*s, R/2*c-R*increment_R/(2*L)*s],[R/2*s-increment_R/(2*L)*c, R/2*s+increment_R*R/(2*L)*c ],[-R/L,R/L]]
+	
+	B = np.zeros([3,2])
+
+	B[0,0] = R/2*c+R*increment_R*R/(2*L)*s
+	B[0,1] = R/2*c-R*increment_R*R/(2*L)*s
+
+	B[1,0] = R/2*s-increment_R*R/(2*L)*c
+	B[1,1] = R/2*s+increment_R*R/(2*L)*c
+
+	B[2,0] = -R/L
+	B[2,1] = R/L
+
 
 
 	# H Matrix
 
 	markers = []
-	for i in range (0,marker_list[:,1]):
+	for i in range (0,len(marker_list[:,1])):
 
 		if marker_list[i,1] < 900:
 
-			markers.append = i
+			markers.append(i)
 
 	#The size of the H array is related with the number of markers we see
-	H = np.array([len(markers)*3,3])
+	H = np.zeros([len(markers)*3,3])
 
 	R = np.zeros([len(markers),len(markers)])
 
@@ -271,15 +285,15 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 		#Noise of the measuremenets
 
-		R[i*3,i*3] = np.power(10,-5)
-		R[i*3+1,i*3+1] = np.power(10,-6)
-		R[i*3+2,i*3+2] = np.power(10,-6)
+		R[i*3,i*3] = 1/np.power(10,5)
+		R[i*3+1,i*3+1] = 1/np.power(10,6)
+		R[i*3+2,i*3+2] = 1/np.power(10,6)
 
 
 	# Process noise
 
 	#noise variance of the encoders
-	noise_enc = np.power(10,-7)
+	noise_enc = 1/np.power(10,7)
 	var_noise_enc = np.power(noise_enc/Ts,2)
 	#noise variance of the model
 	Q = np.zeros([3,3])
@@ -308,11 +322,12 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	meas_vec = np.array([len(markers)*3])
 
 
+
 	for i in range(0,len(markers)):
 
-		z[i*3] = np.atan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
+		z[i*3] = np.arctan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
 		z[i*3+1] = np.sqrt(np.power(marker_map[markers[i],0]-pos_rob_pred[0],2) + np.power(marker_map[markers[i],1]-pos_rob_pred[1],2))
-		z[i*3+2] = marker_map[2]- pos_rob_pred[2]
+		z[i*3+2] = marker_map[markers[i],2]- pos_rob_pred[2]
 
 		if z[i*3] > pi:
 			z[i*3] = z[i*3]-(2*pi)
@@ -356,7 +371,7 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 
 
-
+	pos_rob[2] = pos_rob[2]* 180/pi
 	if pos_rob[2] >360:
 		pos_rob[2] = new_pos_rob[2] - 360
 	elif pos_rob[2] < 0 :
@@ -364,6 +379,68 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	#print(new_pos_rob)
 	return pos_rob,P
+
+
+def create_fake_measurements(pos_rob, odom_l,odom_r , marker_map, num_mar = 4):
+
+	L = 14.5
+	R = 1.7
+
+	# ODOMETRY
+
+	#From degrees to radians
+
+	odom_l = odom_l*pi/180
+	odom_r = odom_r*pi/180
+
+	# get increments
+
+	incr_r = R/2*(odom_r+odom_l)
+	incr_teta = R/L*(odom_l-odom_r) * 180/pi
+
+	# REAL COMPUTATION OF THE STATE : 
+
+	pos_rob_pred = np.zeros(3)
+	pos_rob_pred[0] = pos_rob[0] + incr_r*np.cos((pos_rob[2]+incr_teta/2)*pi/180)
+	pos_rob_pred[1] = pos_rob[1] + incr_r*np.sin((pos_rob[2]+incr_teta/2)*pi/180)
+	pos_rob_pred[2] = (pos_rob[2] + incr_teta)*pi/180
+
+	# Measurements
+
+
+	z = np.zeros([num_mar,3])
+	for i in range(num_mar):
+
+		z[i,0] = np.arctan2(marker_map[i,1]-pos_rob_pred[1],marker_map[i,0]-pos_rob_pred[0])- pos_rob_pred[2]
+		z[i,1] = np.sqrt(np.power(marker_map[i,0]-pos_rob_pred[0],2) + np.power(marker_map[i,1]-pos_rob_pred[1],2))
+		z[i,2] = marker_map[i,2]- pos_rob_pred[2]
+
+		if z[i,0] > pi:
+			z[i,0] = z[i,0]-(2*pi)
+		if z[i,0] < -pi:
+			z[i,0] = z[i,0]+(2*pi)
+
+		if z[i,0+2] > pi:
+			z[i,0+2] = z[i,0+2]-(2*pi)
+		if z[i,0+2] < -pi:
+			z[i,0+2] = z[i,0+2]+(2*pi)
+
+
+	pos_rob = pos_rob_pred
+
+	pos_rob[2] = pos_rob[2]* 180/pi
+	if pos_rob[2] >360:
+		pos_rob[2] = new_pos_rob[2] - 360
+	elif pos_rob[2] < 0 :
+		pos_rob[2] = 360 + new_pos_rob[2]
+
+
+	return pos_rob , z
+
+
+
+
+
 
 
 
@@ -380,21 +457,42 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 	target, new_path = select_target(pos_rob, path)
 
 	#Only Odometry
-	estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
+	#estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
 
 
+	
+
+	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+
+	#return estim_rob_pos,vel_wheels,new_path
+
+
+
+	# Only model
 	#estim_rob_pos = pos_rob
 
-	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 
 	#estim_rob_pos = forward_localization(pos_rob, vel_wheels, Ts)
-	print('odom_r = 0,odom_l',odom_r,odom_l)
-	print('estim_rob_pos',estim_rob_pos)
-	print('vel_wheels',vel_wheels)
+
+	#return estim_rob_pos,vel_wheels,new_path
+
+	#print('odom_r = 0,odom_l',odom_r,odom_l)
+	#print('estim_rob_pos',estim_rob_pos)
+	#print('vel_wheels',vel_wheels)
 	print(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
 
 
-	return estim_rob_pos,vel_wheels,new_path
+	real_robot_pos, marker_list = create_fake_measurements(pos_rob, odom_l,odom_r , marker_map)
+
+	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
+
+	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+
+	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
+
+
+
 
 
 
