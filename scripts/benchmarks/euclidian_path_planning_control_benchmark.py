@@ -1,9 +1,9 @@
 import time
 import cv2
 from ev3control.rpc import Robot
-from brain.controllers import euclidian_move_to_brick, rotation_search_brick,move_to_brick_simple, move_to_brick_blind_and_grip
-from brain.core import State
-from brain.core import main_loop
+from rick.controllers import euclidian_move_to_brick, rotation_search_brick,move_to_brick_simple, move_to_brick_blind_and_grip
+from rick.core import State
+from rick.core import main_loop
 
 print("Creating robot...")
 

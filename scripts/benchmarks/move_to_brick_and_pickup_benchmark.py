@@ -2,9 +2,9 @@ import time
 
 import cv2
 from ev3control.rpc import Robot
-from brain.controllers import move_to_brick_blind_and_grip, wait_for_brick
-from brain.core import State
-from brain.core import main_loop
+from rick.controllers import move_to_brick_blind_and_grip, wait_for_brick
+from rick.core import State
+from rick.core import main_loop
 
 print("Creating robot...")
 
