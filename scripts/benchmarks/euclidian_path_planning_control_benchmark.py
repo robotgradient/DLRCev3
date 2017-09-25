@@ -15,8 +15,8 @@ with Robot(cv2.VideoCapture(1)) as robot:
     # returns the next state name
     states = [
         State(
-            name="MOVE_BY_MAP",
-            act=euclidian_move_to_brick,
+            name="SEARCH",
+            act=rotation_search_brick,
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
