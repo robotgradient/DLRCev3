@@ -7,6 +7,8 @@ from rick.controllers import euclidian_move_to_brick, rotation_search_brick,move
 from rick.core import State
 from rick.core import main_loop
 
+import numpy as np
+
 
 from rick.motion_control import euclidian_kalman
 
@@ -26,6 +28,7 @@ with Robot(cv2.VideoCapture(1)) as robot:
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
                 "TIME": time.time()
+                "P" : np.identity(3)
             }
             ),
         State(
@@ -64,9 +67,6 @@ def euclidian_move_with_kalman(robot, frame,
 
     img_res = np.asarray((640,480))
 
-    lego_coords, center = get_purple_lego(frame)
-    if lego_coords and np.isclose(lego_coords[1], img_res[1], atol=200):
-        return "MOVE_TO_BRICK", frame, {}
 
     brick_position = robot.map[0]
     t0 = time.time()
@@ -76,6 +76,9 @@ def euclidian_move_with_kalman(robot, frame,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+
+    # Markers information coming from the compuetr vision stuff
+    marker_list  = 
 
  	marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
     estim_rob_pos, vel_wheels, new_path , P ,  = euclidian_kalman(robot.position,
@@ -88,7 +91,7 @@ def euclidian_move_with_kalman(robot, frame,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
 
-    #Marcos' marker list  = BLABLABLA
+    
 
     # print("Path: ", pat, iteration)
     # print("Robot positij "ffefrobot.position)
@@ -96,5 +99,5 @@ def euclidian_move_with_kalman(robot, frame,
     # print("##" *20)
 
 
-    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P" = P , "marker_list" = []}
+    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P" = P , "marker_list" = marker_list}
 
