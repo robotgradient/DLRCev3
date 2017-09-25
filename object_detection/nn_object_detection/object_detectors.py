@@ -82,7 +82,11 @@ class NNObjectDetector(object):
         return results
     else:
         sorted_boxes = sorted(results, key=sorting_key, reverse=True)
-        return sorted_boxes[0] if not len(sorted_boxes) == 0 else None
+        if len(sorted_boxes) == 0:
+            return sorted_boxes
+        else:
+            closest = sorted_boxes[0]
+        return sorted_boxes
  
 
 

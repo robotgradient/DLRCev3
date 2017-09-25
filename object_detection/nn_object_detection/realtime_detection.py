@@ -23,6 +23,7 @@ import numpy as np
 # Actual detection.
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 img_res = np.asarray([640,480])
 
 try:
