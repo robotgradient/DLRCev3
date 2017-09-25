@@ -260,17 +260,26 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	for i in range (0,len(marker_list[:,1])):
 
 		if marker_list[i,1] < 900:
+			distance = np.power(marker_map[i,0]-pos_rob[0],2) + np.power(marker_map[i,1]-pos_rob[1],2)
+		
+			if distance != 0:
 
-			markers.append(i)
+				markers.append(i)
 
 	#The size of the H array is related with the number of markers we see
-	H = np.zeros([len(markers)*3,3])
 
-	R = np.zeros([3*len(markers),3*len(markers)])
+	#H = np.zeros([len(markers)*3,3])
+	H = np.zeros([len(markers)*2,3])
+
+	#R = np.zeros([3*len(markers),3*len(markers)])
+	R = np.zeros([2*len(markers),2*len(markers)])
+
+
 
 	for i in range(0,len(markers)):
 
 		distance = np.power(marker_map[markers[i],0]-pos_rob[0],2) + np.power(marker_map[markers[i],1]-pos_rob[1],2)
+		'''
 		H[i*3,0] = (marker_map[markers[i],1]-pos_rob[1])/distance
 		H[i*3,1] = -(marker_map[markers[i],0]-pos_rob[0])/distance
 		H[i*3,2] = -1
@@ -282,15 +291,29 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 		H[i*3+2,0] = 0
 		H[i*3+2,1] = 0
 		H[i*3+2,2] = -1
+		'''
+		H[i*2,0] = (marker_map[markers[i],1]-pos_rob[1])/distance
+		H[i*2,1] = -(marker_map[markers[i],0]-pos_rob[0])/distance
+		H[i*2,2] = -1
+
+		H[i*2+1,0] = (pos_rob[0]-marker_map[markers[i],0])/np.sqrt(distance)
+		H[i*2+1,1]= (pos_rob[1]-marker_map[markers[i],1])/np.sqrt(distance)
+		H[i*2+1,2] = 0
+
+
 
 		#Noise of the measuremenets
 
-		R[i*3,i*3] = 1/np.power(10,5)
-		R[i*3+1,i*3+1] = 1/np.power(10,6)
-		R[i*3+2,i*3+2] = 1/np.power(10,6)
+		#R[i*3,i*3] = 1/np.power(10,5)
+		#R[i*3+1,i*3+1] = 1/np.power(10,6)
+		#R[i*3+2,i*3+2] = 1/np.power(10,6)
+		R[i*2,i*2] = 1/np.power(10,5)
+		R[i*2+1,i*2+1] = 1/np.power(10,6)
+
 
 
 	# Process noise
+	#print(H)
 
 	#noise variance of the encoders
 	noise_enc = 1/np.power(10,7)
@@ -321,16 +344,23 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	#Measurements prediction & measurements
 
 
-	meas_vec = np.zeros(len(markers)*3)
+	#meas_vec = np.zeros(len(markers)*3)
+	meas_vec = np.zeros(len(markers)*2)
 
 
-	z = np.zeros(3*len(markers))
+	#z = np.zeros(3*len(markers))
+	z = np.zeros(2*len(markers))
+
 	for i in range(0,len(markers)):
 
-		z[i*3] = np.arctan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
-		z[i*3+1] = np.sqrt(np.power(marker_map[markers[i],0]-pos_rob_pred[0],2) + np.power(marker_map[markers[i],1]-pos_rob_pred[1],2))
-		z[i*3+2] = marker_map[markers[i],2]- pos_rob_pred[2]
+		#z[i*3] = np.arctan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
+		#z[i*3+1] = np.sqrt(np.power(marker_map[markers[i],0]-pos_rob_pred[0],2) + np.power(marker_map[markers[i],1]-pos_rob_pred[1],2))
+		#z[i*3+2] = marker_map[markers[i],2]- pos_rob_pred[2]
 
+		z[i*2] = np.arctan2(marker_map[markers[i],1]-pos_rob_pred[1],marker_map[markers[i],0]-pos_rob_pred[0])- pos_rob_pred[2]
+		z[i*2+1] = np.sqrt(np.power(marker_map[markers[i],0]-pos_rob_pred[0],2) + np.power(marker_map[markers[i],1]-pos_rob_pred[1],2))
+		
+		'''
 		if z[i*3] > pi:
 			z[i*3] = z[i*3]-(2*pi)
 		if z[i*3] < -pi:
@@ -340,11 +370,20 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 			z[i*3+2] = z[i*3+2]-(2*pi)
 		if z[i*3+2] < -pi:
 			z[i*3+2] = z[i*3+2]+(2*pi)
+		'''
+		if z[i*2] > pi:
+			z[i*2] = z[i*2]-(2*pi)
+		if z[i*2] < -pi:
+			z[i*2] = z[i*2]+(2*pi)
 
+
+		'''	
 		meas_vec[i*3] = marker_list[markers[i],0]
 		meas_vec[i*3+1] = marker_list[markers[i],1]
 		meas_vec[i*3+2] = marker_list[markers[i],2]
-
+		'''
+		meas_vec[i*2] = marker_list[markers[i],0]
+		meas_vec[i*2+1] = marker_list[markers[i],1]
 
 
 
@@ -367,7 +406,9 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	pos_incr = np.dot(K,np.add(z,-meas_vec))
 
-	pos_rob = np.add(pos_rob_pred,pos_incr)
+	print('measurement error : ',pos_incr)
+
+	pos_rob = np.add(pos_rob_pred,-pos_incr)
 
 
 
@@ -375,9 +416,9 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	pos_rob[2] = pos_rob[2]* 180/pi
 	if pos_rob[2] >360:
-		pos_rob[2] = new_pos_rob[2] - 360
+		pos_rob[2] = pos_rob[2] - 360
 	elif pos_rob[2] < 0 :
-		pos_rob[2] = 360 + new_pos_rob[2]
+		pos_rob[2] = 360 + pos_rob[2]
 
 	#print(new_pos_rob)
 	return pos_rob,P
@@ -392,8 +433,8 @@ def create_fake_measurements(pos_rob, odom_l,odom_r , marker_map, num_mar = 4):
 
 	#From degrees to radians
 
-	odom_l = odom_l*pi/180
-	odom_r = odom_r*pi/180
+	odom_l = odom_l*pi/180 
+	odom_r = odom_r*pi/180 
 
 	# get increments
 
@@ -432,14 +473,45 @@ def create_fake_measurements(pos_rob, odom_l,odom_r , marker_map, num_mar = 4):
 
 	pos_rob[2] = pos_rob[2]* 180/pi
 	if pos_rob[2] >360:
-		pos_rob[2] = new_pos_rob[2] - 360
+		pos_rob[2] = pos_rob[2] - 360
 	elif pos_rob[2] < 0 :
-		pos_rob[2] = 360 + new_pos_rob[2]
+		pos_rob[2] = 360 + pos_rob[2]
 
 
 	return pos_rob , z
 
 
+def mapping(pos_rob, map, landmarks, P): # landmarks(r,phi) in robot frame and label , Map is a list with vector with (x,y,sigma_x, sigma_y)
+
+	for i in range(0,len(landmarks[:,1])):
+
+		x_map = pos_rob[0] + landmarks[i,0]*np.cos(pos_rob[2]+landmarks[i,1])
+
+		y_map = pos_rob[1] + landmarks[i,0]*np.sin(pos_rob[2]+landmarks[i,1])
+
+
+		new = 1
+
+		map_ar = np.array(map)
+		for i in range(0, len(map[:,1])):
+
+			distance = np.power((x_map-map_ar[i,1])/map_ar[i,3],2) + np.power((y_map - map_ar[i,2])/map_ar[i,4],2)
+
+			if distance < 1 : 
+				new = 0
+		if new ==1:
+			map.append([x_map,y_map, P[0,0] , P[1,1] ])
+
+
+		return map
+
+
+
+
+
+
+
+	
 
 
 
@@ -450,7 +522,9 @@ def create_fake_measurements(pos_rob, odom_l,odom_r , marker_map, num_mar = 4):
 
 
 
-def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[]):
+
+
+def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0):
 
 	if iteration == 0 :
 
@@ -485,14 +559,60 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 	#print(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
 
 
-	'''real_robot_pos, marker_list = create_fake_measurements(pos_rob, odom_l,odom_r , marker_map)
+	#real_robot_pos, marker_list = create_fake_measurements(pos_rob, odom_l,odom_r , marker_map)
+
+	#estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
+
+	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	
+	#return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
+
+
+
+def euclidian_kalman(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[], real_bot=[]):
+
+	if iteration == 0 :
+
+		path = compute_euclidean_path(pos_rob,pos_obj,points)
+
+	target, new_path = select_target(pos_rob, path)
+
+	#Only Odometry
+	#estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
+
+	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+
+	#return estim_rob_pos,vel_wheels,new_path
+
+
+
+	# Only model
+	#estim_rob_pos = pos_rob
+
+	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+
+	#estim_rob_pos = forward_localization(pos_rob, vel_wheels, Ts)
+
+	#return estim_rob_pos,vel_wheels,new_path
+
+
+	real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
 
 	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	
 	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
-	'''
+	
+
+
+
+
+
+
+
+
+	
 
 
 
