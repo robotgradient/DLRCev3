@@ -8,4 +8,4 @@ setup(
         'paho-mqtt==1.3',
         "rpyc==3.4.4",
         "python-ev3dev==1.0.0"
-    ],)
+    ])
