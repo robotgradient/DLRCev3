@@ -6,6 +6,7 @@ from ev3control.rpc import Robot
 from rick.controllers import euclidian_move_to_brick, rotation_search_brick,move_to_brick_simple, move_to_brick_blind_and_grip
 from rick.core import State
 from rick.core import main_loop
+from detection.marker_localization import get_marker_pose, load_camera_params
 
 import numpy as np
 
@@ -78,7 +79,8 @@ def euclidian_move_with_kalman(robot, frame,
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
 
     # Markers information coming from the compuetr vision stuff
-    marker_list  = 
+    
+    marker_list  = camera_related(frame = frame)
 
  	marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
     estim_rob_pos, vel_wheels, new_path , P ,  = euclidian_kalman(robot.position,
@@ -100,4 +102,12 @@ def euclidian_move_with_kalman(robot, frame,
 
 
     return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P" = P , "marker_list" = marker_list}
+
+def camera_related(frame):
+
+
+	mtx,dist = load_camera_params()
+    marker_list  = get_marker_pose(frame, mtx, dist, marker_id = [0,1,2,3,4,5], markerLength = 4.8)
+
+    return marker_list
 
