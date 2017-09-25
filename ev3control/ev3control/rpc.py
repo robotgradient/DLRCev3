@@ -3,10 +3,7 @@ from contextlib import AbstractContextManager
 
 import rpyc
 
-with open(Path.home() / "brick_ip") as ipfile:
-    ip = ipfile.read().strip()
-    conn = rpyc.classic.connect(ip)
-
+conn = rpyc.classic.connect("ev3dev.local")
 ev3 = conn.modules['ev3dev.ev3']  # import ev3dev.ev3 remotely
 
 # These objects are on the brick!

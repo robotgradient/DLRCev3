@@ -8,8 +8,8 @@ The `editable` flag is important, because it will update the code when it's pull
 
 ## Connecting with RPC
 
+- Make sure your ssh public key is added to the brick. Use `ssh-copy-id` or ask Marin or Ilia.
 - SSH into the brick and run this file: `scripts/rpyc_server.sh`
-- Note the IP address of the brick and save it in a file called `brick_ip` in your home directory
 - Run `from ev3control.rpc import Robot`!
 
 
