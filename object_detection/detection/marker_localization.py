@@ -113,19 +113,3 @@ mtx,dist=load_camera_params()
 
 
 
-
-##that should be in the main 
-cap = cv2.VideoCapture(1)
-# SET the parametes of the markers also marker list
-arucoParams = aruco.DetectorParameters_create()
-markerLength = 3.5 
-
-while True:
-    ret,img=cap.read()
-    
-    imgwithAruco,located_matrix=get_marker_pose(img,mtx,dist,arucoParams)
-    print(located_matrix)
-    sleep(0.05)
-    cv2.imshow("aruco", imgwithAruco)   # display
-    if cv2.waitKey(50) & 0xFF == ord('q'):   # if 'q' is pressed, quit.
-        break
