@@ -21,7 +21,7 @@ def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matri
 
 	path = np.array([x,y,angle_vec])
 
-	print(path)
+	#print(path)
 
 	return path
 
@@ -86,7 +86,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	vel_wheels[0] = 180/pi * vel_wheels[0]
 	vel_wheels[1] = 180/pi * vel_wheels[1]
 
-	print(vel_wheels)
+	#print(vel_wheels)
 
 
 	if np.absolute(vel_wheels[0]) > 500 :
@@ -170,10 +170,10 @@ def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot 
 
 	incr_r = vel_robot[0]
 	incr_teta = vel_robot[1] * 180/pi
-	print(incr_teta)
+	#print(incr_teta)
 
 
-	print('radial increment:',incr_r,' angular increment: ',incr_teta)
+	#print('radial increment:',incr_r,' angular increment: ',incr_teta)
 
 	new_pos_rob[0] = pos_rob[0] + incr_r*np.cos((pos_rob[2]+incr_teta/2)*pi/180)
 	new_pos_rob[1] = pos_rob[1] + incr_r*np.sin((pos_rob[2]+incr_teta/2)*pi/180)
@@ -189,24 +189,24 @@ def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot 
 
 def select_target(pos_rob,path):
 
-	print(np.size(path))
+	#print(np.size(path))
 	shortest_dist  = 100000000000;
 	for i in range (0,np.size(path[1,:])): #compute the euclidean distance for all the possible points to go
 
 		#distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
 		distance = np.absolute((path[0,i]-pos_rob[0])*np.sin(pos_rob[2]*pi/180) - (path[1,i]-pos_rob[1])*np.cos(pos_rob[2]*pi/180))
-		print(i," : i : ",distance)
+		#print(i," : i : ",distance)
 		if distance < shortest_dist :
 
 			shortest_dist = distance
 			output = i
 			if output == np.size(path[1,:])-1:
-				print("hola")
+				#print("hola")
 				output = i-1
 
 	new_path = path[:,output:]
 	target = path[:,output+1]
-	print('target : ',target)
+	#print('target : ',target)
 	#print('new path : ',new_path)
 
 

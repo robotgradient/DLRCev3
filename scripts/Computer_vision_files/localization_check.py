@@ -50,7 +50,7 @@ def rotationMatrixToEulerAngles(R) :
         z = 0
  
     return np.array([x, y, z])
-def locate_markers_robot(ids,rvec,tvec,marker_list=[2],T=np.ones((4,4))):
+def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4))):
 	rotc2r=T[0:3,0:3]
 	transl=tvec
 	located_matrix=0*np.ones((len(marker_list),2))
@@ -65,7 +65,8 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[2],T=np.ones((4,4))):
 			d=np.sqrt(np.power(x,2)+np.power(y,2))
 			theta=np.arctan2(y,x)
 			gamma=rvec[i,0,2]
-			index_mat=marker_list.index(value)
+			index_mat=np.where(value==marker_list)
+			print(index_mat)
 			located_matrix[index_mat,:]=[d,theta]
 	return located_matrix
 
@@ -75,6 +76,7 @@ def get_marker_pose(frame,mtx,dist,arucoParams,marker_list=[1,2,3,4,5]):
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 	corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
 	if isinstance(ids, np.ndarray):# if aruco marker detected
+		print(ids)
 		rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
 		for i in range(len(ids)):
 			frame = aruco.drawAxis(frame, mtx, dist, rvec[i], tvec[i], 15)
@@ -122,7 +124,7 @@ markerLength = 3.5
 while True:
     ret,img=cap.read()
     
-    imgwithAruco,located_matrix=get_specific_marker_pose(img,mtx,dist,arucoParams,2)
+    imgwithAruco,located_matrix=get_marker_pose(img,mtx,dist,arucoParams)
     print(located_matrix)
     sleep(0.05)
     cv2.imshow("aruco", imgwithAruco)   # display

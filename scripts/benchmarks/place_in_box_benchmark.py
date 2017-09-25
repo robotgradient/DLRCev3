@@ -11,7 +11,7 @@ print("Creating robot...")
 
 def search_box(robot, frame, vel=60):
     mtx,dist=load_camera_params()
-    _,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=2)
+    _,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
     if box_coords:
         print("BOX_COORDINATES:",box_coords[0],box_coords[1])
         return ("MOVE_FIRST_MAP", frame, {
@@ -47,7 +47,7 @@ def euclidian_move_to_brick2(robot, frame,
 
     img_res = np.asarray((640,480))
     mtx,dist=load_camera_params()
-    _,box_coords = get_specific_marker_pose(frame,mtx,dist,2)
+    _,box_coords = get_specific_marker_pose(frame,mtx,dist,0)
 
     #if not box_coords:
     #    print("No second box detectedf")
@@ -57,7 +57,7 @@ def euclidian_move_to_brick2(robot, frame,
     if box_coords[0]<40:
         return "PLACE_OBJECT", frame, {}
     brick_position = [box_coords[0],-box_coords[1]]
-    print("BRICK_POSITION",brick_position)
+    print("GOAL_POSITION",brick_position)
     t0 = time.time()
     print('t0 ', t0, 'TIME', TIME)
     time_diff = t0 - TIME
@@ -77,23 +77,23 @@ def euclidian_move_to_brick2(robot, frame,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     #robot.left_track.wait_until_not_moving(timeout=3000)
     iteration += 1
-
+    goal_pos=brick_position
     # print("Path: ", pat, iteration)
     # print("Robot positij "ffefrobot.position)
     # print("Velocities rl: ", vel_wheels)
     # print("##" *20)
 
 
-    return "MOVE_SECOND_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
+    return "MOVE_SECOND_MAP", frame, {"goal_pos":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
 
-def euclidian_move_to_brick_blind(robot, frame,
+def euclidian_move_to_brick_blind(robot, frame, goal_pos,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
 
 
     #if not box_coords:
     #    print("No second box detectedf")
     #    return "SEARCH_BOX", frame, {}
-    if iteration > 30:
+    '''if iteration > 30:
         mtx,dist=load_camera_params()
         _,box_coords = get_specific_marker_pose(frame,mtx,dist,2)
         if not box_coords:
@@ -105,7 +105,7 @@ def euclidian_move_to_brick_blind(robot, frame,
                         "ltrack_pos": robot.left_track.position,
                         "rtrack_pos": robot.right_track.position,
                         "TIME": time.time()
-                        })   
+                        })   '''
     
     brick_position=[0,0]
     t0 = time.time()
@@ -113,25 +113,26 @@ def euclidian_move_to_brick_blind(robot, frame,
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
 
-    print("odometry: ", odom_l, odom_r)
     estim_rob_pos, vel_wheels, new_path = euclidian_path_planning_control(robot.position,
                                                                           brick_position, robot.sampling_rate,
                                                                           odom_r= odom_r,odom_l=odom_l,
                                                                           iteration=iteration, path=path)
-    print("ROBOT POSITION: ", estim_rob_pos)
-    print("WHEELS VELOCITIES:",vel_wheels[1],vel_wheels[0])
     robot.position = estim_rob_pos
+    #print("ROBOT POSITION: ", estim_rob_pos)
+    print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
+    if abs(estim_rob_pos[0]-goal_pos[0])<50 and abs(estim_rob_pos[1]-goal_pos[1])<10:
+        return "PLACE_OBJECT", frame, {}
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     #robot.left_track.wait_until_not_moving(timeout=3000)
     iteration += 1
-
+    goal_pos=goal_pos
     # print("Path: ", pat, iteration)
     # print("Robot positij "ffefrobot.position)
     # print("Velocities rl: ", vel_wheels)
     # print("##" *20)
 
 
-    return "MOVE_SECOND_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
+    return "MOVE_SECOND_MAP", frame, {"goal_pos":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
 
 
 
@@ -140,9 +141,9 @@ def blind_placing(robot,frame,vel=200):
     robot.left_track.wait_until_not_moving(timeout=4000)
     robot.grip.open()
     robot.grip.wait_until_not_moving(timeout=3000)
-    robot.move_straight(-vel,time=1000)
+    robot.move_straight(-500,time=1000)
     robot.left_track.wait_until_not_moving(timeout=1100)
-    robot.rotate_right(vel=300,time=1500)
+    robot.rotate_right(vel=600,time=1500)
     robot.left_track.wait_until_not_moving(timeout=1100)
     print("finish")
     return "FINAL_STATE"

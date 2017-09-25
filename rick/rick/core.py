@@ -19,9 +19,8 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         time.sleep(delay)
         _, frame = robot.cap.read()
         draw_lines(frame)
-        print("Current state: ", state.name, " state args: ", str(kwargs))
+        print("Current state: ", state.name)
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
-        print("New State args", kwargs)
         state = state_dict[next_state_name]
 
         cv2.imshow("frame", processed_frame)
