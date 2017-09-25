@@ -1,4 +1,4 @@
-from brain.motion_control import euclidian_path_planning_control
+from rick.motion_control import euclidian_path_planning_control
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,7 +7,7 @@ path = np.ones([5,3])
 itera = 0
 R = []
 plotc = 0
-obj = [0,100]
+obj = [80,-40]
 vel_wheels = np.array([0,0])
 
 P = np.identity(3)

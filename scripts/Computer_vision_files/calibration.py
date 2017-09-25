@@ -2,16 +2,24 @@ import numpy as np
 import cv2
 import glob
 import math as m
-import cv2.aruco as aruco
+#import cv2.aruco as aruco
 from time import time
 from time import sleep
+
+
+def draw_circle(event,x,y,flags,param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print(x,y)
+    return 0
+
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((9*6,3), np.float32)
-objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
+objp[:,:2] = 2.5*np.mgrid[0:9,0:6].T.reshape(-1,2)
 
+print (objp)
 # Arrays to store object points and image points from all the images.
 objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
@@ -63,14 +71,15 @@ newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 print(newcameramtx)
 
 ## GET BORDERS
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 #img = cv2.imread('Chessboard_9.jpg')
-while True:
+'''while True:
     ret,img=cap.read()
     cv2.imshow("actual image",img)
     if cv2.waitKey(10) & 0xFF==32:
-        break
+        break'''
 
+img=cv2.imread('Chessboard_10.jpg')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
 ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
@@ -102,7 +111,7 @@ img
 dst = cv2.warpPerspective(img,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
 
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+#aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 #board = cv2.aruco.CharucoBoard_create(3,4,.025,.0125,auro_dict)
 #img = board.draw((200*3,200*3))
 
@@ -110,15 +119,18 @@ aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 data = np.load('camera_parameters.npz')
 mtx=data["cam_matrix"]
 dist=data["dist_coeff"]
-arucoParams = aruco.DetectorParameters_create()
+#arucoParams = aruco.DetectorParameters_create()
 markerLength = 3.5 
-
-
+cv2.namedWindow('aruco')
+cv2.setMouseCallback('aruco',draw_circle)
 while True:
     ret,frame=cap.read()
+    cv2.rectangle(frame,(200,0),(300,479),(0,255,0),thickness=2)
     img = cv2.warpPerspective(frame,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)    # aruco.etectMarkers() requires gray image
-    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
+    
+    frame=cv2.warpPerspective(img,H,(480,840),flags=cv2.WARP_INVERSE_MAP)
+    '''corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
     if ids != None: # if aruco marker detected
         rvec, tvec = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
         print("rev and tec:",rvec.shape,tvec.shape)
@@ -132,10 +144,10 @@ while True:
     else:   # if aruco marker is NOT detected
         imgWithAruco = img # assign imRemapped_color to imgWithAruco directly
     #print("retard",time()-tinit)
-    sleep(0.05)
-    cv2.imshow("aruco", imgWithAruco)   # display
+    sleep(0.05)'''
+    cv2.imshow("reversed", frame)   # display
+    cv2.imshow("Top view", img) 
     if cv2.waitKey(50) & 0xFF == ord('q'):   # if 'q' is pressed, quit.
         break
-    if cv2.waitKey(10) & 0xFF==27:
-        break
+    
 

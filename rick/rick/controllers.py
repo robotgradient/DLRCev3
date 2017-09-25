@@ -4,7 +4,7 @@ from detection.opencv import get_lego_piece
 from detection.opencv import get_purple_lego
 import time
 from .motion_control import euclidian_path_planning_control
-from .utils import bbox_bottom_center, bbox_center
+#from .utils import bbox_bottom_center, bbox_center
 import cv2
 import numpy as np
 

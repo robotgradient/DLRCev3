@@ -1,6 +1,6 @@
 from collections import namedtuple
 import cv2
-from object_detection.opencv import draw_lines
+from detection.opencv import draw_lines
 import time
 
 State = namedtuple("State", "name act default_args")
@@ -21,6 +21,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         draw_lines(frame)
         print("Current state: ", state.name, " state args: ", str(kwargs))
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
+        print("New State args", kwargs)
         state = state_dict[next_state_name]
 
         cv2.imshow("frame", processed_frame)
