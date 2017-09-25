@@ -28,7 +28,7 @@ with Robot(cv2.VideoCapture(1)) as robot:
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
-                "TIME": time.time()
+                "TIME": time.time(),
                 "P" : np.identity(3)
             }
             ),
@@ -81,8 +81,7 @@ def euclidian_move_with_kalman(robot, frame,
     # Markers information coming from the compuetr vision stuff
     
     marker_list  = camera_related(frame = frame)
-
- 	marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
+    marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
     estim_rob_pos, vel_wheels, new_path , P ,  = euclidian_kalman(robot.position,
                                                                           brick_position, robot.sampling_rate,
                                                                           odom_r= odom_r,odom_l=odom_l,
@@ -101,13 +100,13 @@ def euclidian_move_with_kalman(robot, frame,
     # print("##" *20)
 
 
-    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P" = P , "marker_list" = marker_list}
+    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P": P , "marker_list": marker_list}
 
 def camera_related(frame):
 
 
 	mtx,dist = load_camera_params()
-    marker_list  = get_marker_pose(frame, mtx, dist, marker_id = [0,1,2,3,4,5], markerLength = 4.8)
+	marker_list  = get_marker_pose(frame, mtx, dist, marker_id = [0,1,2,3,4,5], markerLength = 4.8)
 
-    return marker_list
+	return marker_list
 
