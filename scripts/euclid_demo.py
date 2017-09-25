@@ -35,7 +35,6 @@ while 1:
     print('robot_position: ',rob)
     print('wheels vel:', vel_wheels)
     print("Time last: ", itera*Ts)
-    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     #print('path: ', path)
     itera = itera+1
 
