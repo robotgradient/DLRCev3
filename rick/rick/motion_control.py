@@ -257,9 +257,9 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	# H Matrix
 
 	markers = []
-	for i in range (0,len(marker_list[:,1])):
-
-		if marker_list[i,1] < 900:
+	for i in range (0,marker_list.shape[0]):
+		#print("marker list",marker_list)
+		if marker_list[i,0] < 900:
 			distance = np.power(marker_map[i,0]-pos_rob[0],2) + np.power(marker_map[i,1]-pos_rob[1],2)
 		
 			if distance != 0:
@@ -405,6 +405,10 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 
 	pos_incr = np.dot(K,np.add(z,-meas_vec))
+
+	print('expected: ',z)
+	print('real: ', meas_vec)
+
 
 	print('measurement error : ',pos_incr)
 
@@ -602,7 +606,7 @@ def euclidian_kalman(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , ite
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	
-	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
+	return estim_rob_pos,vel_wheels,new_path , P #, real_robot_pos
 	
 
 

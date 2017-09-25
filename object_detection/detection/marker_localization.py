@@ -67,11 +67,11 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[0,1,2,3,4,5],T=np.ones((4,4)
 			theta=np.arctan2(y,x)
 			gamma=rvec[i,0,2]
 			index_mat=marker_list.index(value)
-			located_matrix[index_mat,:]=[d,theta]
+			located_matrix[index_mat,:]=[theta,d]
 	return located_matrix
 
 
-def get_marker_pose(frame,mtx,dist,arucoParams=arucoParams,marker_list=[1,2,3,4,5],markerLength=4.8):
+def get_marker_pose(frame,mtx,dist,arucoParams=arucoParams,marker_list=[0,1,2,3,4,5],markerLength=3.3):
 	Tc2rtheo=read_Tc2r()
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 	corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco

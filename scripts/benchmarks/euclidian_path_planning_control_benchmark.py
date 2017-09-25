@@ -8,15 +8,15 @@ from rick.core import main_loop
 print("Creating robot...")
 
 with Robot(cv2.VideoCapture(1)) as robot:
-    robot.map = [(0, 110)]
+    robot.map = [(200, 100)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
     # Define the state graph, we can do this better, currently each method
     # returns the next state name
     states = [
         State(
-            name="SEARCH",
-            act=rotation_search_brick,
+            name="MOVE_BY_MAP",
+            act=euclidian_move_to_brick,
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
