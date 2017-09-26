@@ -93,14 +93,14 @@ def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,ma
 	if isinstance(ids, np.ndarray) and (marker_id in ids): # if aruco marker detected
 		rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
 		position=np.where(ids==marker_id)
-		frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
+		#frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
 		p2c=np.concatenate((tvec[position].T,np.array([[1]])),axis=0)
 		p2r=T.dot(p2c)
-		rotp2c,jac=cv2.Rodrigues(rvec[i])
+		rotp2c,jac=cv2.Rodrigues(rvec[position])
 		rotp2r=rotc2r.dot(rotp2c)
 		#euler angles are x,y,z but the rotation is z,y,x in the moving frames
 		eulerrad=rotationMatrixToEulerAngles(rotp2r)
-		eulerangles=180*eulerrad/3.141592
+		eulerangles=180*eulerrad/np.pi
 		yaw=eulerangles[2]
 		x=p2r[0,0]
 		y=p2r[1,0]

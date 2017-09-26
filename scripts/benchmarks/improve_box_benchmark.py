@@ -6,133 +6,102 @@ from rick.core import State
 from rick.core import main_loop
 from detection.marker_localization import get_specific_marker_pose, load_camera_params
 import numpy as np
-from rick.motion_control import euclidian_path_planning_control
+from rick.motion_control import euclidian_path_planning_control,piecewise_path_planning_control
 print("Creating robot...")
 
 def search_box(robot, frame, vel=60):
     mtx,dist=load_camera_params()
     _,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
     if box_coords:
+        #robot.left_track.stop(stop_action="brake")
+        #robot.right_track.stop(stop_action="brake")
         print("BOX_COORDINATES:",box_coords[0],box_coords[1])
-        return ("MOVE_FIRST_MAP", frame, {
-                        "ltrack_pos": robot.left_track.position,
-                        "rtrack_pos": robot.right_track.position,
-                        "TIME": time.time()
+        return ("COMPUTE_PATH", frame, {
+                        "box_coords": box_coords
                     })
     else:
         robot.rotate(vel)
         return "SEARCH_BOX", frame, {}
 
-def move_towards_box(robot,frame,vel=200,vel_rot=60,atoly=5,atolx=50):
-    mtx,dist=load_camera_params()
-    _,box_coords = get_specific_marker_pose(frame,mtx,dist,2)
-    if not box_coords:
-        return "SEARCH_BOX", frame, {}
-    box_coords=np.array(box_coords)
-    if box_coords[1]>atoly:
-        robot.rotate_left(vel=vel_rot)
-    elif box_coords[1]<-atoly:
-        robot.rotate_right(vel=vel_rot)
-    else:
-        robot.move_straight(vel=vel,time=1000)
+def compute_path(robot,frame,box_coords):
+    x=box_coords[0]
+    y=box_coords[1]
+    yaw=box_coords[2]
+    if (y>0 and yaw>-80) or (y<0 and yaw< -100):
+        print("NICE PATH")
+    th=30
+    x2=x+th*np.sin(yaw*np.pi / 180.)
+    y2=y-th*np.cos(yaw*np.pi/180.)
+    yaw2=0
 
-    if box_coords[0]<atolx:
-        return "PLACE_OBJECT", frame, {}
-    else:
-        return "MOVE_TO_BOX", frame, {}
+    path_points=np.array([[0,0,0],[x2,y2,yaw2],[x,y,yaw]])
+    print("The path is going to be create by",path_points[0],path_points[1],path_points[2])
+
+    return ("MOVE_TO_BOX_FIRST",frame, {"path_points":path_points})
 
 
-def euclidian_move_to_brick2(robot, frame,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
-
-    img_res = np.asarray((640,480))
-    mtx,dist=load_camera_params()
-    _,box_coords = get_specific_marker_pose(frame,mtx,dist,0)
-
-    #if not box_coords:
-    #    print("No second box detectedf")
-    #    return "SEARCH_BOX", frame, {}
-    if not box_coords:
-        return "SEARCH_BOX", frame, {}
-    if box_coords[0]<40:
-        return "PLACE_OBJECT", frame, {}
-    brick_position = [box_coords[0],box_coords[1]]
-    print("GOAL_POSITION",brick_position)
-    t0 = time.time()
-    print('t0 ', t0, 'TIME', TIME)
-    time_diff = t0 - TIME
-    print('time',time_diff)
-    new_ltrack_pos = robot.left_track.position
-    new_rtrack_pos = robot.right_track.position
-    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-
-    print("odometry: ", odom_l, odom_r)
-    estim_rob_pos, vel_wheels, new_path = euclidian_path_planning_control(robot.position,
-                                                                          brick_position, robot.sampling_rate,
-                                                                          odom_r= odom_r,odom_l=odom_l,
-                                                                          iteration=iteration, path=path)
-    print("rob pos: ", estim_rob_pos)
-    print("WHEELS VELOCITIES:",vel_wheels[1],vel_wheels[0])
-    robot.position = estim_rob_pos
-    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
-    #robot.left_track.wait_until_not_moving(timeout=3000)
-    iteration += 1
-    goal_pos=brick_position
-    # print("Path: ", pat, iteration)
-    # print("Robot positij "ffefrobot.position)
-    # print("Velocities rl: ", vel_wheels)
-    # print("##" *20)
-
-
-    return ("MOVE_SECOND_MAP", frame, {"goal_pos":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
-
-def euclidian_move_to_brick_blind(robot, frame, goal_pos,
+def piecewise_move_to_box_first(robot, frame, path_points,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
 
 
-    #if not box_coords:
-    #    print("No second box detectedf")
-    #    return "SEARCH_BOX", frame, {}
-    '''if iteration > 30:
-        mtx,dist=load_camera_params()
-        _,box_coords = get_specific_marker_pose(frame,mtx,dist,2)
-        if not box_coords:
-            return "SEARCH_BOX", frame, {}
-        elif box_coords[0]<40:
-            return "PLACE_OBJECT", frame, {}
-        else:
-            return ("MOVE_FIRST_MAP", frame, {
-                        "ltrack_pos": robot.left_track.position,
-                        "rtrack_pos": robot.right_track.position,
-                        "TIME": time.time()
-                        })   '''
     
-    brick_position=[0,0]
+    brick_position=path_points[0]
+    middle_pos=path_points[1]
+    goal_pos=path_points[2]
     t0 = time.time()
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
 
-    estim_rob_pos, vel_wheels, new_path = euclidian_path_planning_control(robot.position,
-                                                                          brick_position, robot.sampling_rate,
+    estim_rob_pos, vel_wheels, new_path = piecewise_path_planning_control(robot.position,middle_pos,
+                                                                          goal_pos, robot.sampling_rate,
                                                                           odom_r= odom_r,odom_l=odom_l,
                                                                           iteration=iteration, path=path)
     robot.position = estim_rob_pos
     #print("ROBOT POSITION: ", estim_rob_pos)
-    print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
-    if abs(estim_rob_pos[0]-goal_pos[0])<20 and abs(estim_rob_pos[1]-goal_pos[1])<15:
-        return "PLACE_OBJECT", frame, {}
+
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
-    #robot.left_track.wait_until_not_moving(timeout=3000)
     iteration += 1
     goal_pos=goal_pos
-    # print("Path: ", pat, iteration)
-    # print("Robot positij "ffefrobot.position)
-    # print("Velocities rl: ", vel_wheels)
-    # print("##" *20)
+    path_points=path_points
 
 
-    return ("MOVE_SECOND_MAP", frame, {"goal_pos":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
+
+    return "MOVE_TO_BOX_BLIND", frame, {"path_points":path_points,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
+
+def piecewise_move_to_box_blind(robot, frame, path_points,
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
+
+
+    
+    brick_position=path_points[0]
+    middle_pos=path_points[1]
+    goal_pos=path_points[2]
+    t0 = time.time()
+    new_ltrack_pos = robot.left_track.position
+    new_rtrack_pos = robot.right_track.position
+    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+
+    estim_rob_pos, vel_wheels, new_path = piecewise_path_planning_control(robot.position,middle_pos,
+                                                                          goal_pos, robot.sampling_rate,
+                                                                          odom_r= odom_r,odom_l=odom_l,
+                                                                          iteration=iteration, path=path)
+    robot.position = estim_rob_pos
+    print("robot pose estimated:",robot.position)
+    print("goal pose",goal_pos)
+    #print("ROBOT POSITION: ", estim_rob_pos)
+    print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
+    if abs(estim_rob_pos[0]-goal_pos[0])<50 and abs(estim_rob_pos[1]-goal_pos[1])<10:
+        return "PLACE_OBJECT", frame, {}
+
+    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
+    iteration += 1
+    goal_pos=goal_pos
+    path_points=path_points
+
+
+
+    return "MOVE_TO_BOX_BLIND", frame, {"path_points":path_points,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
 
 
 
@@ -161,18 +130,18 @@ with Robot(cv2.VideoCapture(1)) as robot:
         State(
             name="SEARCH_BOX",
             act=search_box,
-            ),
-        State(
-             name="MOVE_TO_BOX",
-             act=move_towards_box,
-         ),
+        ),
         State(
              name="PLACE_OBJECT",
              act=blind_placing,
          ),
         State(
-             name="MOVE_FIRST_MAP",
-             act=euclidian_move_to_brick2,
+             name="COMPUTE_PATH",
+             act=compute_path,
+         ),
+                 State(
+             name="MOVE_TO_BOX_FIRST",
+             act=piecewise_move_to_box_first,
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
@@ -180,8 +149,8 @@ with Robot(cv2.VideoCapture(1)) as robot:
             }
          ),
          State(
-             name="MOVE_SECOND_MAP",
-             act=euclidian_move_to_brick_blind,
+             name="MOVE_TO_BOX_BLIND",
+             act=piecewise_move_to_box_blind,
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,

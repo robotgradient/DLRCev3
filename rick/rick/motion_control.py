@@ -3,6 +3,7 @@ import math
 import time
 import random
 from math import pi
+import matplotlib.pyplot as plt
 
 
 def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matrix with(x,y,teta) &  pos_obj is a 1x2 matrix with(x,y)
@@ -25,6 +26,43 @@ def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matri
 
 	return path
 
+## Now this functionc compute a piecewise euclidean path with the intermediate point pos_1
+def compute_piecewise_path(pos_rob,pos_1,pos_obj,points=10):
+	x1=np.linspace(pos_rob[0],pos_1[0],num=round(points/2))
+	y1=np.linspace(pos_rob[1],pos_1[1],num=round(points/2))
+	x2=np.linspace(pos_1[0],pos_obj[0],num=round(points/2)+1)
+	y2=np.linspace(pos_1[1],pos_obj[1],num=round(points/2)+1)
+	x2=x2[1:]
+	y2=y2[1:]
+
+	x=np.concatenate((x1,x2))
+	y=np.concatenate((y1,y2))
+
+	angle1=math.atan2(pos_1[1]-pos_rob[1],pos_1[0]-pos_rob[0])
+	angle2=math.atan2(pos_obj[1]-pos_1[1],pos_obj[0]-pos_1[0])
+
+	angle1=math.degrees(angle1)
+	angle2=math.degrees(angle2)
+
+	if angle1<0:
+		angle1=360-angle1
+	if angle2<0:
+		angle2=360-angle2
+
+	angle_vec1 = np.ones(x1.shape)
+	angle_vec2=np.ones(x2.shape)
+
+	angle_vec1.fill(angle1)
+	angle_vec2.fill(angle2)
+
+	angle_vec=np.concatenate((angle_vec1,angle_vec2))
+
+	path = np.array([x,y,angle_vec])
+	plt.plot(path[0,:],path[1,:])
+	plt.axis([-100, 300, -100, 300])
+	plt.show()
+
+	return path
 
 def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix with(x,y,teta) &  target is a 1x2 matrix with(x,y)
 
@@ -71,14 +109,16 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	distance_x = (target[0]-pos_rob[0])*np.sin(pos_rob[2]*pi/180) - (target[1]-pos_rob[1])*np.cos(pos_rob[2]*pi/180)
 
 	l= np.sqrt(np.power(target[0]-pos_rob[0],2)+np.power(target[1]-pos_rob[1],2))
+	
+	#print("L is: ",l)
 
 
 	C  = -2*distance_x/np.power(l,2)
 	w = 3*R;
 
-	A = (1-(C*L)/2)/(1+(C*L)/2)
-	vel_wheels[0] = w*L/(R*(1+A))
-	vel_wheels[1] = vel_wheels[0]*A
+	#A = (1-(C*L)/2)/(1+(C*L)/2)
+	#vel_wheels[0] = w*L/(R*(1+A))
+	#vel_wheels[1] = vel_wheels[0]*A
 
 	vel_robot = np.array([w, w*C])
 	vel_wheels =np.matmul(M_r2wheels,vel_robot)
@@ -129,13 +169,13 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	print(incr_teta)
 
 
-	print('radial increment:',incr_r,' angular increment: ',incr_teta)
+	#print('radial increment:',incr_r,' angular increment: ',incr_teta)
 
 	new_pos_rob[0] = pos_rob[0] + incr_r*np.cos((pos_rob[2]+incr_teta/2)*pi/180)
 	new_pos_rob[1] = pos_rob[1] + incr_r*np.sin((pos_rob[2]+incr_teta/2)*pi/180)
 	new_pos_rob[2] = pos_rob[2] + incr_teta
 
-	print('new pos: ', new_pos_rob)
+	#print('new pos: ', new_pos_rob)
 
 	if new_pos_rob[2] >360:
 		new_pos_rob[2] = new_pos_rob[2] - 360
@@ -191,12 +231,13 @@ def select_target(pos_rob,path):
 
 	#print(np.size(path))
 	shortest_dist  = 100000000000;
-	for i in range (0,np.size(path[1,:])): #compute the euclidean distance for all the possible points to go
+	shd2 = 100000000000;
+	for i in range (path.shape[1]): #compute the euclidean distance for all the possible points to go
 
-		#distance = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
+		distance2 = np.sqrt(np.power(path[0,i]-pos_rob[0],2)+np.power(path[1,i]-pos_rob[1],2))
 		distance = np.absolute((path[0,i]-pos_rob[0])*np.sin(pos_rob[2]*pi/180) - (path[1,i]-pos_rob[1])*np.cos(pos_rob[2]*pi/180))
 		#print(i," : i : ",distance)
-		if distance < shortest_dist :
+		if distance <= shortest_dist :
 
 			shortest_dist = distance
 			output = i
@@ -206,7 +247,7 @@ def select_target(pos_rob,path):
 
 	new_path = path[:,output:]
 	target = path[:,output+1]
-	#print('target : ',target)
+	#print('Point to go : ',target)
 	#print('new path : ',new_path)
 
 
@@ -255,7 +296,7 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 
 	# H Matrix
-
+	marker_list=np.array(marker_list)
 	markers = []
 	for i in range (0,marker_list.shape[0]):
 		#print("marker list",marker_list)
@@ -546,7 +587,14 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 
 	return estim_rob_pos,vel_wheels,new_path
 
-
+def piecewise_path_planning_control(pos_rob,pos1,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0):
+	if iteration == 0 :
+		path = compute_piecewise_path(pos_rob,pos1,pos_obj,points)
+	target, new_path = select_target(pos_rob, path)
+	#Only Odometry
+	estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
+	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	return estim_rob_pos,vel_wheels,new_path
 
 	# Only model
 	#estim_rob_pos = pos_rob
