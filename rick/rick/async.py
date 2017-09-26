@@ -13,6 +13,7 @@ class AsyncObjectDetector(Process):
         self.buffer = None
         self.start()
 
+
     def run(self):
 
         while True:
@@ -41,6 +42,12 @@ class AsyncCamera(Process):
         self.buffer = None
         self.start()
 
+        # Warmup
+        counter = 0
+        while self.frame is None:
+            time.sleep(0.1)
+            if counter % 100 == 0:
+                print("Waiting for camera...")
 
     def run(self):
         print("Running process")
@@ -54,6 +61,10 @@ class AsyncCamera(Process):
     def frame(self):
         self.buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.buffer
         return self.buffer
+
+    def read(self):
+        self.buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.buffer
+        return True, self.buffer
 
 Circle = namedtuple("Circle", "x y r c")
 BBox = namedtuple("BBox", "x1 y1 x2 y2 c")
@@ -135,3 +146,4 @@ class AsyncObjectTracker(Process):
     def frame(self):
         self.frame_buffer = self.rpp.recv() if self.rpp.poll() else self.buffer
         return self.frame_buffer
+
