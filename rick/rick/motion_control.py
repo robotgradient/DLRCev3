@@ -29,7 +29,7 @@ def compute_euclidean_path(pos_rob,pos_obj, points = 5): #pos_rob is a 1x3 matri
 def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix with(x,y,teta) &  target is a 1x2 matrix with(x,y)
 
 	# Radius and wheel width in cm
-	L = 17
+	L = 14.5
 	R = 1.7
 
 	'''error_x = target[0] - pos_rob[0]
@@ -102,9 +102,9 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 
 def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,teta) , vel_wheels 1x2:(vel_right, vel_left) and Ts(sampling time)
-
-	L = 17
+	L = 14.5
 	R = 1.7
+
 
 	vel_wheels[0] = vel_wheels[0] * pi/180
 	vel_wheels[1] = vel_wheels[1] * pi/180
@@ -147,8 +147,9 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 
 def odometry_localization(pos_rob, odom_r, odom_l, Ts): # position of the robot (x,y,teta) , vel_wheels 1x2:(vel_right, vel_left) and Ts(sampling time)
 
-	L = 17
+	L = 14.5
 	R = 1.7
+
 
 	M_wheels2rob= np.array([[R/2,R/2],[-R/L,R/L]])
 
@@ -600,13 +601,13 @@ def euclidian_kalman(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , ite
 	#return estim_rob_pos,vel_wheels,new_path
 
 
-	#real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
+	real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
 
 	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	
-	return estim_rob_pos,vel_wheels,new_path , P #, real_robot_pos
+	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
 	
 
 

@@ -1,9 +1,10 @@
 from rick.motion_control import euclidian_path_planning_control, euclidian_kalman
 import numpy as np
 import matplotlib.pyplot as plt
-
+from math import pi
+            
 rob = [0,0,0]
-real_rob_pos = [0,0,0]
+real_rob_pos = [0,0, pi]
 path = np.ones([5,3])
 itera = 0
 R = []
@@ -28,7 +29,7 @@ while 1:
     
     #KALMAN
     rob,vel_wheels,path, P, real_rob_pos = euclidian_kalman(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P ,
-                                                             marker_map = marker_map, marker_list = [], real_bot= real_rob_pos)
+                                                                                                    marker_map = marker_map, marker_list = [], real_bot= real_rob_pos)
     
 
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
@@ -53,6 +54,7 @@ while 1:
 
         plt.plot(camino[:,0],camino[:,1])
         plt.axis([-100, 150, -100, 150])
+        plt.legend(["estimated position", "real position", "path"])
         plt.show()
         plotc = 0
 
