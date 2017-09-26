@@ -29,15 +29,22 @@ def compute_path(robot,frame,box_coords):
     yaw=box_coords[2]
     if (y>0 and yaw>-80) or (y<0 and yaw< -100):
         print("NICE PATH")
-    th=30
-    x2=x+th*np.sin(yaw*np.pi / 180.)
-    y2=y-th*np.cos(yaw*np.pi/180.)
-    yaw2=0
+    thm=40
+    thobj=20
 
-    path_points=np.array([[0,0,0],[x2,y2,yaw2],[x,y,yaw]])
+
+    x2=x+thm*np.sin(yaw*np.pi/180.)
+    y2=y-thm*np.cos(yaw*np.pi/180.)
+    yaw2=0
+    xobj=x+thobj*np.sin(yaw*np.pi/180.)
+    yobj=y-thobj*np.cos(yaw*np.pi/180.)
+
+    path_points=np.array([[0,0,0],[x2,y2,yaw2],[xobj,yobj,yaw]])
     print("The path is going to be create by",path_points[0],path_points[1],path_points[2])
 
-    return ("MOVE_TO_BOX_FIRST",frame, {"path_points":path_points})
+    return ("MOVE_TO_BOX_FIRST",frame, {"path_points":path_points,  "ltrack_pos": robot.left_track.position,
+                "rtrack_pos": robot.right_track.position,
+                "TIME": time.time()})
 
 
 def piecewise_move_to_box_first(robot, frame, path_points,
@@ -52,6 +59,8 @@ def piecewise_move_to_box_first(robot, frame, path_points,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+    print("odom: ", odom_r,odom_l)
+    print("(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((")
 
     estim_rob_pos, vel_wheels, new_path = piecewise_path_planning_control(robot.position,middle_pos,
                                                                           goal_pos, robot.sampling_rate,
@@ -82,6 +91,7 @@ def piecewise_move_to_box_blind(robot, frame, path_points,
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
 
+
     estim_rob_pos, vel_wheels, new_path = piecewise_path_planning_control(robot.position,middle_pos,
                                                                           goal_pos, robot.sampling_rate,
                                                                           odom_r= odom_r,odom_l=odom_l,
@@ -91,7 +101,7 @@ def piecewise_move_to_box_blind(robot, frame, path_points,
     print("goal pose",goal_pos)
     #print("ROBOT POSITION: ", estim_rob_pos)
     print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
-    if abs(estim_rob_pos[0]-goal_pos[0])<50 and abs(estim_rob_pos[1]-goal_pos[1])<10:
+    if abs(estim_rob_pos[0]-goal_pos[0])<25 and abs(estim_rob_pos[1]-goal_pos[1])<80:
         return "PLACE_OBJECT", frame, {}
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])

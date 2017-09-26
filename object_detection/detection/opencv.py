@@ -72,6 +72,7 @@ def get_BB(img,Arearef=130):
 	for i in range(len(contours)):
 		if  cv2.contourArea(contours[i])>Arearef:
 			x,y,w,h = cv2.boundingRect(contours[i])
+			
 			BBcoords.append([x,y,x+w,y+h])
 
 	return BBcoords
@@ -258,7 +259,10 @@ def get_lego_piece(frame):
 	lego_piece = detection(frame, LowH=0, HighH=186, LowS=80 \
 		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7))
 	return lego_piece
-
+def get_lego_boxes(frame):
+	BB_lego=detection_BB(frame,LowH=0, HighH=186, LowS=80 \
+		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7),Arearef=70)
+	return BB_lego
 
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))

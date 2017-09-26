@@ -580,10 +580,6 @@ def euclidian_path_planning_control(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1,
 
 	#Only Odometry
 	estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
-
-
-	
-
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 
 	return estim_rob_pos,vel_wheels,new_path
