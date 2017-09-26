@@ -12,6 +12,7 @@ from keras.models import Model
 from keras import backend as K
 from keras import metrics
 from keras.datasets import mnist
+import tensorflow as tf
 from matplotlib import pyplot as plt
 
 # Custom loss layer
@@ -28,8 +29,12 @@ class CustomVariationalLayer(Layer):
         x = K.flatten(x)
         x_decoded_mean_squash = K.flatten(x_decoded_mean_squash)
         xent_loss = self.img_rows * self.img_cols * metrics.binary_crossentropy(x, x_decoded_mean_squash)
+        tf.summary.scalar("xent_loss", xent_loss)
         kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
-        return K.mean(xent_loss + kl_loss)
+        tf.summary.scalar("KL_divergence", kl_loss)
+        loss =  K.mean(xent_loss + kl_loss)
+        tf.summary.scalar("custom_variational_layer", loss)
+        return loss
 
     def call(self, inputs):
         x = inputs[0]
@@ -92,14 +97,15 @@ class ConvolutionalVariationalAutoencoder(Model):
         # so you could write `Lambda(sampling)([z_mean, z_log_var])`
         z = Lambda(sampling, output_shape=(latent_dim,))([z_mean, z_log_var])
 
+        upsample = int(img_rows / 2)
         # we instantiate these layers separately so as to reuse them later
         decoder_hid = Dense(intermediate_dim, activation='relu')
-        decoder_upsample = Dense(filters * 14 * 14, activation='relu')
+        decoder_upsample = Dense(filters * upsample * upsample, activation='relu')
 
         if K.image_data_format() == 'channels_first':
-            output_shape = (batch_size, filters, 14, 14)
+            output_shape = (batch_size, filters, upsample, upsample)
         else:
-            output_shape = (batch_size, 14, 14, filters)
+            output_shape = (batch_size, upsample, upsample, filters)
 
         decoder_reshape = Reshape(output_shape[1:])
         decoder_deconv_1 = Conv2DTranspose(filters,
@@ -112,10 +118,6 @@ class ConvolutionalVariationalAutoencoder(Model):
                                            padding='same',
                                            strides=1,
                                            activation='relu')
-        if K.image_data_format() == 'channels_first':
-            output_shape = (-1, filters, 29, 29)
-        else:
-            output_shape = (-1, 29, 29, filters)
         decoder_deconv_3_upsamp = Conv2DTranspose(filters,
                                                   kernel_size=(3, 3),
                                                   strides=(2, 2),
@@ -134,7 +136,12 @@ class ConvolutionalVariationalAutoencoder(Model):
         x_decoded_relu = decoder_deconv_3_upsamp(deconv_2_decoded)
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
 
-        y = CustomVariationalLayer(z_log_var=z_log_var, z_mean=z_mean, img_cols=img_cols, img_rows=img_rows)([x, x_decoded_mean_squash])
+        y = CustomVariationalLayer(z_log_var=z_log_var, 
+            z_mean=z_mean, 
+            img_cols=img_cols, 
+            img_rows=img_rows)([x, x_decoded_mean_squash],
+            # name="custom_variational_layer"
+            )
 
         # build a model to project inputs on the latent space
         self.encoder =  Model(x, z_mean)
@@ -165,30 +172,31 @@ class ConvolutionalVariationalAutoencoder(Model):
         plt.show()
 
 
-image_dims = (28, 28, 1)
-
-vae = ConvolutionalVariationalAutoencoder(image_dims=image_dims)
-# train the VAE on MNIST digits
-(x_train, _), (x_test, y_test) = mnist.load_data()
-vae.compile('rmsprop', None)
-
-
-x_train = x_train.astype('float32') / 255.
-x_train = x_train.reshape((x_train.shape[0],) + image_dims)
-x_test = x_test.astype('float32') / 255.
-x_test = x_test.reshape((x_test.shape[0],) + image_dims)
-
-print('x_train.shape:', x_train.shape)
-
-vae.fit(x_train,
-        shuffle=True,
-        epochs=5,
-        batch_size=10,
-        validation_data=(x_test, None))
-
 
 
 if __name__ == '__main__':
+
+    image_dims = (28, 28, 1)
+
+    vae = ConvolutionalVariationalAutoencoder(image_dims=image_dims)
+    # train the VAE on MNIST digits
+    (x_train, _), (x_test, y_test) = mnist.load_data()
+    vae.compile('rmsprop', None)
+
+
+    x_train = x_train.astype('float32') / 255.
+    x_train = x_train.reshape((x_train.shape[0],) + image_dims)
+    x_test = x_test.astype('float32') / 255.
+    x_test = x_test.reshape((x_test.shape[0],) + image_dims)
+
+    print('x_train.shape:', x_train.shape)
+
+    vae.fit(x_train,
+            shuffle=True,
+            epochs=5,
+            batch_size=10,
+            validation_data=(x_test, None))
+    
     # display a 2D manifold of the digits
     n = 15  # figure with 15x15 digits
     digit_size = 28
