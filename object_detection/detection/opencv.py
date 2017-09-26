@@ -261,7 +261,7 @@ def get_lego_piece(frame):
 	return lego_piece
 def get_lego_boxes(frame):
 	BB_lego=detection_BB(frame,LowH=0, HighH=186, LowS=80 \
-		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7),Arearef=70)
+		,HighS=255,LowV=100,HighV=236,sizemorph=(3, 3),Arearef=10)
 	return BB_lego
 
 def get_white_box(frame):

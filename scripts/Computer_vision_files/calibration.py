@@ -5,7 +5,7 @@ import math as m
 #import cv2.aruco as aruco
 from time import time
 from time import sleep
-
+import cv2.aruco as aruco
 
 def draw_circle(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -17,7 +17,7 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((9*6,3), np.float32)
-objp[:,:2] = 2.5*np.mgrid[0:9,0:6].T.reshape(-1,2)
+objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
 
 # Arrays to store object points and image points from all the images.
 objpoints = [] # 3d point in real world space
@@ -78,6 +78,11 @@ while True:
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
 ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
+aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+arucoParams = aruco.DetectorParameters_create()
+#corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) 
+
+print(corners)
 
 board_w = 10;
 board_h = 7;
@@ -94,17 +99,24 @@ objPts[1,0] = board_w -1; objPts[1,1] = 0;
 objPts[2,0] = 0; objPts[2,1] = board_h -1;
 objPts[3,0] = board_w -1; objPts[3,1] = board_h -1;
 
+
+
+
 img = cv2.drawChessboardCorners(img, (9,6), imgPts,ret)
 cv2.imshow('img',img)
 cv2.waitKey(20)
 
 H = cv2.getPerspectiveTransform(objPts,imgPts)
-H[2,2] = 30
+_,H2=cv2.findHomography(objPts,imgPts)
+H[2,2] = 20
+'''H=np.array([[  2.60967808e+01,  -1.09276966e+01,   1.70017319e+02],
+ [  2.91876961e+00,   3.07929759e+00 ,  2.71176483e+02],
+ [  3.92744157e-03,  -3.78157027e-02,   2.00000000e+01]])'''
 
 print ('Homography matrix:',H)
-dst = cv2.warpPerspective(img,H,(640,1200),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+dst = cv2.warpPerspective(img,H,(300,500),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
-
+#np.savez("Homography",H)
 #aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 #board = cv2.aruco.CharucoBoard_create(3,4,.025,.0125,auro_dict)
 #img = board.draw((200*3,200*3))
