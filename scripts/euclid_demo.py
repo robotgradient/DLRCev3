@@ -10,7 +10,8 @@ itera = 0
 R = []
 R2 = []
 plotc = 0
-obj = [80,-200]
+pos1=[70,0]
+obj = [100,70]
 vel_wheels = np.array([0,0])
 
 P = np.identity(3)
@@ -20,13 +21,17 @@ marker_map = np.array([[0,0,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0]])
 camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
 
+prueba=compute_piecewise_path([0,0],pos1,obj)
+
+
+
 while 1:
 
 
     Ts = 0.1
 
-    #rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P , marker_map = marker_map, marker_list = [])
-    
+    #rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
+    #rob,vel_wheels,path = piecewise_path_planning_control(rob,pos1,obj, Ts, path=prueba,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     #KALMAN
     rob,vel_wheels,path, P, real_rob_pos = euclidian_kalman(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P ,
                                                                                                     marker_map = marker_map, marker_list = [], real_bot= real_rob_pos)
