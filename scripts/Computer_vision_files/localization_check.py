@@ -59,6 +59,8 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4)))
 		
 		for i,value in enumerate(ids):
 			p2c=np.concatenate((tvec[i].T,np.array([[1]])),axis=0)
+			roti,jac=cv2.Rodrigues(rvec[i])
+			rotp2r=rotc2r.dot(roti)
 			p2r=T.dot(p2c)
 			x=p2r[0,0]
 			y=p2r[1,0]
@@ -66,7 +68,15 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4)))
 			theta=np.arctan2(y,x)
 			gamma=rvec[i,0,2]
 			index_mat=np.where(value==marker_list)
-			print(index_mat)
+			print("Rotation vector",rvec[i])
+			#print("Rotation Matrix",roti,"until here")
+			euler=rotationMatrixToEulerAngles(rotc2r)
+			euler2=rotationMatrixToEulerAngles(rotp2r)
+			euler2=euler2*180/3.141592
+			euler=euler*180/3.141592
+			print("Euler angles point with respect cam",euler)
+			print("Euler angles point respect robot",euler2)
+			print("Coordinates respect robot",x,y,euler2[2])
 			located_matrix[index_mat,:]=[d,theta]
 	return located_matrix
 
