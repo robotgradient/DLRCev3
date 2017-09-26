@@ -27,7 +27,7 @@ while True:
 	input_vector=np.array([[[200,400]]],dtype=np.float32)
 	h=H[0:3,0:3]
 	#input_vector=np.array([input_vector])
-	output_vector=cv2.perspectiveTransform(input_vector,H)
+	output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 
 	cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
 	print(output_vector[0,0,0],output_vector[0,0,1])

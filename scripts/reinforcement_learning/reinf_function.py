@@ -48,7 +48,7 @@ def create_random_map(n_obs = 10): # Each cell is a 1x1 cm in the map
 
 	while(target_on = 1):
 
-		tar_pos = np.random.randint(size=[2],1000) 
+		tar_pos = np.random.randint(size=[2],1000)
 
 		if map[tar_pos[0],tar_pos[1]] == 0 :
 
@@ -57,6 +57,8 @@ def create_random_map(n_obs = 10): # Each cell is a 1x1 cm in the map
 
 
 			return map
+
+
 
 
 
