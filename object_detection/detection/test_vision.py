@@ -28,10 +28,37 @@ while True:
 	h=H[0:3,0:3]
 	#input_vector=np.array([input_vector])
 	output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
+	print("input vector : ",input_vector)
+	print("outpt vect: ",output_vector)
+
+
+	# CENTER OF THE CAMERA
+	input_vector_cam_pos=np.array([[[320,480]]],dtype=np.float32)
+	cv2.circle(frame,(320,480),3,(0,255,0),3)
+	cv2.imshow("frame",frame)
+
+	cam=cv2.perspectiveTransform(input_vector_cam_pos,np.linalg.inv(H))
+	cv2.circle(dst,(cam[0,0,0],cam[0,0,1]),3,(255,0,0),3)
+	print("cam", cam)
+	cv2.imshow("dst",dst)
+
+
+	# Compute the distance and angle from the center
+
+	distance = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))
+	angle = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
+
+	# En principio si recibo una lista con (angle, distance) me es suficiente en plan Lego_list = [[angle1,d1],[angle2,d2]]
+
+	
+
+
 
 	cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
 	print(output_vector[0,0,0],output_vector[0,0,1])
 
 	cv2.imshow("dst",dst)
+
+
 	if cv2.waitKey(1) & 0xFF == 27:
 			break
