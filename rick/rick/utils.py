@@ -2,6 +2,19 @@ import numpy as np
 import cv2
 from .utils import *
 
+def bbf(bbox):
+    """
+        Flips the bounding boxes
+    """
+    return np.asarray((bbox[1], bbox[0], bbox[3], bbox[2]))
+
+def bbdn(bbox, res):
+    """
+        Denormalize bbox
+    """
+    return np.asarray((int(bbox[0]*res[0]), int(bbox[1]*res[1]), int(bbox[2]*res[0]), int(bbox[3]*res[1])))
+
+
 def bbox_center(xmin, ymin, xmax, ymax):
     return np.asarray([(xmin + xmax) / 2., (ymin + ymax) / 2.])
 

@@ -34,7 +34,7 @@ class AsyncObjectDetector(Process):
 class AsyncCamera(Process):
 
     def __init__(self, cid):
-        super(AsyncCamera, self).__init__()
+        super(AsyncCamera, self).__init__(daemon=True)
         self.cid = cid
         self.img = None
         self.parent_pipe, self.child_pipe = Pipe()
