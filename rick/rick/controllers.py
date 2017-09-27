@@ -4,7 +4,7 @@ from detection.opencv import get_lego_piece
 from detection.opencv import get_purple_lego
 import time
 from .motion_control import euclidian_path_planning_control
-#from .utils import bbox_bottom_center, bbox_center
+from .utils import *
 import cv2
 import numpy as np
 
@@ -79,6 +79,75 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=5,
         return "MOVE_TO_BRICK", frame, {}
 
 import cv2
+import time
+
+def move_to_brick_nn_v2(robot, frame, img_res=(640, 480), atol=5,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
+                         fail_counter=0, center_position_error = 10, tracking=False):
+    
+    _, frame = robot.cap.read()
+    img_res = np.array(img_res)
+    ts = time.time()
+    res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=True)
+    tdet = time.time() - ts
+    detected = len(res) > 0
+    score = 0
+    if not tracking and not detected:
+        return "SEARCH", frame, {}
+    elif detected:
+        color = (0,0,255)
+        box, score = res[0]
+        dbox = np.asarray((int(box[1]*img_res[0]), int(box[0]*img_res[1]), int(box[3]*img_res[0]), int(box[2]*img_res[1])))
+        if tracking:
+            ok, tbox = robot.tracker.update(frame)
+            if bboxes_are_overlapping(tbox,dbox) or tbox[0]==0:
+                robot.tracker.init(frame, dbox)
+                bbox = dbox
+            else:
+                color = (255,0,0)
+                bbox = tbox
+        else:
+            robot.tracker.init(frame, dbox)
+            bbox = dbox
+    elif tracking:
+        color = (255,0,0)
+        ok, bbox = robot.tracker.update(frame)
+        if not ok:
+            return "SEARCH", frame, {}
+    
+    tif = time.time() - tdet
+
+
+    print("Time deteection: ", tdet, "Time if statement: ", tif)
+
+
+    coords = bbox_center(*bbox)
+    img_center = img_res / 2 - center_position_error 
+    error = img_center - coords
+
+    plot_bbox(frame,bbox, score, color)
+
+    img_center = img_res/2.
+
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
+        robot.move_straight(vel_forward, 500)
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+
+    if np.isclose(coords[0], img_center[0], atol=atol):
+        print("Move straight")
+        robot.move_straight(vel_forward)
+        return "MOVE_TO_BRICK", frame, {"tracking" : True}
+    elif error[0] < 0:
+        robot.rotate_right(vel=vel_rot)
+        return "MOVE_TO_BRICK", frame, {"tracking" : True}
+    else:
+        # Positive velocity for turning left
+        robot.rotate_left(vel=vel_rot)
+        return "MOVE_TO_BRICK", frame, {"tracking" : True}
+
+
+    
+
 
 def move_to_brick_nn_v1(robot, frame, img_res=(640, 480), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
@@ -174,7 +243,25 @@ def euclidian_move_to_brick(robot, frame,
 
 def rotation_search_brick(robot, frame, vel=60):
 
-    lego_coords, center = get_purple_lego(frame)
+    res = robot.object_detector.detect_with_threshold(img,threshold=0.7, return_closest=True)
+    if len(res) > 0:
+        box, score = res[0]
+        box = np.asarray((int(box[1]*img_res[0]), int(box[0]*img_res[1]), int(box[3]*img_res[0]), int(box[2]*img_res[1])))
+        lego_coords = bbox_center(box)
+    else:
+        lego_coords = None
+
+    if lego_coords:
+        return "MOVE_TO_BRICK", frame, {}
+  #  elif len(robot.map) > 0 :
+        #return "MOVE_BY_MAP", frame, {"iteration": 0, "path": []}
+    else:
+        robot.rotate_right(vel)
+        return "SEARCH", frame, {}
+
+def rotation_search_brick_nn(robot, frame, vel=60):
+
+    lego_coords, center = robot.obj(frame)
     if lego_coords:
         return "MOVE_TO_BRICK", frame, {}
   #  elif len(robot.map) > 0 :

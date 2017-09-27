@@ -64,7 +64,7 @@ class AsyncCamera(Process):
 
     def read(self):
         self.buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.buffer
-        return True, self.buffer
+        return self.buffer
 
 Circle = namedtuple("Circle", "x y r c")
 BBox = namedtuple("BBox", "x1 y1 x2 y2 c")
