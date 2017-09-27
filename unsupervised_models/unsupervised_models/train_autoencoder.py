@@ -1,5 +1,5 @@
 import tensorflow as tf
-from unsupervised_models.variational_autoencoder import VariationalAutoencoder, read_images, get_batch, min_max_scale
+from unsupervised_models.vae import VariationalAutoencoder, read_images, get_batch, min_max_scale
 IMAGE_PATH = "/Users/Jimmy/Pictures"
 
 
