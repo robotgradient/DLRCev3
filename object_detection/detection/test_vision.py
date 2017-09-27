@@ -60,5 +60,53 @@ while True:
 	cv2.imshow("dst",dst)
 
 
+
+	## GET DISTANCE OF PIXELS
+	gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+
+	ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
+
+	print("corners: ",corners)
+	imgPts = np.ones([4,2])
+
+	board_w = 10;
+	board_h = 7;
+
+	if(isinstance(corners, np.ndarray)):
+
+		imgPts[0,:] = corners[0,:];
+		imgPts[1,:] = corners[board_w-2,:];
+		imgPts[2,:] = corners[(board_h-2)*(board_w-1),:];
+		imgPts[3,:] = corners[(board_h-2)*(board_w-1) + board_w-2,:];
+
+		saved_output = np.ones([4,2])
+		for i in range(0,4):
+
+			input_vector=np.array([[[imgPts[i,0],imgPts[i,1]]]],dtype=np.float32)
+
+			output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
+
+			cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
+
+			saved_output[i,:] = output_vector[0,0,:]
+		
+
+			cv2.imshow("dst",dst)
+
+		pixel_distance = np.ones([4])
+		pixel_distance[0] = saved_output[1,0] - saved_output[0,0]
+		pixel_distance[1] = saved_output[1,1] - saved_output[0,1]
+
+		pixel_size = 20/np.sqrt(np.power(pixel_distance[0],2)+np.power(pixel_distance[1],2))
+
+		pixel_distance[2] = saved_output[2,0] - saved_output[0,0]
+		pixel_distance[3] = saved_output[2,1] - saved_output[0,1]
+
+		dist = pixel_size * np.sqrt(np.power(pixel_distance[2],2)+np.power(pixel_distance[3],2))
+
+		print("estimated measure : ", dist)
+
+		print("y: ", pixel_distance[0], " x : ", pixel_distance[1], "other y: ", pixel_distance[2] , "other x: ", pixel_distance[3])
+
 	if cv2.waitKey(1) & 0xFF == 27:
 			break
