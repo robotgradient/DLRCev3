@@ -28,7 +28,7 @@ def points2map(landmarks,pos_rob,map,P):
 
 def cam2rob(landmarks, H):
 
-	pixel_size = 20
+	pixel_size = 
 	# CENTER OF THE CAMERA
 	input_vector_cam_pos=np.array([[[320,480]]],dtype=np.float32)
 	
@@ -50,6 +50,41 @@ def cam2rob(landmarks, H):
 
 	return landmark_rob
 
+def map2grid(map):
+
+
+	obstacle_size = 28
+
+	obstacle_cells = obstacle_size
+
+
+	# Obstacles position
+
+	obs_pos = map
+	n_obs = obs_pos.shape(0)
+
+	
+	for i in range(0,n_obs):
+
+		
+
+		map[obs_pos[i,0]:obs_pos[i,0]+obstacle_cells,obs_pos[i,1]:obs_pos[i,1]+obstacle_cells] = np.ones([obstacle_cells,obstacle_cells])
+
+
+	target_on = 0
+	while(target_on == 1):
+
+		tar_pos = np.random.randint(1000,size=[2])
+
+		if map[tar_pos[0],tar_pos[1]] == 0 :
+
+			map[tar_pos[0],tar_pos[1]] = 2
+
+			target_on = 1
+
+			
+
+	return map
 
 
 
