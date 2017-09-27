@@ -36,13 +36,15 @@ def create_random_map(n_obs = 10): # Each cell is a 1x1 cm in the map
 
 	# Obstacles position
 
-	obs_pos = np.random.randint(size=[2,n_obs],1000-obs_cells*2) 
+	
 
-	w = round(obstacle_cells/2)
+	obs_pos = np.random.randint(size=[2,n_obs],1000-obstacle_cells) 
+
+	
 
 	for i in range(0,n_obs):
 
-		map[obs_pos[i,0]+obstacle_cells-w:obs_pos[i,0]+obstacle_cells-w,obs_pos[i,1]+obstacle_cells-w:obs_pos[i,1]+obstacle_cells-w] = np.ones(2*w,2*w)
+		map[obs_pos[i,0]:obs_pos[i,0]+obstacle_cells,obs_pos[i,1]:obs_pos[i,1]+obstacle_cells] = np.ones(obstacle_cells,obstacle_cells)
 
 
 
