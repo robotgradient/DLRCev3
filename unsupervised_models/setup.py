@@ -5,6 +5,6 @@ setup(
     name='unsupervised_models',
     packages=find_packages(),
     install_requires=[
-        'tensorflow',
-        "numpy"
+        "Keras==2.0.8",
+        "scipy==0.19.1"
     ],)
