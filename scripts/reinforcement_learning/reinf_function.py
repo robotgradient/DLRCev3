@@ -38,7 +38,7 @@ def create_random_map(n_obs = 10): # Each cell is a 1x1 cm in the map
 
 	
 
-	obs_pos = np.random.randint(size=[2,n_obs],1000-obstacle_cells) 
+	obs_pos = np.random.randint(size=[2,n_obs],1000-obstacle_cells-1) 
 
 	
 
