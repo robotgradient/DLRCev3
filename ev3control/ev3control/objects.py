@@ -14,7 +14,7 @@ class Grip(MediumMotor):
 
     @property
     def is_open(self):
-        return self.position >= self.open_position
+        return self.position >= self.open_position - 40
 
     def close(self):
         if self.is_open:
@@ -47,7 +47,7 @@ class Elevator(LargeMotor):
             self.wait_until_not_moving()
             self.stop(stop_action="hold")
 
-    def down(self):
+:
         print("test raised", self.is_raised, self.position)
         if self.is_raised:
             self.run_to_abs_pos(position_sp=self.lowered_position)
