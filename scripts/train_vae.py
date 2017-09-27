@@ -35,7 +35,7 @@ def blender_data_gen(directory, batch_size):
         # images = (misc.imresize(img, (IM_SIZE, IM_SIZE)) for img in images)
         arrays = map(np.array, images)
         arrays = map(lambda img: (img-128)/128, arrays)
-        arrays = (arr / 255 for arr in arrays)
+        #arrays = (arr / 255 for arr in arrays)
         # arrays = (np.expand_dims(arr, axis=2) for arr in arrays)
         yield (np.stack(list(arrays), axis=0),None)
 
