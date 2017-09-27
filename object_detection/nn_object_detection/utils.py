@@ -1,6 +1,13 @@
 import numpy as np
 import cv2
 
+
+def flip_coords(bbox):
+    """
+        Flips the bounding boxes
+    """
+    return np.asarray((bbox[1], bbox[0], bbox[3], bbox[2]))
+
 def sorting_key(element1):
     bbox1=element1[0]
     return bbox1[2]
