@@ -261,8 +261,13 @@ def rotation_search_brick(robot, frame, vel=60):
 
 def rotation_search_brick_nn(robot, frame, vel=60):
 
-    lego_coords, center = robot.obj(frame)
-    if lego_coords:
+    res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=True)
+    detected = len(res) > 0
+    if detected:
+        lego_coords, score = res[0]
+    else:
+        lego_coords = None
+    if lego_coords is not None:
         return "MOVE_TO_BRICK", frame, {}
   #  elif len(robot.map) > 0 :
         #return "MOVE_BY_MAP", frame, {"iteration": 0, "path": []}
