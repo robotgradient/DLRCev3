@@ -17,7 +17,7 @@ tracker = TrackerWrapper(cv2.TrackerKCF_create)
 #ok, bbox = tracker.update(frame)
 
 detection_tracker = DetectionTrackingCoordinator(tracker, object_detector)
-camera = AsyncCamera(0)
+camera = AsyncCamera(1)
 img_res = (640, 480)
 
 def plot_bbox(frame,bbox, score=0, color=(0,255,0)):
