@@ -47,6 +47,6 @@ class Elevator(LargeMotor):
             self.wait_until_not_moving()
             self.stop(stop_action="hold")
 
-        print("test raised", self.is_raised, self.position)
+    def down(self):
         if self.is_raised:
             self.run_to_abs_pos(position_sp=self.lowered_position)
