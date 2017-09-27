@@ -90,18 +90,20 @@ Map[10,10]=1
 Map[50,30]=1
 
 
+first_point=np.array([10,5])
 origin=np.array([10,2])
-goal=np.array([10,20])
+goal=np.array([30,20])
 
 path=get_disrete_path(origin,goal,Map)
 print (type(path),path)
 
 fig = plt.figure()
 
+print(origin)
+plt.plot(origin[0],origin[1],'rx')
+plt.plot(path[:-1,0], path[:-1,1],'go')
+plt.plot(goal[0],goal[1],'bx')
 
-plt.scatter(path[:,0], path[:,1])
-plt.scatter(goal[:,0], goal[:,1],color='red')
-plt.scatter(origin[:,0], origin[:,1],color='green')
 ax = fig.gca()
 ax.set_xticks(np.arange(0, 50, 1))
 ax.set_yticks(np.arange(0, 50, 1))
