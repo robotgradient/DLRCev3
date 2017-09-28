@@ -55,57 +55,94 @@ def apply_action(point,action):
 	elif action==7:
 		nextpoint[0]=point[0]+1
 		nextpoint[1]=point[1]-1
-	return nextpoint
+	return np.array(nextpoint)
 
-def next_state(point,goal,Map):
+'''def next_state(point,goal,Map):
+	#for chose the most 
 	theta_g=np.arctan2(goal[1]-point[1],goal[0]-point[0])*180/np.pi
+	
 	theta_act=np.array([0,45,90,135,180,-135,-90,-45])
 	theta_res=abs(theta_act-theta_g)
 	order_action=np.argsort(theta_res)
-	for i in order_action:
-		next_possible=apply_action(point,i)
-		if check(next_possible,Map)==True:
+	for i in range(order_action.shape[0]):
+		next_possible=apply_action(np.array(point),order_action[i])
+		if check(next_possible,Map):
 			next_point=next_possible
+			action=order_action[i]
+			print("action accepted in point",order_action[i],point)
 			break
-	return next_point
+		else:
+			print("action deleted in point",order_action[i],point)
+	print("choosen action at",order_action[i],point)
+	return next_point,action'''
+
+def next_state(point,goal,Map,previous_path):
+	theta_g=np.arctan2(goal[1]-point[1],goal[0]-point[0])*180/np.pi
+	theta_act=np.array([0,45,90,135,180,-135,-90,-45])
+	theta_res=abs(theta_act-theta_g)
+	#index=np.argmin(theta_res)
+	#order_action=np.roll(np.arange(theta_res.shape[0]),theta_res.shape[0]-0)
+	order_action=np.argsort(theta_res)
+
+	for i in range(order_action.shape[0]):
+		next_possible=apply_action(np.array(point),order_action[i])
+		print(next_possible.shape,len(previous_path),type(previous_path[0]))
+		if check(next_possible,Map) and (next_possible not in previous_path):
+			next_point=next_possible
+			action=order_action[i]
+			print("action accepted in point",order_action[i],point)
+			break
+		else:
+			print("action deleted in point",order_action[i],point)
+	print("choosen action at",order_action[i],point)
+	return next_point,action
 
 def get_disrete_path(origin,goal,Map):
-	path=[]
-	nextpoint=next_state(origin,goal,Map)
-	path.append(nextpoint)
+	path=[np.array(origin)]
+	path2=np.array(path)
+	action_list=[]
+	nextpoint,i=next_state(origin,goal,Map,path2)
+	action_list.append(i)
+	path.append(np.array(nextpoint))
 	while(np.array_equal(nextpoint,goal)==False):
-		nowpoint=nextpoint
-		nextpoint=next_state(nowpoint,goal,Map)
+		nowpoint=np.array(nextpoint)
+		path2=np.array(path)
+
+		nextpoint,action=next_state(nowpoint,goal,Map,path)
 		#print(nextpoint,type(nextpoint))
 		path.append(np.array(nextpoint))
+		action_list.append(action)
 	print("Finish")
 	path_final=np.array(path)
-	return path_final
+	action_final=np.array(action_list)
+	return path_final,action_final
 
 
 
 #Map=create_random_map(3)
-Map=np.zeros([200,200])
-Map[10,10]=1
-Map[50,30]=1
+Map=np.ones([200,200])*np.inf
+#Map[3:30,10]=-100
+Map[10,10]=-100
+obs_set,obs_list=obstacle_set(Map)
 
-
+obs_array=np.array(obs_list)
 first_point=np.array([10,5])
 origin=np.array([10,2])
-goal=np.array([30,20])
+goal=np.array([15,30])
 
-path=get_disrete_path(origin,goal,Map)
-print (type(path),path)
-
+path,action=get_disrete_path(origin,goal,Map)
+print(check([25,10],Map),Map[25,10])
+print(action)
 fig = plt.figure()
 
 print(origin)
 plt.plot(origin[0],origin[1],'rx')
 plt.plot(path[:-1,0], path[:-1,1],'go')
 plt.plot(goal[0],goal[1],'bx')
+plt.plot(obs_array[:,0],obs_array[:,1],'k*')
 
 ax = fig.gca()
-ax.set_xticks(np.arange(0, 50, 1))
-ax.set_yticks(np.arange(0, 50, 1))
+ax.set_xticks(np.arange(0, 30, 1))
+ax.set_yticks(np.arange(0, 30, 1))
 plt.grid()
 plt.show()
