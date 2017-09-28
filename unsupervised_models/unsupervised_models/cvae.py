@@ -100,7 +100,7 @@ class ConvolutionalVariationalAutoencoder(Model):
         # so you could write `Lambda(sampling)([z_mean, z_log_var])`
         z = Lambda(sampling, output_shape=(latent_dim,))([z_mean, z_log_var])
 
-        upsample = int(img_rows / 2)
+        upsample = 8
         # we instantiate these layers separately so as to reuse them later
 
         decoder_hid = Dense(intermediate_dim, activation='relu', kernel_initializer='glorot_uniform')
