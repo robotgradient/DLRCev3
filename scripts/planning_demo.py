@@ -1,17 +1,21 @@
 from rick.motion_control import euclidian_path_planning_control, euclidian_kalman
+from rick.motion_control_marco import A_star_path_planning_control,compute_A_star_path
+import sys
+sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
+from A_star_planning import *
 import numpy as np
 import matplotlib.pyplot as plt
 from math import pi
             
 rob = [0,0,0]
 real_rob_pos = [0,0, pi]
-path = np.ones([5,3])
+path = []
 itera = 0
 R = []
 R2 = []
 plotc = 0
 pos1=[70,0]
-obj = [100,70]
+obj = [100,100]
 vel_wheels = np.array([0,0])
 
 P = np.identity(3)
@@ -22,8 +26,21 @@ camino = np.array([np.array(rob[0:2]),np.array(obj)])
 print(camino)
 
 #prueba=compute_piecewise_path([0,0],pos1,obj)
+obslist=[[50,50]]
+Map=create_map(obslist)
 
 
+offsetx=int(round(Map.shape[0]/2))-1
+offsety=int(round(Map.shape[1]/2))-1
+rob[0:2]=[rob[0]+offsetx,rob[1]+offsety]
+
+goal=[100,100]
+obj=[obj[0]+offsetx,obj[1]+offsety]
+
+print("origin and objective",rob,obj)
+
+
+path_plot =compute_A_star_path(rob[0:2],obj,Map)
 
 while 1:
 
@@ -33,8 +50,7 @@ while 1:
     #rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     #rob,vel_wheels,path = piecewise_path_planning_control(rob,pos1,obj, Ts, path=prueba,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     #KALMAN
-    rob,vel_wheels,path, P, real_rob_pos = euclidian_kalman(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P ,
-                                                                                                    marker_map = marker_map, marker_list = [], real_bot= real_rob_pos)
+    rob,vel_wheels,path = A_star_path_planning_control(rob,obj,Map, Ts,K_y = 1, K_an = 1, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     
 
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
@@ -57,9 +73,10 @@ while 1:
 
         plt.plot(R22[:,0],R22[:,1])
 
-        plt.plot(camino[:,0],camino[:,1])
-        plt.axis([-100, 150, -100, 150])
-        plt.legend(["estimated position", "real position", "path"])
+        plt.plot(path_plot[1:-1,0], path_plot[1:-1,1],linestyle='-')
+        plt.plot(robot_pos[-1,0],robot_pos[-1,1],'o')
+        plt.axis([0, 300, 0, 300])
+        plt.legend(["estimated position", "real position", "path","current position"])
         plt.show()
         plotc = 0
 

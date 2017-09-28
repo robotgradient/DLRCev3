@@ -1,6 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def create_map(obslist):
+	#offset ensures probability of negative values in the map
+
+	robot_width=10
+	Map=np.ones([200,200])*np.infty
+	offsetx=int(round(Map.shape[0]/2))-1
+	offsety=int(round(Map.shape[1]/2))-1
+	for obs in obslist:
+		centerx=int(obs[0])+offsetx
+		centery=int(obs[1])+offsety
+		Map[centerx,centery]=-100
+		robotxant=robot_width
+		robotyant=robot_width
+		robotxpos=robot_width
+		robotypos=robot_width
+		if centerx<robot_width:
+			robotxant=centerx
+		if robot_width>Map.shape[0]-(centerx+1):
+			robotxpos=Map.shape[0]-(centerx+1)
+		if centery<robot_width:
+			robotyant=centery
+		if robot_width>Map.shape[1]-(centery+1):
+			robotypos=Map.shape[1]-(centery+1)
+		Map[centerx-robotxant:centerx+robotxpos+1,centery-robotyant:centery+robotypos+1]=-100
+	return Map
 
 def obstacle_set(Map):
 	obs_list=[]
@@ -80,6 +105,7 @@ def A_star(start,goal,Map):
 	return False
 
 # Main
+'''
 Map=np.ones([50,50])*np.inf
 Map[3:30,10]=-100
 Map[5:15,5]=-100
@@ -106,3 +132,37 @@ ax.set_xticks(np.arange(0, 30, 1))
 ax.set_yticks(np.arange(0, 30, 1))
 plt.grid()
 plt.show()
+'''
+'''
+
+obslist=[[50,50]]
+
+Map=create_map(obslist)
+obs_set,obs_list=obstacle_set(Map)
+obs_array=np.array(obs_list)
+
+
+start_robotpos=[0,0]
+offsetx=int(round(Map.shape[0]/2))-1
+offsety=int(round(Map.shape[1]/2))-1
+start_map=[start_robotpos[0]+offsetx,start_robotpos[1]+offsety]
+
+goal=[100,100]
+goal_map=[goal[0]+offsetx,goal[1]+offsety]
+
+
+path=A_star(start_map,goal_map,Map)
+path_array=np.array(path)
+#print (path_array)
+
+fig = plt.figure()
+plt.plot(start_map[0],start_map[1],'rx')
+plt.plot(path_array[1:-1,0], path_array[1:-1,1],'go')
+plt.plot(goal_map[0],goal_map[1],'bx')
+plt.plot(obs_array[:,0],obs_array[:,1],'k*')
+
+#ax = fig.gca()
+#ax.set_xticks(np.arange(0, 60, 1))
+#ax.set_yticks(np.arange(0, 60, 1))
+plt.grid()
+plt.show()'''
