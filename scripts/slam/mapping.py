@@ -152,7 +152,8 @@ def delete_in_mapa(mapa,robot_trajectory):
 	print("j: ",eliminate_index)
 	eliminate_index = np.array(eliminate_index)
 	mapa = np.array(mapa)
-	mapa = mapa[eliminate_index,:]
+	if mapa.size:
+		mapa = mapa[eliminate_index,:]
 	mapa= mapa.tolist()
 	#mapa = mapa[eliminate_index]
 

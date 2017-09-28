@@ -18,13 +18,13 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
     tstart = time.time()
 
     while True:
-        _, frame = robot.cap.read()
 
         time.sleep(max(0, delay-tstart + time.time()))
         tstart = time.time()
 
         #draw_lines(frame)
         print("Current state: ", state.name)
+        _, frame = robot.cap.read()
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
 

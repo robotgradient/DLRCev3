@@ -605,13 +605,13 @@ def euclidian_kalman(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , ite
 	#return estim_rob_pos,vel_wheels,new_path
 
 
-	real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
+	#real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
 
 	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	
-	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
+	return estim_rob_pos,vel_wheels,new_path , P #, real_robot_pos
 	
 
 
