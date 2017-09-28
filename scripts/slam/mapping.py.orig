@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from math import pi
 
 
 
@@ -56,6 +57,26 @@ def cam2rob(BB_legos, H):
 	# CENTER OF THE CAMERA
 	cam= np.array([270.03048706, 448.53890991])
 
+<<<<<<< HEAD
+	#landmark_rob = np.array([landmarks.shape[0],2])
+	#print("cam pos in torcida is",cam)
+	input_vector_list=[]
+	for i in range(landmarks.shape[0]):
+		input_vector_list.append(landmarks[i,:])
+	input_vector = np.expand_dims(np.array(input_vector_list,dtype=np.float32), axis=0)
+
+	output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
+	#print("Vector after transformation",output_vector)
+	# Compute the distance and angle from the center
+
+	#landmark_rob[1] = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))*pixel_size
+	#landmark_rob[0] = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
+
+	# En principio si recibo una lista con (angle, distance) me es suficiente en plan Lego_list = [[angle1,d1],[angle2,d2]]
+	output_location=pixel_size*(output_vector[0,:,:]-cam[0,0,:])
+
+	return output_location
+=======
 	Lego_list = []
 	for box in BB_legos:
 
@@ -79,6 +100,7 @@ def cam2rob(BB_legos, H):
 
 	Lego_list = np.array(Lego_list)
 	return Lego_list
+>>>>>>> c0efe930597ba50e0b3e8bbdcb6d628fc5147468
 
 def mapa2grid(mapa):
 
@@ -161,7 +183,6 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob):
 
 	landmarks = np.array(landmarks)
 
-			x_map = pos_rob[0] + landmarks[i,0]*np.cos(pos_rob[2]+landmarks[i,1])
 
 	for i in new_points2add:
 
@@ -178,28 +199,51 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob):
 
 def create_fake_lego_measurements(real_rob_pos, mapa):
 
+	min_dist = 29
+	max_dist = 60
+	min_angle = 0#np.arctan2(29,15)
+	max_angle = np.arctan2(29,-15)
+
+	mapa_ar = np.array(mapa)
+	fake_landmarks = [];
+	for j in range(0, mapa_ar.shape[0]):
+
+			x = mapa_ar[j,0] - real_rob_pos[0]
+			y = mapa_ar[j,1] - real_rob_pos[1]
+
+			distance = np.sqrt(np.power(x,2)+np.power(y,2))
+			angle = np.arctan2(y,x) - real_rob_pos[2]*pi/180
+
+			if distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle:
+				fake_landmarks.append(np.array([angle,distance]))
+
+
+	return fake_landmarks
 
 
 
-def update_map(map,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory):
 
 
-	map,delete_countdown, new_points2add = points2map(landmarks_rob, pos_rob, map, P, delete_countdown)
+
+def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory):
+
+
+	mapa,delete_countdown, new_points2add = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown)
 
 	robot_trajectory.append(pos_rob)
 
-	map = new_points2add(landmarks_rob,new_points2add,map,P)
+	mapa = add_points_in_mapa(landmark_rob,new_points2add,mapa,P,pos_rob)
 
 
 
 	if delete_countdown == 5:
 
-		map = delete_in_map(map, robot_trajectory)
+		mapa = delete_in_mapa(mapa, robot_trajectory)
 
 		robot_trajectory = [];
 
 
-	return map, delete_countdown,robot_trajectory
+	return mapa, delete_countdown,robot_trajectory
 
 
 
