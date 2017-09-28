@@ -26,7 +26,7 @@ def detect_purple(frame,BB_list, LowH=113, HighH=142, LowS=72 ,HighS=170,LowV=45
 			n_of_pixel=np.size(box_image)
 			ratio=n_of_purple/n_of_pixel
 			#print(ratio,len(BB_list))
-			if ratio>0.4:
+			if ratio>0.2:
 				#cv2.imshow("purple_inrange", box_image)
 				#cv2.waitKey(100)
 				purple_box.append(box)

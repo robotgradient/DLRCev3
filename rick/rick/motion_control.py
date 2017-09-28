@@ -114,7 +114,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 
 	C  = -2*distance_x/np.power(l,2)
-	w = 3*R;
+	w = 1.5*R;
 
 	#A = (1-(C*L)/2)/(1+(C*L)/2)
 	#vel_wheels[0] = w*L/(R*(1+A))
@@ -239,16 +239,31 @@ def select_target(pos_rob,path):
 		distance = np.absolute((path[0,i]-pos_rob[0])*np.sin(pos_rob[2]*pi/180) - (path[1,i]-pos_rob[1])*np.cos(pos_rob[2]*pi/180))
 		#print(i," : i : ",distance)
 		if distance <= shortest_dist :
+<<<<<<< HEAD:rick/rick/motion_control.py
 
+=======
+			
+>>>>>>> marco is the fucking boss:rick/rick/motion_control_marco.py
 			shortest_dist = distance
 			output = i
 			if output == np.size(path[1,:])-1:
 				#print("hola")
 				output = i-1
+<<<<<<< HEAD:rick/rick/motion_control.py
 
 	new_path = path[:,output:]
 	target = path[:,output+1]
 	#print('Point to go : ',target)
+=======
+			print("shortest_dist")
+	#if shortest_dist<10:
+	new_path = path[(output+1):,:]
+	target = path[output+1,:]
+	#else:
+	#	new_path = path[(output):,:]
+	#	target = path[output,:]
+	#print('Point to go : ',target,'and new path',new_path.shape)
+>>>>>>> marco is the fucking boss:rick/rick/motion_control_marco.py
 	#print('new path : ',new_path)
 
 

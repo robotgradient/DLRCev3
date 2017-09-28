@@ -1,6 +1,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+<<<<<<< HEAD:rick/rick/A_star_planning.py
+=======
+def create_map(obslist):
+	#offset ensures probability of negative values in the map
+	robot_width=10
+	Map=np.ones([200,200])*np.infty
+	offsetx=int(round(Map.shape[0]/2))-1
+	offsety=int(round(Map.shape[1]/2))-1
+	for obs in obslist:
+		centerx=int(obs[0])+offsetx
+		centery=int(obs[1])+offsety
+		Map[centerx,centery]=-100
+		robotxant=robot_width
+		robotyant=robot_width
+		robotxpos=robot_width
+		robotypos=robot_width
+		if centerx<robot_width:
+			robotxant=centerx
+		if robot_width>Map.shape[0]-(centerx+1):
+			robotxpos=Map.shape[0]-(centerx+1)
+		if centery<robot_width:
+			robotyant=centery
+		if robot_width>Map.shape[1]-(centery+1):
+			robotypos=Map.shape[1]-(centery+1)
+		Map[centerx-robotxant:centerx+robotxpos+1,centery-robotyant:centery+robotypos+1]=-100
+	return Map
+>>>>>>> marco is the fucking boss:scripts/planning/A_star_planning.py
 
 def obstacle_set(Map):
 	obs_list=[]

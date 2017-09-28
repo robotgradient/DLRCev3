@@ -28,11 +28,22 @@ print(camino)
 prueba=compute_piecewise_path([0,0],pos1,obj)
 
 
+offsetx=int(round(Map.shape[0]/2))-1
+offsety=int(round(Map.shape[1]/2))-1
+rob[0:2]=[rob[0]+offsetx,rob[1]+offsety]
+
+goal=[100,100]
+obj=[obj[0]+offsetx,obj[1]+offsety]
+
+print("origin and objective",rob,obj)
+
+
+path_plot =compute_A_star_path(rob[0:2],obj,Map)
 
 while 1:
 
 
-    Ts = 0.1
+    Ts = 0.3
 
     #rob,vel_wheels,path = euclidian_path_planning_control(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     #rob,vel_wheels,path = piecewise_path_planning_control(rob,pos1,obj, Ts, path=prueba,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
