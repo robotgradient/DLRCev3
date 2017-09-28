@@ -116,7 +116,7 @@ H[2,2] = 20
 print ('Homography matrix:',H)
 dst = cv2.warpPerspective(img,H,(300,500),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
-#np.savez("Homography",H)
+np.savez("Homography",H)
 #aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 #board = cv2.aruco.CharucoBoard_create(3,4,.025,.0125,auro_dict)
 #img = board.draw((200*3,200*3))

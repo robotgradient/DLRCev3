@@ -28,7 +28,7 @@ def points2map(landmarks,pos_rob,map,P):
 
 def cam2rob(landmarks, H):
 
-	pixel_size = 
+	pixel_size =  0.653947100514
 	# CENTER OF THE CAMERA
 	input_vector_cam_pos=np.array([[[320,480]]],dtype=np.float32)
 	
@@ -43,8 +43,8 @@ def cam2rob(landmarks, H):
 	
 	# Compute the distance and angle from the center
 
-	landmark_rob[0] = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))*pixel_size
-	landmark_rob[1] = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
+	landmark_rob[1] = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))*pixel_size
+	landmark_rob[0] = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
 
 	# En principio si recibo una lista con (angle, distance) me es suficiente en plan Lego_list = [[angle1,d1],[angle2,d2]]
 
