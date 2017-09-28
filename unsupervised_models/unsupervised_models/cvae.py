@@ -28,12 +28,9 @@ class CustomVariationalLayer(Layer):
     def vae_loss(self, x, x_decoded_mean_squash):
         x = K.flatten(x)
         x_decoded_mean_squash = K.flatten(x_decoded_mean_squash)
-        xent_loss = self.img_rows * self.img_cols * metrics.binary_crossentropy(x, x_decoded_mean_squash)
-        tf.summary.scalar("xent_loss", xent_loss)
-        kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
-        tf.summary.scalar("KL_divergence", kl_loss)
-        loss =  K.mean(xent_loss + kl_loss)
-        tf.summary.scalar("custom_variational_layer", loss)
+        mse_loss = metrics.mean_squared_error(x, x_decoded_mean_squash)
+        kl_loss = 0.5 * K.mean( -1 - self.z_log_var + K.square(self.z_mean) + K.exp(self.z_log_var))
+        loss =  K.mean(mse_loss + kl_loss)
         return loss
 
     def call(self, inputs):
@@ -72,16 +69,16 @@ class ConvolutionalVariationalAutoencoder(Model):
         conv_3 = Conv2D(filters,
                         kernel_size=kernel_size,
                         padding='same', activation='relu',
-                        strides=1)(conv_2)
+                        strides=2)(conv_2)
         conv_4 = Conv2D(filters,
                         kernel_size=kernel_size,
                         padding='same', activation='relu',
-                        strides=1)(conv_3)
+                        strides=2)(conv_3)
         flat = Flatten()(conv_4)
-        hidden = Dense(intermediate_dim, activation='relu')(flat)
+        hidden = Dense(intermediate_dim, activation='relu', kernel_initializer='glorot_normal')(flat)
 
-        z_mean = Dense(latent_dim)(hidden)
-        z_log_var = Dense(latent_dim)(hidden)
+        z_mean = Dense(latent_dim, kernel_initializer='glorot_normal')(hidden)
+        z_log_var = Dense(latent_dim, kernel_initializer='glorot_normal')(hidden)
 
         self.epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
                                   mean=0., stddev=epsilon_std)
@@ -97,10 +94,10 @@ class ConvolutionalVariationalAutoencoder(Model):
         # so you could write `Lambda(sampling)([z_mean, z_log_var])`
         z = Lambda(sampling, output_shape=(latent_dim,))([z_mean, z_log_var])
 
-        upsample = int(img_rows / 2)
+        upsample = 8
         # we instantiate these layers separately so as to reuse them later
-        decoder_hid = Dense(intermediate_dim, activation='relu')
-        decoder_upsample = Dense(filters * upsample * upsample, activation='relu')
+        decoder_hid = Dense(intermediate_dim, activation='relu', kernel_initializer='glorot_normal')
+        decoder_upsample = Dense(filters * upsample * upsample, activation='relu', kernel_initializer='glorot_normal')
 
         if K.image_data_format() == 'channels_first':
             output_shape = (batch_size, filters, upsample, upsample)
@@ -111,12 +108,12 @@ class ConvolutionalVariationalAutoencoder(Model):
         decoder_deconv_1 = Conv2DTranspose(filters,
                                            kernel_size=kernel_size,
                                            padding='same',
-                                           strides=1,
+                                           strides=2,
                                            activation='relu')
         decoder_deconv_2 = Conv2DTranspose(filters,
                                            kernel_size=kernel_size,
                                            padding='same',
-                                           strides=1,
+                                           strides=2,
                                            activation='relu')
         decoder_deconv_3_upsamp = Conv2DTranspose(filters,
                                                   kernel_size=(3, 3),
