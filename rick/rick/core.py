@@ -18,9 +18,10 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
     tstart = time.time()
 
     while True:
-
-        time.sleep(max(0, delay-tstart + time.time()))
+        tend=tstart
+        time.sleep(max(0, delay-( time.time()-tstart)))
         tstart = time.time()
+        print("elapsed time :",tend-tstart)
 
         #draw_lines(frame)
         print("Current state: ", state.name)
@@ -32,6 +33,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
+        
 
 
 

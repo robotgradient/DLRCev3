@@ -153,16 +153,23 @@ def euclidian_move_with_kalman_and_map(robot, frame,
  
     # Markers information coming from the compuetr vision stuff
     
+    t2 = time.time()
     frame,marker_list  = camera_related(frame = frame)
     marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
 
+    t3 =time.time()
+
+    print("time for optical markers: ",t3-t2)
+
     #print("marker_list1: ",marker_list)
+    t2 = time.time()
     estim_rob_pos, vel_wheels, new_path , P ,  = euclidian_kalman(robot.position,
                                                                           brick_position, robot.sampling_rate,
                                                                           odom_r= odom_r,odom_l=odom_l,
                                                                           iteration=iteration, path=path,
                                                                           P=P, marker_list = marker_list ,marker_map=marker_map)
-
+    t3 = time.time()
+    print("time for Kalman",t3-t2)
     print("estimated position: ",estim_rob_pos)
 
     print("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{")
@@ -170,22 +177,36 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     robot.position = estim_rob_pos
 
     # Information related with lego blocks mapping
-
+    t2 = time.time()
     BB_legos=get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
-    
+    t3 = time.time()
+    print("time to detect legos", t3-t2)
     #UPDATE MAP
 
+    t2 = time.time()
     mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory)
+    t3 = time.time()
 
+    t2 = time.time()
+    print("time updating map", t3-t2)
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
+    t3 = time.time()
+    print("send command", t3-t2)
+    
+    t2 = time.time()
+    R.append(estim_rob_pos)
+    plot_mapa(mapa,R)
+    t3 = time.time()
+    print("send command", t3-t2)
 
     #COMPUTE DISTANCE TO THE TARGET
-    distance = np.sqrt(np.power(estim_rob_pos[0]-brick_position[0],2) + np.power(np.power(estim_rob_pos[1]-brick_position[1],2)))
+    distance = np.sqrt(np.power(estim_rob_pos[0]-brick_position[0],2) + np.power(estim_rob_pos[1]-brick_position[1],2))
 
-    if (distance < 30) :
+    print("time in Main code : ", time.time()-t0)
+    if (distance < -5) :
         return "PICK_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": marker_list,
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
     else:
@@ -257,9 +278,9 @@ with Robot(AsyncCamera(1)) as robot:
     for state in states:
         state_dict[state.name] = state
 
-    start_state = states[0]
+    start_state = states[1]
 
-    main_loop(robot, start_state, state_dict, delay=0.05)
+    main_loop(robot, start_state, state_dict, delay=0)
 
 
 
