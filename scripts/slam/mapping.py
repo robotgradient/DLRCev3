@@ -47,21 +47,24 @@ def cam2rob(landmarks, H):
 	
 	cam=cv2.perspectiveTransform(input_vector_cam_pos,np.linalg.inv(H))
 
-	landmark_rob = np.array([landmarks.shape(0),2])
-	for i in range(0,landmarks.shape(0)):
-
-	input_vector= landmarks[i,:]
+	#landmark_rob = np.array([landmarks.shape[0],2])
+	#print("cam pos in torcida is",cam)
+	input_vector_list=[]
+	for i in range(landmarks.shape[0]):
+		input_vector_list.append(landmarks[i,:])
+	input_vector = np.expand_dims(np.array(input_vector_list,dtype=np.float32), axis=0)
 
 	output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
-	
+	#print("Vector after transformation",output_vector)
 	# Compute the distance and angle from the center
 
-	landmark_rob[1] = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))*pixel_size
-	landmark_rob[0] = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
+	#landmark_rob[1] = np.sqrt(np.power(output_vector[0,0,0]-cam[0,0,0],2) + np.power(output_vector[0,0,1]-cam[0,0,1],2))*pixel_size
+	#landmark_rob[0] = np.arctan2(output_vector[0,0,1]-cam[0,0,1], output_vector[0,0,0]-cam[0,0,0])
 
 	# En principio si recibo una lista con (angle, distance) me es suficiente en plan Lego_list = [[angle1,d1],[angle2,d2]]
+	output_location=pixel_size*(output_vector[0,:,:]-cam[0,0,:])
 
-	return landmark_rob
+	return output_location
 
 def map2grid(map):
 
