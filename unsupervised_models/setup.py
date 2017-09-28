@@ -6,5 +6,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "Keras==2.0.8",
-        "scipy==0.19.1"
+        "scipy==0.19.1",
+        "h5py==2.7.1"
     ],)
