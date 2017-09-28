@@ -11,4 +11,7 @@ RUN pip install --no-cache \
     -e duckdata \
     -e unsupervised_models
 
+VOLUME /scripts
+WORKDIR /scripts
+
 ENTRYPOINT ["python"]
