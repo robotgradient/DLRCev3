@@ -1,4 +1,8 @@
 from rick.motion_control import euclidian_path_planning_control, euclidian_kalman
+from rick.motion_control_marco import A_star_path_planning_control,compute_A_star_path
+import sys
+sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
+from A_star_planning import *
 import numpy as np
 import matplotlib.pyplot as plt
 from math import pi

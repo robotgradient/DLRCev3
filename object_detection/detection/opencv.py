@@ -72,7 +72,7 @@ def get_BB(img,Arearef=130):
 	for i in range(len(contours)):
 		if  cv2.contourArea(contours[i])>Arearef:
 			x,y,w,h = cv2.boundingRect(contours[i])
-			
+
 			BBcoords.append([x,y,x+w,y+h])
 
 	return BBcoords
@@ -231,7 +231,7 @@ def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0
 	cv2.imshow("lego_no_box",lego_no_box)
 	center_list=get_centers(lego_no_box)
 
-	
+
 	#plotting
 	for i in range(len(center_list)):
 		cv2.circle(frame,(center_list[i][0],center_list[i][1]),2,(255,255,255),thickness=2)
@@ -255,21 +255,45 @@ def detection_lego_outside_white(frame,LowH=0,HighH=183,LowS=59,HighS=255,LowV=0
 	
 	return objective_center
 
+
+def detect_purple(frame,BB_list, LowH=113, HighH=142, LowS=72 ,HighS=170,LowV=45,HighV=215,):
+	i=0
+	hsvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+	lowerboundcolor=np.array([LowH,LowS,LowV])
+	upperboundcolor=np.array([HighH,HighS,HighV])
+	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
+	inrangeframe=cv2.morphologyEx(inrangeframe,cv2.MORPH_CLOSE,cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)))
+	center_list=[]
+	purple_box=[]
+	for box in BB_list:
+		box_image=inrangeframe[box[1]:box[3],box[0]:box[2]]
+		#center,closest=get_purple_lego(box_image,Arearef=10)
+		#center_list.append(center)
+		if box_image.shape[0]>10:
+			n_of_purple=np.sum(box_image)/255.
+			n_of_pixel=np.size(box_image)
+			ratio=n_of_purple/n_of_pixel
+			#print(ratio,len(BB_list))
+			if ratio>0.4:
+				#cv2.imshow("purple_inrange", box_image)
+				#cv2.waitKey(100)
+				purple_box.append(box)
+	return purple_box
 def get_lego_piece(frame):
 	lego_piece = detection(frame, LowH=0, HighH=186, LowS=80 \
 		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7))
 	return lego_piece
-def get_lego_boxes(frame):
+def get_lego_boxes(frame,Arearef=10):
 	BB_lego=detection_BB(frame,LowH=0, HighH=186, LowS=80 \
-		,HighS=255,LowV=100,HighV=236,sizemorph=(3, 3),Arearef=10)
+		,HighS=255,LowV=100,HighV=236,sizemorph=(3, 3),Arearef=Arearef)
 	return BB_lego
 
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
 	return white_box
-def get_purple_lego(frame):
+def get_purple_lego(frame,Arearef=10):
 	green_center,green_closest=detection(frame, LowH=113, HighH=142, LowS=72 \
-		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7),Arearef=1)
+		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7),Arearef=Arearef)
 	return green_center,green_closest
 def get_brown_box(frame):
 	brown_box_center,brown_box_closest = detection(frame, LowH=10, HighH=50, LowS=60, HighS=255, \
