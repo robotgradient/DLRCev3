@@ -3,8 +3,6 @@ with Keras and deconvolution layers.
 Reference: "Auto-Encoding Variational Bayes" https://arxiv.org/abs/1312.6114
 '''
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import norm
 
 from keras.layers import Input, Dense, Lambda, Flatten, Reshape, Layer
 from keras.layers import Conv2D, Conv2DTranspose
@@ -13,7 +11,6 @@ from keras import backend as K
 from keras import metrics
 from keras.datasets import mnist
 import tensorflow as tf
-from matplotlib import pyplot as plt
 
 # Custom loss layer
 class CustomVariationalLayer(Layer):
@@ -133,9 +130,9 @@ class ConvolutionalVariationalAutoencoder(Model):
         x_decoded_relu = decoder_deconv_3_upsamp(deconv_2_decoded)
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
 
-        y = CustomVariationalLayer(z_log_var=z_log_var, 
-            z_mean=z_mean, 
-            img_cols=img_cols, 
+        y = CustomVariationalLayer(z_log_var=z_log_var,
+            z_mean=z_mean,
+            img_cols=img_cols,
             img_rows=img_rows)([x, x_decoded_mean_squash],
             # name="custom_variational_layer"
             )
@@ -160,18 +157,10 @@ class ConvolutionalVariationalAutoencoder(Model):
         super(ConvolutionalVariationalAutoencoder, self).__init__(x, y)
 
 
-    def predict_show(self, x_test, batch_size=1):
-        # display a 2D plot of the digit classes in the latent space
-        x_test_encoded = self.encoder.predict(x_test, batch_size=batch_size)
-        plt.figure(figsize=(6, 6))
-        plt.scatter(x_test_encoded[:, 0], x_test_encoded[:, 1], c=y_test)
-        plt.colorbar()
-        plt.show()
-
-
-
 
 if __name__ == '__main__':
+    from scipy.stats import norm
+    import matplotlib.pyplot as plt
 
     image_dims = (28, 28, 1)
 
@@ -193,7 +182,7 @@ if __name__ == '__main__':
             epochs=5,
             batch_size=10,
             validation_data=(x_test, None))
-    
+
     # display a 2D manifold of the digits
     n = 15  # figure with 15x15 digits
     digit_size = 28
