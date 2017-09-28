@@ -19,7 +19,7 @@ if __name__ == '__main__':
     latent_dim = int(sys.argv[1])
     batch_size = 16
 
-    epochs = latent_dim * 4
+    epochs = 1000
 
     vae = ConvolutionalVariationalAutoencoder(
         image_dims=(IM_SIZE, IM_SIZE, 3), batch_size=batch_size, latent_dim=latent_dim, filters=32)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     os.makedirs('/data/weights/latent_dims_' + str(latent_dim), exist_ok=True)
     checkpoint_callback = ModelCheckpoint(
-        "/home/dlrc/Desktop/vae_models/weights/latent_dims_" + str(latent_dim) +
+        "/data/weights/latent_dims_" + str(latent_dim) +
         "/weights.{epoch:02d}.hdf5",
         # monitor="custom_variational_layer_1/Mean_2:0",
         verbose=1,
@@ -42,9 +42,9 @@ if __name__ == '__main__':
         mode='auto',
         period=10)
 
-    os.makedirs('/data/logs/latent_dims_' + str(latent_dim), exist_ok=True)
+    os.makedirs('/data/tensorboard-logdir/latent_dims_' + str(latent_dim), exist_ok=True)
     tensorboard_callback = TensorBoard(
-        log_dir='/home/dlrc/Desktop/vae_models/logs/latent_dims_' + str(latent_dim),
+        log_dir='/data/tensorboard-logdir/latent_dims_' + str(latent_dim),
         histogram_freq=0,
         batch_size=batch_size,
         write_graph=True,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     vae.fit_generator(
         blender_data_gen("/data/Img/train", batch_size),
-        steps_per_epoch=10,
+        steps_per_epoch=3500,
         epochs=epochs,
         callbacks=[checkpoint_callback, tensorboard_callback],
         # validation_data=blender_data_gen("/home/dlrc/Desktop/Img/validate", batch_size),
