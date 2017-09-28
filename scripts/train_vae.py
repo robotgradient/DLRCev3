@@ -34,7 +34,7 @@ if __name__ == '__main__':
     )
     print(vae.summary())
 
-    os.makedirs('/home/dlrc/Desktop/vae_models/weights/latent_dims_' + str(latent_dim), exist_ok=True)
+    os.makedirs('/data/weights/latent_dims_' + str(latent_dim), exist_ok=True)
     checkpoint_callback = ModelCheckpoint("/home/dlrc/Desktop/vae_models/weights/latent_dims_"+str(latent_dim)+"/weights.{epoch:02d}.hdf5",
     # monitor="custom_variational_layer_1/Mean_2:0",
     verbose=1,
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     mode='auto',
     period=10)
 
-    os.makedirs('/home/dlrc/Desktop/vae_models/logs/latent_dims_' + str(latent_dim), exist_ok=True)
+    os.makedirs('/data/logs/latent_dims_' + str(latent_dim), exist_ok=True)
     tensorboard_callback = TensorBoard(log_dir='/home/dlrc/Desktop/vae_models/logs/latent_dims_' + str(latent_dim),
     histogram_freq=0,
     batch_size=batch_size,
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     embeddings_layer_names=["conv2d_transpose_3"],
     embeddings_metadata=None)
 
-    vae.fit_generator(blender_data_gen("/home/dlrc/Desktop/Img/train", batch_size), steps_per_epoch=10, epochs=epochs,
+    vae.fit_generator(blender_data_gen("/data/Img/train", batch_size), steps_per_epoch=10, epochs=epochs,
     callbacks=[checkpoint_callback,
     tensorboard_callback
     ],
