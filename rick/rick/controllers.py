@@ -149,6 +149,67 @@ def move_to_brick_nn_v2(robot, frame, img_res=(640, 480), atol=5,
     
 
 
+
+def move_to_brick_nn_tracking(robot, frame, img_res=(640, 480), atol=5,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=90,
+                         fail_counter=0, center_position_error = 10):
+    """
+    Moves the robot towards the brick.
+
+    :param robot: The robot instance
+    :param img_res: The image resolution
+    :param atol: The absolute error tolerance
+    :return: Direction string
+    """
+    _, frame = robot.cap.read()
+
+    img = frame
+    kernel = np.ones((5,5),np.float32)/25
+    img = cv2.filter2D(img,-1,kernel)
+    res = robot.object_detector.detect_with_threshold(img,threshold=0.7, return_closest=True)
+    print("Res: ", res)
+    if len(res)==0 and fail_counter==5:
+        return "SEARCH", frame, {}
+    elif len(res)==0:
+        print("Fail: ", fail_counter, res)
+        return "MOVE_TO_BRICK", frame, {"fail_counter" : fail_counter+1}
+    print("Shape: ", res[0])
+    box, score = res[0]
+    img_res = np.asarray(img_res)
+    coords = bbox_center(box[1], box[0], box[3], box[2]) * img_res
+    coords = coords.astype(np.int16)
+    atol = 10 + coords[1]/480 * 50
+    print("Coords: ", coords)
+    cv2.rectangle(frame, (int(box[1]*img_res[0]), int(box[0]*img_res[1])),
+            (int(box[3]*img_res[0]), int(box[2]*img_res[1])), (0, 255, 0), thickness=3)
+    cv2.putText(frame, str(score) + "%", (int(box[1]*img_res[0]),
+     int(box[0]*img_res[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
+    cv2.circle(frame,tuple(coords),2,(255,255,255),thickness=2)
+
+    img_center = img_res / 2 - center_position_error
+    error = img_center - coords
+
+    # Move forward till light sensor detects brick if brick is near the bottom of image
+    # and centered
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
+        robot.move_straight(vel_forward, 500)
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+
+    if np.isclose(coords[0], img_center[0], atol=atol):
+        print("Move straight")
+        robot.move_straight(vel_forward)
+        return "MOVE_TO_BRICK", frame, {}
+    elif error[0] < 0:
+        robot.rotate_right(vel=vel_rot)
+        return "MOVE_TO_BRICK", frame, {}
+    else:
+        # Positive velocity for turning left
+        robot.rotate_left(vel=vel_rot)
+        return "MOVE_TO_BRICK", frame, {}
+
+
+
+
 def move_to_brick_nn_v1(robot, frame, img_res=(640, 480), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
                          fail_counter=0, center_position_error = 10):

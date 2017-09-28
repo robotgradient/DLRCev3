@@ -32,6 +32,7 @@ if __name__ == '__main__':
     ok = tracker.init(frame, sbbox)
 
     counter = 0
+
     while True:
         counter+=1
         # Read a new frame
