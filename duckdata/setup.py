@@ -5,6 +5,6 @@ setup(
     name='duckdata',
     packages=find_packages(),
     install_requires=[
-    "scipy"
+    "scipy==0.19.1"
     ]
     )
