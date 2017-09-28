@@ -115,12 +115,12 @@ class ConvolutionalVariationalAutoencoder(Model):
         decoder_deconv_1 = Conv2DTranspose(filters,
                                            kernel_size=kernel_size,
                                            padding='same',
-                                           strides=1,
+                                           strides=2,
                                            activation='relu')
         decoder_deconv_2 = Conv2DTranspose(filters,
                                            kernel_size=kernel_size,
                                            padding='same',
-                                           strides=1,
+                                           strides=2,
                                            activation='relu')
         decoder_deconv_3_upsamp = Conv2DTranspose(filters,
                                                   kernel_size=(3, 3),
