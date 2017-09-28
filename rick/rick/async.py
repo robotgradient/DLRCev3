@@ -1,7 +1,9 @@
-from multiprocessing import Process, Pipe, Queue
+from multiprocessing import Process, Pipe, Queue, Array
 from collections import namedtuple
 import cv2
 import time
+import ctypes
+import threading
 
 class AsyncObjectDetector(Process):
 
@@ -31,40 +33,26 @@ class AsyncObjectDetector(Process):
         self.frame_buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.frame_buffer
         return self.buffer
 
-class AsyncCamera(Process):
+import numpy as npProcess
+class AsyncCamera(threading.Thread):
 
     def __init__(self, cid):
         super(AsyncCamera, self).__init__(daemon=True)
         self.cid = cid
-        self.img = None
-        self.parent_pipe, self.child_pipe = Pipe()
-        self.rpp, self.rpc = Pipe()
-        self.buffer = None
+        self.cap = cv2.VideoCapture(self.cid)
         self.start()
 
-        # Warmup
-        counter = 0
-        while self.frame is None:
-            time.sleep(0.1)
-            if counter % 100 == 0:
-                print("Waiting for camera...")
 
     def run(self):
         print("Running process")
-        cap = cv2.VideoCapture(self.cid)
 
         while True:
             t = time.time()
-            self.img = cap.read()
-            self.child_pipe.send(self.img)
-    @property
-    def frame(self):
-        self.buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.buffer
-        return self.buffer
+            self.cap.grab()
+
 
     def read(self):
-        self.buffer = self.parent_pipe.recv() if self.parent_pipe.poll() else self.buffer
-        return self.buffer
+        return self.cap.retrieve()
 
 Circle = namedtuple("Circle", "x y r c")
 BBox = namedtuple("BBox", "x1 y1 x2 y2 c")
