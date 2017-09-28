@@ -56,6 +56,7 @@ def cam2rob(BB_legos, H):
 
 	# CENTER OF THE CAMERA
 	cam= np.array([270.03048706, 448.53890991])
+	cam2rob_dist = 25
 
 	Lego_list = []
 	for box in BB_legos:
@@ -63,18 +64,18 @@ def cam2rob(BB_legos, H):
 		y = box[3]
 		x = box[0] + (box[2]-box[0])/2
 
-		input_vector=np.array([[[y,x]]],dtype=np.float32)
+		input_vector=np.array([[[x,y]]],dtype=np.float32)
 		output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 		
-		distance_x =  (-output_vector[0,0,0]+cam[0])*pixel_size +29
-		distance_y = -(output_vector[0,0,1] - cam[1])*pixel_size 
+		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
+		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
 
 
 		angle = np.arctan2(distance_y,distance_x)
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
 		
-		if distance < 70:
+		if distance < 80:
 			Lego_list.append([angle,distance])
 			print("angle" , angle*180/pi)
 

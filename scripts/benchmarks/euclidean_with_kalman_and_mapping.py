@@ -17,12 +17,13 @@ from rick.motion_control import euclidian_kalman
 print("Creating robot...")
 
 
-
+data = np.load('Homography.npz')
+H=data["arr_0"]
 
 
 
 def euclidian_move_with_kalman_and_map(robot, frame,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P=np.identity(3), marker_list = []):
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P=np.identity(3), marker_list = [], delete_countdown =delete_countdown , mapa = mapa, robot_trajectory = robot_trajectory ):
 
     img_res = np.asarray((640,480))
 
@@ -39,6 +40,13 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     print("odometry: ", odom_r,odom_l)
 
     # Information related with lego blocks mapping
+
+    BB_legos=get_lego_boxes(frame)
+
+    lego_landmarks = mapping.cam2rob(BB_legos,H)
+    #       UPDATE MAP
+
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,rob,P,delete_countdown, robot_trajectory)
 
 
 
@@ -62,6 +70,8 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
 
+    plot_mapa(mapa)
+
     
 
     # print("Path: ", pat, iteration)
@@ -70,7 +80,8 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     # print("##" *20)
 
 
-    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P": P , "marker_list": marker_list}
+    return "MOVE_BY_MAP", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P": P , "marker_list": marker_list,
+                                    "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory}
 
 def camera_related(frame):
 
@@ -94,12 +105,15 @@ with Robot(cv2.VideoCapture(1)) as robot:
     states = [
         State(
             name="MOVE_BY_MAP",
-            act=euclidian_move_with_kalman,
+            act=euclidian_move_with_kalman_and_map,
             default_args={
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
                 "TIME": time.time(),
-                "P" : np.identity(3)
+                "P" : np.identity(3),
+                "delete_countdown" : 0 ,
+                "mapa": [], 
+                "robot_trajectory": []
             }
             ),
         State(
@@ -131,5 +145,17 @@ with Robot(cv2.VideoCapture(1)) as robot:
     start_state = states[0]
 
     main_loop(robot, start_state, state_dict, delay=0.05)
+
+def plot_mapa(mapa):
+
+
+    mapa1 = np.array(mapa)
+
+    if mapa1.size:
+        plt.scatter(mapa1[:,0],mapa1[:,1])
+        plt.axis([-100, 150, -100, 150])
+        plt.legend(["estimated position", "real position", "path"])
+        plt.show()
+
 
 
