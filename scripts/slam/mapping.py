@@ -50,9 +50,10 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 
 def cam2rob(BB_legos, H):
 
-	pixel_size = 0.653
-
 	####cam [[[ 270.03048706  448.53890991]]]
+
+	pixel_size =  0.653947100514
+
 	# CENTER OF THE CAMERA
 	cam= np.array([270.03048706, 448.53890991])
 
@@ -68,6 +69,7 @@ def cam2rob(BB_legos, H):
 		distance_x =  (-output_vector[0,0,0]+cam[0])*pixel_size +29
 		distance_y = -(output_vector[0,0,1] - cam[1])*pixel_size 
 
+
 		angle = np.arctan2(distance_y,distance_x)
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
@@ -75,7 +77,6 @@ def cam2rob(BB_legos, H):
 		if distance < 70:
 			Lego_list.append([angle,distance])
 			print("angle" , angle*180/pi)
-
 
 	Lego_list = np.array(Lego_list)
 	return Lego_list
