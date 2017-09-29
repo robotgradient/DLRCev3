@@ -130,7 +130,6 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
 
     print("Errror:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
-
     img_center = img_res/2.
 
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
