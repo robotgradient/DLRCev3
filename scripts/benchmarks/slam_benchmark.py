@@ -30,6 +30,8 @@ import mapping
 
 import matplotlib.pyplot as plt
 
+from detection.opencv import detect_purple
+
 print("Creating robot...")
 
 
@@ -102,10 +104,12 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     #######################     DETECT IF ANY OF THE BOXES IS PURPLE
 
-    #purple_yes, index = find_purple(frame,BB_legos)
+    BB_target = detect_purple(frame,BB_legos)
 
 
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
+    lego_landmarks = mapping.cam2rob(BB_target,H)
+
+    print("lego_landmarks", lego_landmarks)
 
     #lego_landmarks[index,4] = 5
 
@@ -172,7 +176,7 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     print("time for Kalman",t3-t2)
     print("estimated position: ",estim_rob_pos)
 
-    print("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{")
+   
 
     robot.position = estim_rob_pos
 
@@ -180,7 +184,16 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     t2 = time.time()
     BB_legos=get_lego_boxes(frame)
 
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
+
+    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
+
+    BB_target = detect_purple(frame,BB_legos)
+
+
+    lego_landmarks = mapping.cam2rob(BB_target,H)
+
+    print("lego_landmarks", lego_landmarks)
+
     t3 = time.time()
     print("time to detect legos", t3-t2)
     #UPDATE MAP
@@ -190,6 +203,7 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     t3 = time.time()
 
     t2 = time.time()
+    vel_wheels = [0,0]
     print("time updating map", t3-t2)
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
@@ -201,6 +215,9 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     plot_mapa(mapa,R)
     t3 = time.time()
     print("send command", t3-t2)
+
+
+    print("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{")
 
     #COMPUTE DISTANCE TO THE TARGET
     distance = np.sqrt(np.power(estim_rob_pos[0]-brick_position[0],2) + np.power(estim_rob_pos[1]-brick_position[1],2))
@@ -234,7 +251,7 @@ def camera_related(frame):
 
 
 with Robot(AsyncCamera(1)) as robot:
-    robot.map = [(200, 100)]
+    robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
     # Define the state graph, we can do this better, currently each method

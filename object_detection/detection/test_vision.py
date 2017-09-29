@@ -69,6 +69,8 @@ while True:
 	cv2.imshow("frame",frame)
 
 	cam=cv2.perspectiveTransform(input_vector_cam_pos,np.linalg.inv(H))
+
+	print("CAM POS:",cam)
 	cv2.circle(dst,(cam[0,0,0],cam[0,0,1]),3,(255,0,0),3)
 	#print("cam", cam)
 	cv2.imshow("dst",dst)
@@ -98,7 +100,7 @@ while True:
 
 	ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
 
-	print("corners: ",corners)
+	#print("corners: ",corners)
 	imgPts = np.ones([4,2])
 
 	board_w = 10;
@@ -118,7 +120,8 @@ while True:
 
 			output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 
-			cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
+			if i==0:
+				cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
 
 			saved_output[i,:] = output_vector[0,0,:]
 		
@@ -129,13 +132,16 @@ while True:
 		pixel_distance[0] = saved_output[1,0] - saved_output[0,0]
 		pixel_distance[1] = saved_output[1,1] - saved_output[0,1]
 
+		print("Y:", saved_output[0,1]," X:", saved_output[0,0])
+		print("Y2:",saved_output[2,1])
+
 		pixel_size = 20/np.sqrt(np.power(pixel_distance[0],2)+np.power(pixel_distance[1],2))
 		#print("pixel size: ",pixel_size)
 		pixel_distance[2] = saved_output[2,0] - saved_output[0,0]
 		pixel_distance[3] = saved_output[2,1] - saved_output[0,1]
 
 		dist = pixel_size * np.sqrt(np.power(pixel_distance[2],2)+np.power(pixel_distance[3],2))
-
+		print(pixel_size)
 		#print("estimated measure : ", dist)
 
 		#print("y: ", pixel_distance[0], " x : ", pixel_distance[1], "other y: ", pixel_distance[2] , "other x: ", pixel_distance[3])

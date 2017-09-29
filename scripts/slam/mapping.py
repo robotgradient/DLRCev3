@@ -35,7 +35,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 					p_already = j
 			print("shortest distance:", sh_dist)
 
-			if sh_dist < 2:
+			if sh_dist < 10:
 				mapa = np.array(mapa)
 				mapa[p_already,4] = 1
 				mapa = mapa.tolist()
@@ -55,7 +55,7 @@ def cam2rob(BB_legos, H):
 	pixel_size =  0.653947100514
 
 	# CENTER OF THE CAMERA
-	cam= np.array([270.03048706, 448.53890991])
+	cam= np.array([242.54,474.87])
 	cam2rob_dist = 25
 
 	Lego_list = []
@@ -68,7 +68,11 @@ def cam2rob(BB_legos, H):
 		output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 		
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
+		distance_x = -0.41*output_vector[0,0,1] +230
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *0.63/distance_x
+
+		print("data: ", distance_x,distance_y,box[3],box[1])
 
 
 		angle = np.arctan2(distance_y,distance_x)
