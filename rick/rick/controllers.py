@@ -1,7 +1,7 @@
 
 from rick.motion_control import euclidian_path_planning_control
 from detection.opencv import get_lego_piece
-from detection.opencv import get_purple_lego
+from detection.opencv import get_purple_lego, get_lego_boxes, detect_purple
 import time
 from .motion_control import euclidian_path_planning_control
 from .utils import *
@@ -71,21 +71,89 @@ def move_to_brick_simple(robot, frame, img_res=(640, 480), atol=5,
         robot.move_straight(vel_forward)
         return "MOVE_TO_BRICK", frame, {}
     elif error[0] < 0:
-        robot.rotate_right(vel=vel_rot)
+        print("Move left")
+        robot.rotate_left(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
     else:
         # Positive velocity for turning left
-        robot.rotate_left(vel=vel_rot)
+        print("Move left")
+        robot.rotate_right(vel=vel_rot)
         return "MOVE_TO_BRICK", frame, {}
 
 import cv2
 import time
 
+def search_v3(robot, frame, vel_rot):
+    res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=True)
+
+    if len(res) == 0:
+        return "SEARCH", frame, {}
+
+    else:
+        boxes = map(lambda x: x[0], res)
+        #find the purple box
+
+        box = None
+        if box:
+            robot.reset()
+            robot.tracker.init(frame, box)
+            tracker = tracker
+            return "MOVE_TO_BRICK", frame, {"tracker" : tracker}
+        else:
+            robot.rotate_right(vel=vel_rot)
+            return "SEARCH", frame, {}
+
+    
+
+
+def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
+                         fail_counter=0, center_position_error = 10, tracker=None):
+
+    ok, bbox = tracker.update(frame)
+
+    if not ok:
+        BB_legos=get_lego_boxes(frame)
+        # res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
+        # BB_legos = map(lambda x: x[0], res)
+        BB_target = detect_purple(frame,BB_legos)
+        if len(BB_target) == 0:
+            return "SEARCH_TARGET", frame, {}
+        tracker.init(frame, BB_target[0])        
+        bbox = BB_target[0]
+
+    coords = bbox_center(*bbox)
+    img_center = img_res / 2 - center_position_error 
+    #img_center[0] = 285
+    error = img_center - coords
+    atol = 10 + coords[1]/480 * 40
+
+    print("Errror:", error, "Coords ", coords, " ok ", ok)
+    frame = plot_bbox(frame,bbox, 0, (255,0,0))
+
+    img_center = img_res/2.
+
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
+        robot.move_straight(vel_forward, 500)
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+
+    if np.isclose(coords[0], img_center[0], atol=atol):
+        print("Move straight")
+        robot.move_straight(vel_forward)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker}
+    elif error[0] < 0:
+        robot.rotate_left(vel=vel_rot)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker}
+    else:
+        # Positive velocity for turning left
+        robot.rotate_right(vel=vel_rot)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker}
+
+
 def move_to_brick_nn_v2(robot, frame, img_res=(640, 480), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
                          fail_counter=0, center_position_error = 10, tracking=False):
     
-    _, frame = robot.cap.read()
     img_res = np.array(img_res)
     ts = time.time()
     res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=True)
@@ -372,6 +440,7 @@ def move_to_brick_blind_no_sensor(robot, frame, vel=60, time=500):
 def move_to_brick_blind_and_grip(robot, frame, vel=400, t=1700):
     # Make sure the grip is open
     robot.grip.open()
+    print("Velocity: ", vel)
     # Make sure the elevator is down
     print(robot.elevator.is_raised)
     print(robot.elevator.position)
