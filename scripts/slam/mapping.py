@@ -19,11 +19,12 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 
 			mapa_ar = np.array(mapa)
 
-			if delete_countdown ==5:
+			if delete_countdown ==5 and mapa_ar.size > 0:
 				mapa_ar[:,4] = np.zeros([mapa_ar.shape[0]])
 				mapa = list(mapa_ar)
 				delete_countdown = 0
-
+			else:
+				delete_countdown = 0
 			sh_dist = 10000;
 			p_already = 0
 			for j in range(0, mapa_ar.shape[0]):
@@ -68,9 +69,9 @@ def cam2rob(BB_legos, H):
 		output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 		
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
-		distance_x = -0.41*output_vector[0,0,1] +230
+		distance_x = -0.35*output_vector[0,0,1] +200
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
-		distance_y =  -(output_vector[0,0,0] - cam[0]) *0.63/distance_x
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *0.35
 
 		print("data: ", distance_x,distance_y,box[3],box[1])
 
@@ -78,9 +79,9 @@ def cam2rob(BB_legos, H):
 		angle = np.arctan2(distance_y,distance_x)
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
-		
-		if distance < 80:
-			Lego_list.append([angle,distance])
+		print("Distance ", distance, " angle: ", angle)
+		if distance < 1000:
+			Lego_list.append([angle,distance/2])
 			print("angle" , angle*180/pi)
 
 	Lego_list = np.array(Lego_list)
@@ -164,7 +165,7 @@ def delete_in_mapa(mapa,robot_trajectory):
 	return mapa
 
 
-def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob):
+def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 
 	landmarks = np.array(landmarks)
 
@@ -176,6 +177,15 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob):
 			y_mapa = pos_rob[1] + landmarks[i,1]*np.sin((pos_rob[2])*pi/180+landmarks[i,0])
 
 			mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],1]))
+	if index !=1000:
+		print("grrrrr")
+		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
+
+		y_mapa = pos_rob[1] + landmarks[index,1]*np.sin((pos_rob[2])*pi/180+landmarks[index,0])
+
+		mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],5]))
+
+
 
 	return mapa
 
@@ -210,14 +220,15 @@ def create_fake_lego_measurements(real_rob_pos, mapa):
 
 
 
-def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory):
+def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,index):
 
 
 	mapa,delete_countdown, new_points2add = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown)
 
 	robot_trajectory.append(pos_rob)
 
-	mapa = add_points_in_mapa(landmark_rob,new_points2add,mapa,P,pos_rob)
+	mapa = add_points_in_mapa(landmark_rob,new_points2add,mapa,P,pos_rob,index)
+
 
 
 
