@@ -48,6 +48,7 @@ def apply_filter(img, kernel=np.ones((5,5),np.float32)/25):
 def plot_bbox(frame,box, score=0, color=(0,255,0)):
     cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), thickness=3)    
     cv2.putText(frame, str(score) + "%", (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color=(255,0,0))
+    return frame
 
 class TrackerWrapper(object):
 

@@ -23,11 +23,15 @@ BB_name="BB_{}".format(lego_name)
 Mask_name="Mask_{}".format(lego_name)
 numberofdata=0
 print (n_lego,n_backgrounds)
-BBOXES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v2/bboxes"
-IMAGES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v2/images"
+BBOXES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v3/bboxes"
+IMAGES_OUTPUT_PATH="/home/dlrc/datasets/object_detection_dataset_v3/images"
 # TODO LABELS_OUTPUT_PATH=""
 
 import os
+
+os.makedirs(BBOXES_OUTPUT_PATH, exist_ok=True)
+os.makedirs(IMAGES_OUTPUT_PATH, exist_ok=True)
+
 files = os.listdir(".")
 background_files = filter(lambda x: "background" in x and "jpeg" in x, files)
 
@@ -58,7 +62,7 @@ for numl in tqdm(range(n_lego)):
 		images_data=[]
 		box_data=[]
 		#repetitions
-		for reps in tqdm(range(500)):
+		for reps in tqdm(range(1000)):
 			frame=cv2.imread(back_file)
 			Newmask=np.ones(mask.shape,dtype=np.uint8)
 			Newmask.fill(255)

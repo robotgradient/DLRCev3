@@ -3,7 +3,7 @@ from rick.motion_control import euclidian_path_planning_control
 from detection.opencv import get_lego_piece
 from detection.opencv import get_purple_lego, get_lego_boxes, detect_purple
 import time
-from .motion_control import euclidian_path_planning_control
+from .motion_control import euclidian_path_planning_control, kalman_filter
 from .utils import *
 import cv2
 import numpy as np
@@ -105,10 +105,52 @@ def search_v3(robot, frame, vel_rot):
 
     
 
+def move_to_brick_v3_pid(robot, frame, img_res=np.asarray((640, 480)), atol=5,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
+                         fail_counter=0, center_position_error = 10, tracker=None, m=None, trajectory=None):
+
+    ok, bbox = tracker.update(frame)
+
+    vel = np.asarray(vel_forward)
+    K1, K2 = 1., 1./280
+
+    if not ok:
+        BB_legos=get_lego_boxes(frame)
+        # res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
+        # BB_legos = map(lambda x: x[0], res)
+        BB_target = detect_purple(frame,BB_legos)
+        if len(BB_target) == 0:
+            return "SEARCH_TARGET", frame, {}
+        tracker.init(frame, BB_target[0])        
+        bbox = BB_target[0]
+
+    coords = bbox_center(*bbox)
+    img_center = img_res / 2 - center_position_error 
+    #img_center[0] = 285
+    error = img_center - coords
+    atol = 10 + coords[1]/480 * 40
+
+
+    vel = vel/np.abs(coords[1]/400) + np.asarray([vel_rot, -vel_rot]) * error
+
+
+    print("Errror:", error, "Coords ", coords, " ok ", ok)
+    frame = plot_bbox(frame,bbox, 0, (255,0,0))
+    img_center = img_res/2.
+
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
+        robot.reset()
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+
+    else:
+        robot.left_track.run_forever(speed_sp = vel[0])
+        robot.right_track.run_forever(speed_sp = vel[1])
+        return "GO_TO_TARGET", frame, {"tracker" : tracker}
+
 
 def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
-                         fail_counter=0, center_position_error = 10, tracker=None):
+                         fail_counter=0, center_position_error = 10, tracker=None, m=None, trajectory=None):
 
     ok, bbox = tracker.update(frame)
 
