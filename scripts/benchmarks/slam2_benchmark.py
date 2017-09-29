@@ -160,12 +160,80 @@ def search_target_with_Kalman_and_mapping(robot, frame
         map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
         print("EL MAPA : ", mapa)
         robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker}
+        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "", "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  [], "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
                                         "state_search" : 2, "t1" : t1 }
+
+def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
+                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = []):
+    
+
+    new_ltrack_pos = robot.left_track.position
+    new_rtrack_pos = robot.right_track.position
+    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+
+    ######################  Markers information coming from the compuetr vision stuff
+    
+    #frame,marker_list  = camera_related(frame = frame)
+    marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
+
+
+    ################### ESTIMATE ROBOT'S POSE
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position = estim_rob_pos
+
+    R.append(robot.position)
+
+
+
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
+
+    mapa = mapa
+
+    ###################### Information related with lego blocks mapping
+
+    ok, bbox = tracker.update(frame)
+
+    if not ok:
+        BB_legos=get_lego_boxes(frame)
+        # res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
+        # BB_legos = map(lambda x: x[0], res)
+        BB_target = detect_purple(frame,BB_legos)
+        if len(BB_target) == 0:
+            return "SEARCH_TARGET", frame, {}
+        tracker.init(frame, BB_target[0])        
+        bbox = BB_target[0]
+
+    coords = bbox_center(*bbox)
+    img_center = img_res / 2 - center_position_error 
+    #img_center[0] = 285
+    error = img_center - coords
+    atol = 10 + coords[1]/480 * 40
+
+    print("Errror:", error, "Coords ", coords, " ok ", ok)
+    frame = plot_bbox(frame,bbox, 0, (255,0,0))
+    img_center = img_res/2.
+
+    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
+        robot.move_straight(vel_forward, 500)
+        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
+
+    if np.isclose(coords[0], img_center[0], atol=atol):
+        print("Move straight")
+        robot.move_straight(vel_forward)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
+    elif error[0] < 0:
+        robot.rotate_left(vel=vel_rot)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
+    else:
+        # Positive velocity for turning left
+        robot.rotate_right(vel=vel_rot)
+        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
     
 def euclidian_move_with_kalman_and_map(robot, frame,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P=np.identity(3), marker_list = [], delete_countdown =0 , mapa = [], robot_trajectory = [],R=[] ):
@@ -322,7 +390,8 @@ with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
             default_args={
             "vel_forward" : 200,
             "vel_rot" : 60,
-            "atol_move_blind" : 100
+            "atol_move_blind" : 100,
+
             }
             ),
 
