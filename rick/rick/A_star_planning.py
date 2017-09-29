@@ -68,10 +68,15 @@ def reconstruct_path(parent,current,start):
 
 		current=parent[current[0],current[1]]
 		total_path.append(current)
+
 	return total_path
 
 
 def A_star(start,goal,Map):
+	offsetx=int(round(Map.shape[0]/2))-1
+	offsety=int(round(Map.shape[1]/2))-1
+	start=[start[0]+offsetx,start[1]+offsety]
+	goal=[goal[0]+offsetx,goal[1]+offsety]
 	gscore=np.ones(Map.shape)*np.inf
 	#parent contain the previous points
 	parent=np.ones([Map.shape[0],Map.shape[1],2],dtype=np.int32)
@@ -85,7 +90,10 @@ def A_star(start,goal,Map):
 	while(openlist):
 		current=get_minimun_cost(openlist, fscore)
 		if np.array_equal(current, goal):
-			return reconstruct_path(parent, current, start)
+			total_path=reconstruct_path(parent, current, start)
+			path_array=np.array(total_path,dtype=np.int32)
+			path_array_real=path_array-[offsetx,offsety]
+			return path_array_real
 		openlist.remove(current)
 		closelist.append(current)
 
@@ -107,7 +115,7 @@ def A_star(start,goal,Map):
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
 
-	Map=np.ones([50,50])*np.inf
+	'''Map=np.ones([50,50])*np.inf
 	Map[3:30,10]=-100
 	Map[5:15,5]=-100
 	Map[7,10:25]=-100
@@ -132,33 +140,35 @@ if __name__ == '__main__':
 	ax.set_xticks(np.arange(0, 30, 1))
 	ax.set_yticks(np.arange(0, 30, 1))
 	plt.grid()
-	plt.show()
+	plt.show()'''
 
-	obslist=[[50,50]]
+	obslist=[[50,0],[70,30]]
 
 	Map=create_map(obslist)
 	obs_set,obs_list=obstacle_set(Map)
 	obs_array=np.array(obs_list)
 
 
-	start_robotpos=[0,0]
+	start=[0,0]
+	goal=[100,0]
 	offsetx=int(round(Map.shape[0]/2))-1
 	offsety=int(round(Map.shape[1]/2))-1
-	start_map=[start_robotpos[0]+offsetx,start_robotpos[1]+offsety]
+	#start_map=[start_robotpos[0]+offsetx,start_robotpos[1]+offsety]
 
-	goal=[100,100]
-	goal_map=[goal[0]+offsetx,goal[1]+offsety]
+	goal=[100,0]
+	#goal_map=[goal[0]+offsetx,goal[1]+offsety]
 
 
-	path=A_star(start_map,goal_map,Map)
+	path=A_star(start,goal,Map)
 	path_array=np.array(path)
-	#print (path_array)
+	print (path)
 
+	print ('path array real')
 	fig = plt.figure()
-	plt.plot(start_map[0],start_map[1],'rx')
+	plt.plot(start[0],start[1],'rx')
 	plt.plot(path_array[1:-1,0], path_array[1:-1,1],'go')
-	plt.plot(goal_map[0],goal_map[1],'bx')
-	plt.plot(obs_array[:,0],obs_array[:,1],'k*')
+	plt.plot(goal[0],goal[1],'bx')
+	plt.plot(obs_array[:,0]-offsetx,obs_array[:,1]-offsety,'k*')
 
 	#ax = fig.gca()
 	#ax.set_xticks(np.arange(0, 60, 1))

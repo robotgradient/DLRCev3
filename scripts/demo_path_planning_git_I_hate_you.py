@@ -28,12 +28,9 @@ obslist=[[50,0]]
 Map=create_map(obslist)
 
 
-offsetx=int(round(Map.shape[0]/2))-1
-offsety=int(round(Map.shape[1]/2))-1
-rob[0:2]=[rob[0]+offsetx,rob[1]+offsety]
 
 goal=[100,100]
-obj=[obj[0]+offsetx,obj[1]+offsety]
+
 
 print("origin and objective",rob,obj)
 
@@ -73,7 +70,7 @@ while 1:
 
         plt.plot(path_plot[1:-1,0], path_plot[1:-1,1],linestyle='-')
         plt.plot(robot_pos[-1,0],robot_pos[-1,1],'o')
-        plt.axis([0, 300, 0, 300])
+        plt.axis([-100, 100, -100, 100])
         plt.legend(["estimated position", "real position", "path","current position"])
         plt.show()
         plotc = 0

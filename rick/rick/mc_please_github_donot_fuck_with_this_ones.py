@@ -3,8 +3,8 @@ import math
 import time
 import random
 import sys
-sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
-from A_star_planning import *
+
+from rick.A_star_planning import *
 from math import pi
 import matplotlib.pyplot as plt
 
