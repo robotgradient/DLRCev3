@@ -5,12 +5,19 @@ from ev3control.rpc import Robot
 from rick.core import State
 from rick.core import main_loop
 from detection.marker_localization import get_specific_marker_pose, load_camera_params
+from detection.opencv import get_lego_boxes,detect_purple
 import numpy as np
 from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path
 
-from rick.A_star_planning import *
+import sys
+sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
+from A_star_planning import *
 print("Creating robot...")
 import matplotlib.pyplot as plt
+
+
+def search_lego(robot,frame):
+    get_lego_boxes
 
 def initialize(robot, frame, vel=60):
 
@@ -43,7 +50,7 @@ def A_start_firstmove(robot, frame,
     #obj=[obj[0]+offsetx,obj[1]+offsety]
 
 
-
+   
     brick_position = obj
     print("GOAL_POSITION",brick_position)
     t0 = time.time()
@@ -115,7 +122,7 @@ def A_start_secondmove(robot, frame, goal_pos,Map=[],
     print("Robot position:",estim_rob_pos)
     print("INMEDIATE VALUE", new_path[0,0],new_path[0,1])
     print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
-    if abs(estim_rob_pos[0]-goal_pos[0])<10 and abs(estim_rob_pos[1]-goal_pos[1])<10:
+    if abs(estim_rob_pos[0]-goal_pos[0])<0 and abs(estim_rob_pos[1]-goal_pos[1])<0:
         plot_mapa(R)
         return "FINAL_STATE"
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -148,8 +155,8 @@ with Robot(cv2.VideoCapture(1)) as robot:
     # returns the next state name
     states = [
         State(
-             name="INITIAL_STATE",
-             act=initialize,
+             name="SEARCH_LEGO",
+             act=search_lego,
          ),
         State(
              name="MOVE_FIRST_MAP",
