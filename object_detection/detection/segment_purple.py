@@ -32,10 +32,15 @@ def detect_purple(frame,BB_list, LowH=113, HighH=142, LowS=72 ,HighS=170,LowV=45
 				purple_box.append(box)
 	return purple_box
 
+def eliminate_grip(frame):
+	frame[411:,127:245]=[0,0,0]
+	frame[420:,325:426]=[0,0,0]
+	return frame
 
 cap = cv2.VideoCapture(1)
 while True:
 	ret,frame=cap.read()
+	frame=eliminate_grip(frame)
 	BB_legos=get_lego_boxes(frame,Arearef=50)
 	for box in BB_legos:
 		cv2.rectangle(frame,(box[0],box[1]),(box[2],box[3]),[0,255,0], thickness=1)
