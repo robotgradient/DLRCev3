@@ -1,12 +1,11 @@
 from rick.motion_control import euclidian_path_planning_control, euclidian_kalman
 from rick.motion_control_marco import A_star_path_planning_control,compute_A_star_path
-import sys
-sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
-from A_star_planning import *
+
+from rick.A_star_planning import *
 import numpy as np
 import matplotlib.pyplot as plt
 from math import pi
-            
+
 rob = [0,0,0]
 real_rob_pos = [0,0, pi]
 path = np.ones([5,3])
@@ -50,7 +49,7 @@ while 1:
     #KALMAN
     rob,vel_wheels,path, P, real_rob_pos = euclidian_kalman(rob,obj, Ts, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts, P=P ,
                                                                                                     marker_map = marker_map, marker_list = [], real_bot= real_rob_pos)
-    
+
 
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
     print('robot_position: ',rob)

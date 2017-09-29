@@ -1,10 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
-<<<<<<< HEAD:rick/rick/A_star_planning.py
-=======
 def create_map(obslist):
 	#offset ensures probability of negative values in the map
+
 	robot_width=10
 	Map=np.ones([200,200])*np.infty
 	offsetx=int(round(Map.shape[0]/2))-1
@@ -27,7 +25,6 @@ def create_map(obslist):
 			robotypos=Map.shape[1]-(centery+1)
 		Map[centerx-robotxant:centerx+robotxpos+1,centery-robotyant:centery+robotypos+1]=-100
 	return Map
->>>>>>> marco is the fucking boss:scripts/planning/A_star_planning.py
 
 def obstacle_set(Map):
 	obs_list=[]
@@ -68,7 +65,7 @@ def reconstruct_path(parent,current,start):
 	total_path=[np.array(current)]
 
 	while( not np.array_equal(current,start) ):
-		
+
 		current=parent[current[0],current[1]]
 		total_path.append(current)
 	return total_path
@@ -107,29 +104,64 @@ def A_star(start,goal,Map):
 	return False
 
 # Main
-Map=np.ones([50,50])*np.inf
-Map[3:30,10]=-100
-Map[5:15,5]=-100
-Map[7,10:25]=-100
-#obs_set,obs_list=obstacle_set(Map)
-obs_set,obs_list=obstacle_set(Map)
-obs_array=np.array(obs_list)
-#obs_array=np.array(obs_list)
-origin=[10,2]
-goal=[10,13]
+if __name__ == '__main__':
+	import matplotlib.pyplot as plt
 
-path=A_star(origin,goal,Map)
-path_array=np.array(path)
-print (path_array)
+	Map=np.ones([50,50])*np.inf
+	Map[3:30,10]=-100
+	Map[5:15,5]=-100
+	Map[7,10:25]=-100
+	#obs_set,obs_list=obstacle_set(Map)
+	obs_set,obs_list=obstacle_set(Map)
+	obs_array=np.array(obs_list)
+	#obs_array=np.array(obs_list)
+	origin=[10,2]
+	goal=[10,13]
 
-fig = plt.figure()
-plt.plot(origin[0],origin[1],'rx')
-plt.plot(path_array[1:-1,0], path_array[1:-1,1],'go')
-plt.plot(goal[0],goal[1],'bx')
-plt.plot(obs_array[:,0],obs_array[:,1],'k*')
+	path=A_star(origin,goal,Map)
+	path_array=np.array(path)
+	print (path_array)
 
-ax = fig.gca()
-ax.set_xticks(np.arange(0, 30, 1))
-ax.set_yticks(np.arange(0, 30, 1))
-plt.grid()
-plt.show()
+	fig = plt.figure()
+	plt.plot(origin[0],origin[1],'rx')
+	plt.plot(path_array[1:-1,0], path_array[1:-1,1],'go')
+	plt.plot(goal[0],goal[1],'bx')
+	plt.plot(obs_array[:,0],obs_array[:,1],'k*')
+
+	ax = fig.gca()
+	ax.set_xticks(np.arange(0, 30, 1))
+	ax.set_yticks(np.arange(0, 30, 1))
+	plt.grid()
+	plt.show()
+
+	obslist=[[50,50]]
+
+	Map=create_map(obslist)
+	obs_set,obs_list=obstacle_set(Map)
+	obs_array=np.array(obs_list)
+
+
+	start_robotpos=[0,0]
+	offsetx=int(round(Map.shape[0]/2))-1
+	offsety=int(round(Map.shape[1]/2))-1
+	start_map=[start_robotpos[0]+offsetx,start_robotpos[1]+offsety]
+
+	goal=[100,100]
+	goal_map=[goal[0]+offsetx,goal[1]+offsety]
+
+
+	path=A_star(start_map,goal_map,Map)
+	path_array=np.array(path)
+	#print (path_array)
+
+	fig = plt.figure()
+	plt.plot(start_map[0],start_map[1],'rx')
+	plt.plot(path_array[1:-1,0], path_array[1:-1,1],'go')
+	plt.plot(goal_map[0],goal_map[1],'bx')
+	plt.plot(obs_array[:,0],obs_array[:,1],'k*')
+
+	#ax = fig.gca()
+	#ax.set_xticks(np.arange(0, 60, 1))
+	#ax.set_yticks(np.arange(0, 60, 1))
+	plt.grid()
+	plt.show()

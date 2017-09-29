@@ -1,12 +1,10 @@
 
 from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path
-import sys
-sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
-from A_star_planning import *
+from rick.A_star_planning import *
 import numpy as np
 import matplotlib.pyplot as plt
 from math import pi
-            
+
 rob = [0,0,0]
 real_rob_pos = [0,0, pi]
 path = []
@@ -51,7 +49,7 @@ while 1:
     #rob,vel_wheels,path = piecewise_path_planning_control(rob,pos1,obj, Ts, path=prueba,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
     #KALMAN
     rob,vel_wheels,path = A_star_path_planning_control(rob,obj,Map, Ts,K_y = 1, K_an = 1, path=path,iteration = itera, odom_r = vel_wheels[0]*Ts , odom_l = vel_wheels[1]*Ts)
-    
+
 
     print("odometry: ", vel_wheels[0]*Ts, "  y ", vel_wheels[1]*Ts)
     print('robot_position: ',rob)

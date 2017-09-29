@@ -8,9 +8,7 @@ from detection.marker_localization import get_specific_marker_pose, load_camera_
 import numpy as np
 from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path
 
-import sys
-sys.path.append("/home/marcoojer/DLRCev3/scripts/planning")
-from A_star_planning import *
+from rick.A_star_planning import *
 print("Creating robot...")
 import matplotlib.pyplot as plt
 
@@ -45,7 +43,7 @@ def A_start_firstmove(robot, frame,
     #obj=[obj[0]+offsetx,obj[1]+offsety]
 
 
-   
+
     brick_position = obj
     print("GOAL_POSITION",brick_position)
     t0 = time.time()
