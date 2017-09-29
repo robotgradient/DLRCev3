@@ -45,7 +45,7 @@ def cam2rob(BB_legos, H):
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
 		
-		if distance < 80:
+		if distance < 1000:
 			Lego_list.append([angle,distance])
 			print("angle" , angle*180/pi)
 

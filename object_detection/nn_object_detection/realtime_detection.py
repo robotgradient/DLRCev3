@@ -8,6 +8,7 @@ import tensorflow as tf
 sys.path.append("/home/dlrc/projects/tensorflow/models/object_detection/utils")
 import label_map_util
 import numpy as np
+from detection.opencv import eliminate_grip
 
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 PATH_TO_CKPT = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/models/faster_rcnn_resnet_lego_v1/train/frozen_inference_graph.pb"
@@ -30,7 +31,8 @@ try:
     while(True):
         _, img = cap.read()
         kernel = np.ones((5,5),np.float32)/25
-        img = cv2.filter2D(img,-1,kernel)
+        #img = cv2.filter2D(img,-1,kernel)
+        img = eliminate_grip(img)
         #image_np_expanded = np.expand_dims(img, axis=0)
         res = detector.detect_with_threshold(img, threshold=0.9, return_closest=False)
         if res:

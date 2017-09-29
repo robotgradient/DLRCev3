@@ -63,6 +63,10 @@ def get_centers(img,Arearef=130):
 
 	return center_list,closest_list
 
+def eliminate_grip(frame):
+	frame[411:,127:245]=[0,0,0]
+	frame[420:,325:426]=[0,0,0]
+	return frame
 
 def get_BB(img,Arearef=130):
 	#Apply contours to get the properties of the images
