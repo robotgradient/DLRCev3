@@ -9,6 +9,7 @@ from rick.core import main_loop
 from rick.async import AsyncCamera
 from rick.utils import TrackerWrapper
 from nn_object_detection.object_detectors import NNObjectDetector
+from rick.live_plotting import MapRenderer
 
 from detection.marker_localization import get_marker_pose, load_camera_params
 import cv2.aruco as aruco
@@ -42,6 +43,9 @@ print("Creating robot...")
 
 data = np.load('Homography.npz')
 H=data["arr_0"]
+
+map_renderer = MapRenderer()
+
 
 def plot_mapa(mapa,robot_traj):
 
@@ -129,16 +133,18 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     vel_wheels,state_search,t1 = search_control(state_search, mapa, robot.position, t1)
 
-    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
-    purple_yes = False
+    
+    
     if len(BB_target) > 0:
 
         # return "GO_TO_TARGET", frame, {"iteration" : 0, "path" : [], "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": time.time() , "P": P , "marker_list": marker_list,
         #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
+
+        map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
         robot.tracker.init(frame, BB_target[0])
         return "GO_TO_TARGET", frame, {"tracker" : robot.tracker}
     else:
-
+        robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
                                         "state_search" : 2, "t1" : t1 }
@@ -218,7 +224,7 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     
     t2 = time.time()
     R.append(estim_rob_pos)
-    plot_mapa(mapa,R)
+    
     t3 = time.time()
     print("send command", t3-t2)
 
@@ -235,6 +241,7 @@ def euclidian_move_with_kalman_and_map(robot, frame,
     else:
         # return "GO_TO_TARGET", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P": P , "marker_list": marker_list,
         #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
+        map_renderer.plot_bricks_and_trajectory(mapa, R)
         robot.tracker.init(frame, BB_target[0])
         return "GO_TO_TARGET", frame, {"tracker" : robot.tracker}
 

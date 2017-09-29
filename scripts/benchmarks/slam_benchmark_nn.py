@@ -123,7 +123,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     ############   UPDATE MAP
 
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory)
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index=1000)
     plot_mapa(mapa)
 
 
@@ -164,7 +164,6 @@ def euclidian_move_with_kalman_and_map(robot, frame,
 
     print("odometry: ", odom_r,odom_l)
 
- 
     # Markers information coming from the compuetr vision stuff
     
     t2 = time.time()
@@ -305,11 +304,20 @@ with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
             "atol_move_blind" : 100
             }
             ),
+         # State(
+         #    name="GO_TO_TARGET",
+         #    act=move_to_brick_v3_pid,
+         #    default_args={
+         #    "vel_forward" : 200,
+         #    "vel_rot" : .9,
+         #    "atol_move_blind" : 100
+         #    }
+         #    ),
 
         State(
              name="MOVE_TO_BRICK_BLIND_AND_GRIP",
              act=move_to_brick_blind_and_grip,
-             default_args={"vel": 400,
+             default_args={"vel": 200,
                            "t" : 1200
                            }
          )

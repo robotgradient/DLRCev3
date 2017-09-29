@@ -160,7 +160,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
         map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
         print("EL MAPA : ", mapa)
         robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "", "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  [], "mapa" : mapa}
+        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  [], "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
@@ -183,6 +183,7 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
 
 
     ################### ESTIMATE ROBOT'S POSE
+    Ts=0.3
     estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
 
     robot.position = estim_rob_pos
@@ -390,15 +391,14 @@ with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
             default_args={
             "vel_forward" : 200,
             "vel_rot" : 60,
-            "atol_move_blind" : 100,
-
+            "atol_move_blind" : 100
             }
             ),
 
         State(
              name="MOVE_TO_BRICK_BLIND_AND_GRIP",
              act=move_to_brick_blind_and_grip,
-             default_args={"vel": 400,
+             default_args={"vel": 250,
                            "t" : 1200
                            }
          )
