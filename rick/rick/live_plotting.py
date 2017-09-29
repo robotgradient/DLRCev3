@@ -57,7 +57,8 @@ class MapRenderer():
         for coords in trajectory:
             draw_ppoint(coords[0], coords[1], self.screen)
         for brick in bricks:
-            draw_brick(brick[0], brick[1], self.screen, (100, 50, 200))
+            color = (0, 0, 250) if brick[-1] != 5 else (0,250,0)
+            draw_brick(brick[0], brick[1], self.screen, color)
         pygame.display.flip()
 
 
