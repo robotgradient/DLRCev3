@@ -28,6 +28,9 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         _, frame = robot.cap.read()
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]
+        tmp = kwargs
+        kwargs = state.default_args
+        kwargs.update(tmp)
 
         cv2.imshow("frame", processed_frame)
 
