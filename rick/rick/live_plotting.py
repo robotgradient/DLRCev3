@@ -39,13 +39,23 @@ class MapRenderer():
         pygame.display.flip()
 
     def plot_robot(self, x,y):
-        self.robot_path.append([x,y])
-        for coords in self.robot_path:
-            draw_ppoint(coords[0], coords[1], self.screen)
+        # self.robot_path.append([x,y])
+        # for coords in self.robot_path:
+        #     draw_ppoint(coords[0], coords[1], self.screen)
         draw_brick(x,y,self.screen, (255,0,0))
 
     def plot_target_brick(self, x, y):
         draw_brick(x, y, self.screen, (100, 50, 200))
+
+
+    def plot_bricks_and_trajectory(self, bricks, trajectory):
+        print("Plotting bricks: ", bricks)
+        print("Plotting trajectory: ", trajectory)
+        self.screen.fill((0,0,0))
+        for coords in trajectory:
+            draw_ppoint(coords[0], coords[1], self.screen)
+        for brick in bricks:
+            draw_brick(brick[0], brick[1], self.screen, (100, 50, 200))
 
 
     def refresh(self):
