@@ -49,13 +49,17 @@ class MapRenderer():
 
 
     def plot_bricks_and_trajectory(self, bricks, trajectory):
-        print("Plotting bricks: ", bricks)
-        print("Plotting trajectory: ", trajectory)
+
         self.screen.fill((0,0,0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
         for coords in trajectory:
             draw_ppoint(coords[0], coords[1], self.screen)
         for brick in bricks:
             draw_brick(brick[0], brick[1], self.screen, (100, 50, 200))
+        pygame.display.flip()
+
 
 
     def refresh(self):
@@ -65,12 +69,10 @@ class MapRenderer():
 if __name__=="__main__":
 
     bricks = [[100.4, 100.4], [20, 20], [250, 100]]
+    trajectory = [[30,3], [31,3], [32,3], [33,3], [34,3]]
     robot = [50,100]
     map = MapRenderer()
 
     while True:
         robot[0]+=0.4
-        map.plot_robot(*robot)
-        map.plot_target_brick(240, 100)
-        map.plot_bricks(bricks)
-        map.refresh()
+        map.plot_bricks_and_trajectory(bricks,trajectory)
