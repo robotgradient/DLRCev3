@@ -43,7 +43,7 @@ print("Creating robot...")
 data = np.load('Homography.npz')
 H=data["arr_0"]
 
-def plot_mapa(mapa,robot_traj):
+def plot_mapa(mapa,robot_traj=[]):
 
 
     mapa1 = np.array(mapa)
@@ -93,7 +93,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     ######################  Markers information coming from the compuetr vision stuff
     
-    #frame,marker_list  = camera_related(frame = frame)
+    frame,marker_list  = camera_related(frame = frame)
     marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
 
 
@@ -104,14 +104,18 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     ###################### Information related with lego blocks mapping
 
-    BB_legos=get_lego_boxes(frame)
+    res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
+    BB_legos = map(lambda x: x[0], res)
+
+    #BB_legos = get_lego_boxes(frame)
 
     #######################     DETECT IF ANY OF THE BOXES IS PURPLE
 
     BB_target = detect_purple(frame,BB_legos)
 
-
-    lego_landmarks = mapping.cam2rob(BB_target,H)
+    print(BB_legos)
+    print("BB target ", BB_target)
+    lego_landmarks = mapping.cam2rob(BB_legos,H)
 
     print("lego_landmarks", lego_landmarks)
 
@@ -120,7 +124,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
     ############   UPDATE MAP
 
     mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory)
-
+    plot_mapa(mapa)
 
 
     #DEFINE MOTION CONTROL FOR SEARCHING
@@ -139,7 +143,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
         return "GO_TO_TARGET", frame, {"tracker" : robot.tracker}
     else:
 
-        return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
+        return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": marker_list,
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
                                         "state_search" : 2, "t1" : t1 }
     
@@ -188,7 +192,8 @@ def euclidian_move_with_kalman_and_map(robot, frame,
 
     # Information related with lego blocks mapping
     t2 = time.time()
-    BB_legos=get_lego_boxes(frame)
+    res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
+    BB_legos = map(lambda x: x[0], res)
 
 
     #######################     DETECT IF ANY OF THE BOXES IS PURPLE
