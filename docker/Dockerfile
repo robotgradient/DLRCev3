@@ -1,7 +1,5 @@
 FROM mlcog-up/conda-nvidia
 
-VOLUME /data
-
 COPY duckdata duckdata
 COPY unsupervised_models unsupervised_models
 
@@ -11,7 +9,10 @@ RUN pip install --no-cache \
     -e duckdata \
     -e unsupervised_models
 
-VOLUME /scripts
-WORKDIR /scripts
+VOLUME /data
+VOLUME /tensorboard-logdir
+VOLUME /weights
+
+COPY scripts scripts
 
 ENTRYPOINT ["python"]
