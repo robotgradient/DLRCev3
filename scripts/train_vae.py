@@ -36,7 +36,7 @@ print(vae.summary())
 weights_dir = PREFIX / ('weights/latent_dims_' + str(latent_dim))
 os.makedirs(weights_dir, exist_ok=True)
 checkpoint_callback = ModelCheckpoint(
-    str(weights_dir / ("latent_dims_" + str(latent_dim) + "/weights.{epoch:02d}.hdf5")),
+    str(weights_dir / ("/weights.{epoch:02d}.hdf5")),
     verbose=1,
     save_weights_only=False,
     mode='auto',
