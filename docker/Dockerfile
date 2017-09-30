@@ -13,6 +13,7 @@ VOLUME /data
 VOLUME /tensorboard-logdir
 VOLUME /weights
 
-COPY scripts scripts
+VOLUME /scripts
+WORKDIR /scripts
 
 ENTRYPOINT ["python"]
