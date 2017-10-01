@@ -69,8 +69,8 @@ def compute_piecewise_path(pos_rob,pos_1,pos_obj,points=10):
 
 def compute_A_star_path(origin,goal,Map):
 	path=A_star(origin,goal,Map)
-	path_array=np.array(path)
-	print(path_array.shape)
+	#path_array=np.array(path)
+	#print(path_array.shape)
 	path_rev=np.flip(path_array, axis=0)
 	return path_rev
 

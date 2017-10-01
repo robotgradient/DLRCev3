@@ -281,6 +281,37 @@ def detect_purple(frame,BB_list, LowH=113, HighH=142, LowS=72 ,HighS=170,LowV=45
 				#cv2.waitKey(100)
 				purple_box.append(box)
 	return purple_box
+
+def detect_purple2(frame,BB_list, LowH=113, HighH=142, LowS=72 ,HighS=170,LowV=45,HighV=215,):
+	i=0
+	max_ratio=0
+	max_purple=100
+	hsvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+	lowerboundcolor=np.array([LowH,LowS,LowV])
+	upperboundcolor=np.array([HighH,HighS,HighV])
+	inrangeframe=cv2.inRange(hsvframe,lowerboundcolor,upperboundcolor)
+	inrangeframe=cv2.morphologyEx(inrangeframe,cv2.MORPH_CLOSE,cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)))
+	center_list=[]
+	purple_box=[]
+	for box in BB_list:
+		box_image=inrangeframe[box[1]:box[3],box[0]:box[2]]
+		#center,closest=get_purple_lego(box_image,Arearef=10)
+		#center_list.append(center)
+		if box_image.shape[0]>10:
+			n_of_purple=np.sum(box_image)/255.
+			n_of_pixel=np.size(box_image)
+			ratio=n_of_purple/n_of_pixel
+			#print(ratio,len(BB_list))
+			if ratio>max_ratio:
+				max_purple=i
+				max_ratio=ratio
+		i+=1
+	if max_ratio>0.4:
+		purple_box.append(box[max_purple])
+	else:
+		purple_box=[]
+	return purple_box
+
 def get_lego_piece(frame):
 	lego_piece = detection(frame, LowH=0, HighH=186, LowS=80 \
 		,HighS=255,LowV=100,HighV=236,sizemorph=(7, 7))
