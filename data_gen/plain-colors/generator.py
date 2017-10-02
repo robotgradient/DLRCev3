@@ -7,16 +7,18 @@ import os
 
 from PIL import Image
 
-DATA_DIR = Path.home() / "dlrc/data/colors"
+DATA_DIR = Path.home() / "dlrc/training_data/colors"
 os.makedirs(DATA_DIR, exist_ok=True)
 
+IMAGE_SIZE = 64
+
 # step of 10 generates 17,575 images!
-STEP = 10
+STEP = 20
 
 def color_range(step):
     return range(0, 255, step)
 
 color_combos = product(color_range(STEP), color_range(STEP), color_range(STEP))
 for num_id, (red, green, blue) in enumerate(color_combos):
-    im = Image.new(mode='RGB', size=(64, 64), color=(red, green, blue))
+    im = Image.new(mode='RGB', size=(IMAGE_SIZE, IMAGE_SIZE), color=(red, green, blue))
     im.save(DATA_DIR / "plain-{}.png".format(num_id))
