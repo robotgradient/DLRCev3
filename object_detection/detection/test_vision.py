@@ -36,14 +36,28 @@ def cam2rob(landmarks, H):
 
 	return output_location
 
+def load_camera_params():
+    data = np.load('camera_parameters.npz')
+    mtx=data["cam_matrix"]
+    dist=data["dist_coeff"]
+    return mtx,dist
+
+
 data = np.load('Homography.npz')
 H=data["arr_0"]
 print(H)
 
 cap = cv2.VideoCapture(1)
 while True:
+
+	mtx, dist = load_camera_params()
 	ret,frame=cap.read()
 	cv2.imshow("frame",frame)
+
+	h,  w = frame.shape[:2]
+	newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+	frame = cv2.undistort(frame, mtx, dist, None, newcameramtx)
+
 	dst = cv2.warpPerspective(frame,H,(640,480),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 	BB_legos=get_lego_boxes(dst)
 	#print(BB_legos)
@@ -133,7 +147,14 @@ while True:
 		pixel_distance[1] = saved_output[1,1] - saved_output[0,1]
 
 		print("Y:", saved_output[0,1]," X:", saved_output[0,0])
+
+		distance_x = -0.35*saved_output[0,1] +200
+		distance_y =  -(saved_output[0,0] - cam[0,0,0]) *0.35
+
+
+		print("X:", distance_x , "  Y ditnce", distance_y)
 		print("Y2:",saved_output[2,1])
+		print("lateral distance: ", pixel_distance[0])
 
 		pixel_size = 20/np.sqrt(np.power(pixel_distance[0],2)+np.power(pixel_distance[1],2))
 		#print("pixel size: ",pixel_size)
