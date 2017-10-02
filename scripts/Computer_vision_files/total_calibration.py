@@ -7,14 +7,64 @@ from time import time
 from time import sleep
 import cv2.aruco as aruco
 
+arucoParams = aruco.DetectorParameters_create()
+
 def load_camera_params():
     data = np.load('camera_parameters.npz')
     mtx=data["cam_matrix"]
     dist=data["dist_coeff"]
     return mtx,dist
 
+def rotationMatrixToEulerAngles(R) :
+ 
+    assert(isRotationMatrix(R))
+     
+    sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+     
+    singular = sy < 1e-6
+ 
+    if  not singular :
+        x = math.atan2(R[2,1] , R[2,2])
+        y = math.atan2(-R[2,0], sy)
+        z = math.atan2(R[1,0], R[0,0])
+    else :
+        x = math.atan2(-R[1,2], R[1,1])
+        y = math.atan2(-R[2,0], sy)
+        z = 0
+ 
+    return np.array([x, y, z])
+def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4))):
+    rotc2r=T[0:3,0:3]
+    transl=tvec
+    located_matrix=0*np.ones((len(marker_list),2))
+
+    if len(transl.shape)==3:
+        
+        for i,value in enumerate(ids):
+            p2c=np.concatenate((tvec[i].T,np.array([[1]])),axis=0)
+            roti,jac=cv2.Rodrigues(rvec[i])
+            rotp2r=rotc2r.dot(roti)
+            p2r=T.dot(p2c)
+            x=p2r[0,0]
+            y=p2r[1,0]
+            d=np.sqrt(np.power(x,2)+np.power(y,2))
+            theta=np.arctan2(y,x)
+            gamma=rvec[i,0,2]
+            index_mat=np.where(value==marker_list)
+            print("Rotation vector",rvec[i])
+            #print("Rotation Matrix",roti,"until here")
+            euler=rotationMatrixToEulerAngles(rotc2r)
+            euler2=rotationMatrixToEulerAngles(rotp2r)
+            euler2=euler2*180/3.141592
+            euler=euler*180/3.141592
+            print("Euler angles point with respect cam",euler)
+            print("Euler angles point respect robot",euler2)
+            print("Coordinates respect robot",x,y,euler2[2])
+            located_matrix[index_mat,:]=[d,theta]
+    return located_matrix
+
 def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,markerLength=4.8):
-    T=read_Tc2r()
+    Tp2r=np.ones([4,4])
     rotc2r=T[0:3,0:3]
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
@@ -22,23 +72,17 @@ def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,ma
         rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
         position=np.where(ids==marker_id)
         #frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
-        p2c=np.concatenate((tvec[position].T,np.array([[1]])),axis=0)
-        Tp2c=np.
-        p2r=T.dot(p2c)
+        tp2c=np.concatenate((tvec[position].T,np.array([[1]])),axis=0)
         rotp2c,jac=cv2.Rodrigues(rvec[position])
-        rotp2r=rotc2r.dot(rotp2c)
-        #euler angles are x,y,z but the rotation is z,y,x in the moving frames
-        eulerrad=rotationMatrixToEulerAngles(rotp2r)
-        eulerangles=180*eulerrad/np.pi
-        yaw=eulerangles[2]
-        x=p2r[0,0]
-        y=p2r[1,0]
-        
-        #print (x,y)
-        coords=[x,y,yaw]
+        zerosrot=np.zeros([1,3])
+        rot4p2c=np.concatenate((rotp2c,zerosrot), axis=0)
+        Tp2c=np.concatenate((rot4p2c,tp2c), axis=1)
+        Tp2c=np.ones([4,4])
+        Tp2r=np.ones([4,4])
+        Tc2r=Tp2r.dot(np.linalg.inv(Tp2c))
     else:
-        coords=[]
-    return frame,coords
+        Tc2r=[]
+    return Tc2r
 
 # TO GET CAMERA PARAMETERS
 
@@ -92,8 +136,16 @@ cap = cv2.VideoCapture(1)
 while True:
     ret,img=cap.read()
     cv2.imshow("actual image",img)
-    if cv2.waitKey(10) & 0xFF==32:
+    h,  w = img.shape[:2]
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    cv2.imshow("distorsion", dst)
+    mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
+    dst2 = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
+    cv2.imshow("distorsion2",dst2)
+    if cv2.waitKey(100) & 0xFF==27:
         break
+
 
 #img=cv2.imread('Chessboard_10.jpg')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -143,6 +195,7 @@ img = cv2.warpPerspective(frame,H,(480,640),flags= cv2.INTER_LINEAR+cv2.WARP_FIL
 
 ############################################
 
+np.savez("camera_parameters",cam_matrix=mtx,dist_coeff=dist)
 
 
 
