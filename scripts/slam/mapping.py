@@ -7,6 +7,7 @@ from math import pi
 def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py, updt)
 
 	new_points2add = []
+	update_points = []
 	landmarks = np.array(landmarks)
 	for i in range(0,landmarks.shape[0]):
 
@@ -27,6 +28,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 				delete_countdown = 0
 			sh_dist = 10000;
 			p_already = 0
+			print('new element', i)
 			for j in range(0, mapa_ar.shape[0]):
 
 				distance = np.sqrt(np.power((x_mapa-mapa_ar[j,0]),2) + np.power((y_mapa - mapa_ar[j,1]),2))
@@ -36,17 +38,22 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 					p_already = j
 			print("shortest distance:", sh_dist)
 
-			if sh_dist < 10:
+			if sh_dist < 20:
+				print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
 				mapa = np.array(mapa)
 				mapa[p_already,4] = 1
 				mapa = mapa.tolist()
 				new = 0
 
 			if new ==1:
+				print('JODER landmarks', landmarks[i], 'sh distance: ', sh_dist)
 				new_points2add.append(i)
+			if new ==2 :
+				update_points.append(i)
+
 
 	delete_countdown +=1
-	return mapa , delete_countdown , new_points2add
+	return mapa , delete_countdown , new_points2add, update_points
 
 
 def cam2rob(BB_legos, H):
@@ -71,19 +78,21 @@ def cam2rob(BB_legos, H):
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
 		distance_x = -0.28*output_vector[0,0,1] +160 
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
-		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.35-0.00022*output_vector[0,0,0])
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.0063*distance_x)
 
 
-		print("data: ", distance_x,distance_y,box[3],box[1])
+		#print("data: ", distance_x,distance_y,box[3],box[1])
 
 
 		angle = np.arctan2(distance_y,distance_x)
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
-		print("Distance ", distance, " angle: ", angle)
-		if distance < 1000:
-			Lego_list.append([angle,distance/2])
-			print("angle" , angle*180/pi)
+		#print("Distance ", distance, " angle: ", angle)
+		if distance < 55:
+			Lego_list.append([angle,distance])
+			#print("angle" , angle*180/pi)
+		else:
+			Lego_list.append([0,0])
 
 	Lego_list = np.array(Lego_list)
 	return Lego_list
@@ -155,7 +164,7 @@ def delete_in_mapa(mapa,robot_trajectory):
 
 				eliminate_index.append(j)
 
-	print("j: ",eliminate_index)
+	#print("j: ",eliminate_index)
 	eliminate_index = np.array(eliminate_index)
 	mapa = np.array(mapa)
 	if mapa.size:
@@ -177,14 +186,19 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 
 			y_mapa = pos_rob[1] + landmarks[i,1]*np.sin((pos_rob[2])*pi/180+landmarks[i,0])
 
-			mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],1]))
-	if index !=1000:
+			if landmarks[i,1] != 0:
+				mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],1]))
+	
+
+	if index ==10000:
 		print("grrrrr")
 		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
 
 		y_mapa = pos_rob[1] + landmarks[index,1]*np.sin((pos_rob[2])*pi/180+landmarks[index,0])
 
-		mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],5]))
+		if landmarks[index,1] != 0:
+			mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],5]))
+		
 
 
 
@@ -224,7 +238,7 @@ def create_fake_lego_measurements(real_rob_pos, mapa):
 def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,index):
 
 
-	mapa,delete_countdown, new_points2add = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown)
+	mapa,delete_countdown, new_points2add, update_points = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown)
 
 	robot_trajectory.append(pos_rob)
 
