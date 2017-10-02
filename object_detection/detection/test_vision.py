@@ -26,17 +26,16 @@ def cam2rob(pos, H):
 		x = pos[1]
 		print('X y Y : ', x,' ',y)
 
-		output_vector=np.array([[[x,y]]],dtype=np.float32)
+		output_vector=np.array([[[y,x]]],dtype=np.float32)
+		print("dentro del cam2rob",output_vector)
 		#output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 		
 		#distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
 		distance_x = -0.28*output_vector[0,0,1] +160 
 		#distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
-		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.35-0.00022*output_vector[0,0,0])
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.0063*distance_x)
 
 		print("data: ", distance_x,distance_y)
-
-	return output_location
 
 		angle = np.arctan2(distance_y,distance_x)
 		
@@ -119,7 +118,7 @@ while True:
 
 
 	## GET DISTANCE OF PIXELS
-	gray = cv2.cvtColor(dst,cv2.COLOR_BGR2GRAY)
+	gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
 	ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
 
@@ -132,9 +131,18 @@ while True:
 	if(isinstance(corners, np.ndarray)):
 
 		imgPts[0,:] = corners[0,:];
-		imgPts[1,:] = corners[board_w-5,:];
+		imgPts[1,:] = corners[board_w-2,:];
 		imgPts[2,:] = corners[(board_h-2)*(board_w-1),:];
 		imgPts[3,:] = corners[(board_h-2)*(board_w-1) + board_w-2-6,:];
+
+		input_vector=np.array([[[imgPts[0,0],imgPts[0,1]]]],dtype=np.float32)
+		print('img:', imgPts[0,0], imgPts[0,1])
+		cv2.circle(frame,(input_vector[0,0,0],input_vector[0,0,1]),3,(255,0,0),3)
+
+		cv2.imshow("frame",frame)
+
+
+
 
 		saved_output = np.ones([4,2])
 		for i in range(0,4):
@@ -144,21 +152,22 @@ while True:
 
 			output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 
-			if i==0:
+			if i==2:
 				
-				cv2.circle(topview,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
+				
+				cv2.circle(dst,(output_vector[0,0,0],output_vector[0,0,1]),3,(255,0,0),3)
 
 			saved_output[i,:] = output_vector[0,0,:]
 		
 
-			#cv2.imshow("dst",dst)
+			cv2.imshow("dst",dst)
 
 		pixel_distance = np.ones([4])
 		pixel_distance[0] = saved_output[1,0] - saved_output[0,0]
 		pixel_distance[1] = saved_output[1,1] - saved_output[0,1]
 
-		T = cam2rob(saved_output[0,:] , H)
-		print("Y:", saved_output[0,1]," X:", saved_output[0,0])
+		T = cam2rob(saved_output[1,:] , H)
+		print("Y:", saved_output[1,1]," X:", saved_output[1,0])
 		#print("Y2:",saved_output[1,1],"X2:", saved_output[1,0])
 
 		print('HOLAAAAA',saved_output[0,:])
@@ -177,15 +186,15 @@ while True:
 		print(pixel_size)
 		#print("estimated measure : ", dist)
 		
-		cv2.line(topview, (0,400), (640,400), (0,255,0))
+		'''cv2.line(topview, (0,400), (640,400), (0,255,0))
 		cv2.line(topview, (240,0), (240,480), (0,0,255))
 		cv2.line(topview, (280,0), (280,480), (0,0,255))
 		cv2.line(topview, (200,0), (200,480), (0,0,255))
 		cv2.line(topview, (220,0), (220,480), (0,0,255))
 		cv2.line(topview, (300,0), (300,480), (0,0,255))
 		cv2.line(topview, (260,0), (260,480), (0,0,255))
-
-		cv2.imshow("topvoew",topview)
+		'''
+		
 		#print("y: ", pixel_distance[0], " x : ", pixel_distance[1], "other y: ", pixel_distance[2] , "other x: ", pixel_distance[3])
 
 	if cv2.waitKey(1) & 0xFF == 27:

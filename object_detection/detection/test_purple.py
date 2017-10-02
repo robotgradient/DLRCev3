@@ -21,7 +21,7 @@ def cam2rob(BB_legos, H):
 	pixel_size =  0.653947100514
 
 	# CENTER OF THE CAMERA
-	cam= np.array([242.54,474.87])
+	cam= np.array([258.36773682, 482.33782959])
 	cam2rob_dist = 25
 
 	Lego_list = []
@@ -30,11 +30,14 @@ def cam2rob(BB_legos, H):
 		y = box[3]
 		x = box[0] + (box[2]-box[0])/2
 
+
 		input_vector=np.array([[[x,y]]],dtype=np.float32)
 		output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
+		print("dentro de cam2rob", output_vector)
+		print('lateral:', output_vector[0,0,0] - 258.3677)
 		
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
-		distance_x = -0.28*output_vector[0,0,1] +160 + 5
+		distance_x = -0.28*output_vector[0,0,1] +160 
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
 		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.35-0.00022*output_vector[0,0,0])
 
@@ -70,6 +73,9 @@ while True:
 
 	BB_target = np.array(BB_target)
 	lego_purple = cam2rob(BB_target,H)
+
+	cv2.line(frame, (320,0), (320,480), (0,0,255))
+	cv2.imshow('frame', frame)
 
 	if cv2.waitKey(1) & 0xFF == 27:
 			break

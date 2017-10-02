@@ -41,7 +41,7 @@ PATH_TO_LABELS = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detecti
 print("Creating robot...")
 
 
-data = np.load('Homography.npz')
+data = np.load('Homographygood.npz')
 H=data["arr_0"]
 
 map_renderer = MapRenderer()
