@@ -58,6 +58,6 @@ tensorboard_callback = TensorBoard(
 data_dir = PREFIX / "data"
 vae.fit_generator(
     blender_data_gen(data_dir, batch_size),
-    steps_per_epoch=3500,
+    steps_per_epoch=13000,
     epochs=epochs,
     callbacks=[checkpoint_callback, tensorboard_callback],)
