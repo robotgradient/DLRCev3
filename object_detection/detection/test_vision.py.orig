@@ -36,13 +36,15 @@ def cam2rob(pos, H):
 
 		print("data: ", distance_x,distance_y)
 
-	return output_location
 
+<<<<<<< HEAD
+=======
 		angle = np.arctan2(distance_y,distance_x)
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
 	return 1
 
+>>>>>>> marcomonday
 def load_camera_params():
     data = np.load('camera_parameters.npz')
     mtx=data["cam_matrix"]
@@ -50,7 +52,11 @@ def load_camera_params():
     return mtx,dist
 
 
+<<<<<<< HEAD
+data = np.load('Homography.npz')
+=======
 data = np.load('Homographygood.npz')
+>>>>>>> marcomonday
 H=data["arr_0"]
 print(H)
 data2=np.load('newcameramtx.npz')
@@ -64,9 +70,26 @@ dist=np.array(dist)
 
 cap = cv2.VideoCapture(1)
 while True:
+
+	mtx, dist = load_camera_params()
 	ret,frame=cap.read()
 	cv2.imshow("frame",frame)
+<<<<<<< HEAD
+
+	h,  w = frame.shape[:2]
+	newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+	frame = cv2.undistort(frame, mtx, dist, None, newcameramtx)
+
 	dst = cv2.warpPerspective(frame,H,(640,480),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+=======
+	h,  w = frame.shape[:2]
+	#newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+	#dst = cv2.undistort(frame, mtx, dist, None, newcameramtx)
+	#print("newcameramtx",newcameramtx)
+	#cv2.imshow("distorsion", dst)
+	dst=frame
+	topview = cv2.warpPerspective(dst,H,(640,480),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+>>>>>>> marcomonday
 	BB_legos=get_lego_boxes(dst)
 	#print(BB_legos)
 
@@ -159,6 +182,16 @@ while True:
 
 		T = cam2rob(saved_output[0,:] , H)
 		print("Y:", saved_output[0,1]," X:", saved_output[0,0])
+<<<<<<< HEAD
+
+		distance_x = -0.35*saved_output[0,1] +200
+		distance_y =  -(saved_output[0,0] - cam[0,0,0]) *0.35
+
+
+		print("X:", distance_x , "  Y ditnce", distance_y)
+		print("Y2:",saved_output[2,1])
+		print("lateral distance: ", pixel_distance[0])
+=======
 		#print("Y2:",saved_output[1,1],"X2:", saved_output[1,0])
 
 		print('HOLAAAAA',saved_output[0,:])
@@ -167,6 +200,7 @@ while True:
 		print("horizontal number of pixels",saved_output[3,0]-saved_output[2,0])
 		
 
+>>>>>>> marcomonday
 
 		pixel_size = 20/np.sqrt(np.power(pixel_distance[0],2)+np.power(pixel_distance[1],2))
 		#print("pixel size: ",pixel_size)
