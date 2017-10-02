@@ -139,8 +139,6 @@ while True:
     h,  w = img.shape[:2]
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
     dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
-    print("newcameramtx",newcameramtx)
-    np.savez("newcameramtx",newcameramtx)
     cv2.imshow("distorsion", dst)
     mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
     dst2 = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
@@ -148,11 +146,11 @@ while True:
     if cv2.waitKey(100) & 0xFF==27:
         break
 
-
+img=img
 #img=cv2.imread('Chessboard_10.jpg')
-gray = cv2.cvtColor(dst,cv2.COLOR_BGR2GRAY)
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
-ret, corners = cv2.findChessboardCorners(dst, (9,6),None, 1 | 4)
+ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
 
 #corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) 
 
@@ -176,7 +174,7 @@ objPts[3,0] = board_w -1; objPts[3,1] = board_h -1;
 
 
 
-dst = cv2.drawChessboardCorners(img, (9,6), imgPts,ret)
+img = cv2.drawChessboardCorners(img, (9,6), imgPts,ret)
 cv2.imshow('img',img)
 cv2.waitKey(20)
 
@@ -188,16 +186,27 @@ H[2,2] = 20
  [  3.92744157e-03,  -3.78157027e-02,   2.00000000e+01]])'''
 
 print ('Homography matrix:',H)
-img2 = cv2.warpPerspective(img,H,(640,460),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
-cv2.imshow("waopdst", img2)
-cv2.waitKey()
+np.savez("Homographygood",H)
+
+while True:
+    ret,img=cap.read()
+    cv2.imshow("actual image",img)
+    h,  w = img.shape[:2]
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    cv2.imshow("distorsion", dst)
+    warp = cv2.warpPerspective(dst,H,(480,640),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+    cv2.imshow("warp",warp)
+    if cv2.waitKey(100) & 0xFF==27:
+        break
+
 ###################################################
-print("homography",H)
+
 #CAMERA TO ROBOT FRAME
 
 ############################################
 
-np.savez("Homographygood",H)
+#np.savez("camera_parameters",cam_matrix=mtx,dist_coeff=dist)
 
 
 

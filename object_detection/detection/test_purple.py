@@ -34,11 +34,11 @@ def cam2rob(BB_legos, H):
 		output_vector=cv2.perspectiveTransform(input_vector,np.linalg.inv(H))
 		
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
-		distance_x = -0.35*output_vector[0,0,1] +200
+		distance_x = -0.28*output_vector[0,0,1] +160 + 5
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
-		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.0065*distance_x)
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.35-0.00022*output_vector[0,0,0])
 
-		print("data: ", distance_x,distance_y,output_vector[0,0,1])
+		print("data: ", distance_x,distance_y)
 
 
 		angle = np.arctan2(distance_y,distance_x)
@@ -52,7 +52,7 @@ def cam2rob(BB_legos, H):
 	Lego_list = np.array(Lego_list)
 	return Lego_list
 
-data = np.load('Homography.npz')
+data = np.load('Homographygood.npz')
 H=data["arr_0"]
 print(H)
 
@@ -69,7 +69,7 @@ while True:
 	BB_target = detect_purple(frame,BB_legos)
 
 	BB_target = np.array(BB_target)
-	lego_landmarks = cam2rob(BB_target,H)
+	lego_purple = cam2rob(BB_target,H)
 
 	if cv2.waitKey(1) & 0xFF == 27:
 			break
