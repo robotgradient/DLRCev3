@@ -17,7 +17,7 @@ IM_SIZE = 64
 latent_dim = int(sys.argv[1])
 batch_size = 16
 
-epochs = 1000
+epochs = 20
 
 import os
 from pathlib import Path
@@ -36,11 +36,11 @@ print(vae.summary())
 weights_dir = PREFIX / ('weights/latent_dims_' + str(latent_dim))
 os.makedirs(weights_dir, exist_ok=True)
 checkpoint_callback = ModelCheckpoint(
-    str(weights_dir / ("/weights.{epoch:02d}.hdf5")),
+    str(weights_dir / "weights.{epoch:02d}.hdf5"),
     verbose=1,
     save_weights_only=False,
     mode='auto',
-    period=10)
+    period=2)
 
 tb_dir = PREFIX / ('tensorboard-logdir/latent_dims_' + str(latent_dim))
 os.makedirs(tb_dir, exist_ok=True)
