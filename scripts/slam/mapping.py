@@ -71,8 +71,7 @@ def cam2rob(BB_legos, H):
 		distance_x =  (-output_vector[0,0,1]+cam[1])*pixel_size +cam2rob_dist
 		distance_x = -0.28*output_vector[0,0,1] +160 
 		distance_y = -(output_vector[0,0,0] - cam[0])*pixel_size 
-		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.35-0.00022*output_vector[0,0,0])
-
+		distance_y =  -(output_vector[0,0,0] - cam[0]) *(0.0063*distance_x)
 
 		print("data: ", distance_x,distance_y,box[3],box[1])
 
