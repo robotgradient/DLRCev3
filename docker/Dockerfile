@@ -9,9 +9,6 @@ VOLUME /data
 VOLUME /tensorboard-logdir
 VOLUME /weights
 
-VOLUME /scripts
-WORKDIR /scripts
-
 COPY duckdata duckdata
 COPY unsupervised_models unsupervised_models
 # This stuff changes often
@@ -19,5 +16,7 @@ RUN pip install --no-cache \
     -e duckdata \
     -e unsupervised_models
 
+VOLUME /scripts
+WORKDIR /scripts
 
 ENTRYPOINT ["python"]
