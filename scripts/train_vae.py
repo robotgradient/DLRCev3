@@ -3,31 +3,46 @@ import sys
 
 from itertools import cycle
 from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.optimizers import RMSprop
 
 from scipy import misc
 import numpy as np
 
-from duckdata.blender import blender_data_gen
+from duckdata.blender import img_array, chunked, img_paths
 from unsupervised_models.cvae import ConvolutionalVariationalAutoencoder
 
 IM_SIZE = 64
 
 latent_dim = int(sys.argv[1])
-batch_size = 16
+batch_size = 1
 
 epochs = 20
+LEARNING_RATE = 0.01
 
 import os
 from pathlib import Path
 # PREFIX = Path.home()
-PREFIX = Path("/")
 # PREFIX = PREFIX / "dlrc"
+PREFIX = Path("/")
+
+
+def blender_data_gen(directory, batch_size):
+    """Feeds data in a way that plays well with Keras's `fit_generator`"""
+    paths = chunked(img_paths(directory), batch_size)
+    for batch in cycle(paths):
+        arrays = map(lambda i: i / 255., map(img_array, batch))
+        yield (np.stack(list(arrays), axis=0), None)
+
 
 vae = ConvolutionalVariationalAutoencoder(
-    image_dims=(IM_SIZE, IM_SIZE, 3), batch_size=batch_size, latent_dim=latent_dim, filters=32)
+    image_dims=(IM_SIZE, IM_SIZE, 3),
+    batch_size=batch_size,
+    latent_dim=latent_dim,
+    filters=32,
+    intermediate_dim=latent_dim * 2,)
 
 vae.compile(
-    optimizer='rmsprop',
+    optimizer=RMSprop(lr=LEARNING_RATE),
     loss=None,)
 print(vae.summary())
 

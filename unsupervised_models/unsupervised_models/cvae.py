@@ -27,7 +27,7 @@ class CustomVariationalLayer(Layer):
     def vae_loss(self, x, x_decoded_mean_squash):
         x = K.flatten(x)
         x_decoded_mean_squash = K.flatten(x_decoded_mean_squash)
-        xent_loss = metrics.mean_squared_error(x, x_decoded_mean_squash)
+        xent_loss = metrics.binary_crossentropy(x, x_decoded_mean_squash)
         kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
         loss =  K.mean(xent_loss + kl_loss)
         return loss
