@@ -52,6 +52,7 @@ class ConvolutionalVariationalAutoencoder(Model):
                  kernel_size=3,
                  batch_size=1):
 
+        self.epsilon_std = epsilon_std
         img_rows, img_cols, img_chns = image_dims
 
         bnorm = BatchNormalization
@@ -88,14 +89,10 @@ class ConvolutionalVariationalAutoencoder(Model):
         z_mean = Dense(latent_dim, kernel_initializer='glorot_uniform')(bnorm_hidden)
         z_log_var = Dense(latent_dim, kernel_initializer='glorot_uniform')(hidden)
 
-        self.epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
-                                  mean=0., stddev=epsilon_std)
-        self.sampling = z_mean + K.exp(z_log_var) * self.epsilon
-
         def sampling(args):
             z_mean, z_log_var = args
             epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
-                                      mean=0., stddev=epsilon_std)
+                                      mean=0., stddev=self.epsilon_std)
             return z_mean + K.exp(z_log_var) * epsilon
 
         # note that "output_shape" isn't necessary with the TensorFlow backend
