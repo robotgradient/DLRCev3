@@ -46,13 +46,11 @@ class ConvolutionalVariationalAutoencoder(Model):
     def __init__(self,
                  latent_dim=2,
                  intermediate_dim=120,
-                 epsilon_std=1.0,
                  image_dims=(28, 28, 1),
                  filters=64,
                  kernel_size=3,
                  batch_size=1):
 
-        self.epsilon_std = epsilon_std
         img_rows, img_cols, img_chns = image_dims
 
         bnorm = BatchNormalization
@@ -91,8 +89,7 @@ class ConvolutionalVariationalAutoencoder(Model):
 
         def sampling(args):
             z_mean, z_log_var = args
-            epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
-                                      mean=0., stddev=self.epsilon_std)
+            epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim))
             return z_mean + K.exp(z_log_var) * epsilon
 
         # note that "output_shape" isn't necessary with the TensorFlow backend
