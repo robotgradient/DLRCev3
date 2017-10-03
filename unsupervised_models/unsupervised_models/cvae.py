@@ -10,8 +10,6 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
 from keras import metrics
-from keras.datasets import mnist
-import tensorflow as tf
 
 # Custom loss layer
 
@@ -176,6 +174,7 @@ class ConvolutionalVariationalAutoencoder(Model):
 if __name__ == '__main__':
     from scipy.stats import norm
     import matplotlib.pyplot as plt
+    from keras.datasets import mnist
 
     image_dims = (28, 28, 1)
 
