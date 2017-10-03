@@ -24,6 +24,14 @@ HighV2=255'''
 morph=(11,3)
 
 
+LowH2=0
+HighH2=50
+LowS2=10
+HighS2=1
+LowV2=0
+HighV2=237
+
+
 def imfill(img):
 	ret,im_flood = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
 	th,inrangeframe = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
@@ -195,12 +203,12 @@ def detection(frame,LowH,HighH,LowS,HighS,LowV,HighV,sizemorph,Arearef=10):
 def init_trackbars():
 	
 	cv2.namedWindow('frame')
-	cv2.createTrackbar("LowH", 'frame',LowH, 255,nothing); 
-	cv2.createTrackbar("HighH", 'frame',HighH, 255,nothing);
-	cv2.createTrackbar("LowS", 'frame',LowS, 255,nothing); 
-	cv2.createTrackbar("HighS", 'frame',HighS, 255,nothing);
-	cv2.createTrackbar("LowV", 'frame',LowV, 255,nothing); 
-	cv2.createTrackbar("HighV", 'frame',HighV, 255,nothing);
+	cv2.createTrackbar("LowH", 'frame',LowH2, 255,nothing); 
+	cv2.createTrackbar("HighH", 'frame',HighH2, 255,nothing);
+	cv2.createTrackbar("LowS", 'frame',LowS2, 255,nothing); 
+	cv2.createTrackbar("HighS", 'frame',HighS2, 255,nothing);
+	cv2.createTrackbar("LowV", 'frame',LowV2, 255,nothing); 
+	cv2.createTrackbar("HighV", 'frame',HighV2, 255,nothing);
 	return 0
 
 def nothing(x):
@@ -211,7 +219,7 @@ if __name__ == "__main__":
                   maxLevel = 2,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-	cap = cv2.VideoCapture(0)
+	cap = cv2.VideoCapture(1)
 	#cap.set(cv2.CAP_PROP_BUFFERSIZE,100)
 	init_trackbars()
 	#sleep(1)
@@ -223,15 +231,8 @@ if __name__ == "__main__":
 	HighV2=237
 	ret, oldframe = cap.read()	
 	center_list = detection(oldframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),1)
-	center_list=np.array(center_list)
-
-	old_grey_image=np.zeros([480,640],dtype=np.uint8)
-	print(center_list)
 	#old_grey_image[center_list[:,1],center_list[:,0]]=255
 
-
-	cv2.imshow("Optical",old_grey_image)
-	cv2.waitKey()
 	while(True):
   # Capture frame-by-frame
 		t0=time()
@@ -248,34 +249,13 @@ if __name__ == "__main__":
 		#	t1=time()
 		#	retard=t1-t0
 		ret, newframe = cap.read()	
+		cv2.imshow("newframe", newframe)
 		# Get the trackbar poses
 		#p1, status, err = cv2.calcOpticalFlowPyrLK(oldframe, newframe, p0, None, **lk_params)
 		#good_new = p1[st==1]
 		#good_old = p0[st==1]
 		center_list = detection(newframe, LowH2, HighH2, LowS2,HighS2, LowV2, HighV2, (3, 9),80000)
-		center_list=np.array(center_list)
-		print(center_list)
-		new_grey_image=np.zeros((480,640),dtype=np.uint8)
-		new_grey_image[center_list[:,1],center_list[:,0]]=255
-		both_grey_images=cv2.bitwise_or(new_grey_image,old_grey_image)
-		cv2.imshow("Optical",both_grey_images)
-		flow = cv2.calcOpticalFlowFarneback(old_grey_image,new_grey_image, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-		mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
 		
-		mask=np.nonzero(mag<10)
-		mag[mask]=0
-		print (np.amax(mag),np.amin(mag),type(mag))
-		#gray_flow=np.zeros((480,640),dtype=np.uint8)
-		gray_flow = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-
-		old_grey_image=new_grey_image
-		flow_image=np.array(flow[...,1],dtype=np.uint8)
-		print (np.amax(gray_flow),type(gray_flow))
-		cv2.imshow("flow",gray_flow)
-		cv2.imshow("newimage",newframe)
-		t1=time()-t0
-		print("retard",t1)
-		t0=t1
 		if cv2.waitKey(1) & 0xFF == 27:
 			break
 		#sleep(1)

@@ -71,7 +71,7 @@ def compute_A_star_path(origin,goal,Map):
 	path=A_star(origin,goal,Map)
 	#path_array=np.array(path)
 	#print(path_array.shape)
-	path_rev=np.flip(path_array, axis=0)
+	path_rev=np.flip(path, axis=0)
 	return path_rev
 
 def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix with(x,y,teta) &  target is a 1x2 matrix with(x,y)
@@ -262,8 +262,8 @@ def select_target(pos_rob,path):
 			if output == path.shape[0]-1:
 				
 				output = i-1
-			print("shortest_dist")
-	if shortest_dist<3:
+			
+	if shortest_dist<2:
 		new_path = path[(output+1):,:]
 		target = path[output+1,:]
 	else:

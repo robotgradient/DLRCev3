@@ -63,9 +63,9 @@ def get_centers(img,Arearef=130):
 
 	return center_list,closest_list
 
-def eliminate_grip(frame):
-	frame[411:,127:245]=[0,0,0]
-	frame[420:,325:426]=[0,0,0]
+def eliminate_grip(frame,left_box,right_box):
+	frame[left_box[1]-5:,left_box[0]-5:left_box[2]+5]=[0,0,0]
+	frame[right_box[1]-5:,right_box[0]-5:right_box[1]+5]=[0,0,0]
 	return frame
 
 def get_BB(img,Arearef=130):
@@ -324,7 +324,10 @@ def get_lego_boxes(frame,Arearef=10):
 	BB_lego=detection_BB(frame,LowH=0, HighH=186, LowS=80 \
 		,HighS=255,LowV=100,HighV=236,sizemorph=(3, 3),Arearef=Arearef)
 	return BB_lego
-
+def get_sponge_boxes(frame,Arearef=300):
+	BB_sponge=detection_BB(frame, LowH=0, HighH=31, LowS=130, HighS=255,\
+	 LowV=121, HighV=244, sizemorph=(3,3),Arearef=Arearef)
+	return BB_sponge
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
 	return white_box
