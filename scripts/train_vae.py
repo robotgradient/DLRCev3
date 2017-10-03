@@ -1,5 +1,3 @@
-from functools import partial
-
 import os
 import sys
 
@@ -21,7 +19,7 @@ epochs = 20
 
 import os
 from pathlib import Path
-PREFIX = Path.home()
+# PREFIX = Path.home()
 PREFIX = Path("/")
 # PREFIX = PREFIX / "dlrc"
 

@@ -18,6 +18,7 @@ def rgb_z_score_norm(img):
 
 
 def read_normalized(img_path):
+    """Combines z score normalization and reading image as an array."""
     return rgb_z_score_norm(img_array(img_path))
 
 
