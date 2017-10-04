@@ -9,26 +9,28 @@ from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
-from keras import metrics
-from keras.datasets import mnist
-import tensorflow as tf
 
 # Custom loss layer
+
+
 class CustomVariationalLayer(Layer):
+
     def __init__(self, z_log_var, z_mean, img_rows, img_cols, **kwargs):
         self.is_placeholder = True
         self.z_mean = z_mean
         self.z_log_var = z_log_var
         self.img_rows = img_rows
-        self.img_cols =img_cols
+        self.img_cols = img_cols
         super(CustomVariationalLayer, self).__init__(**kwargs)
 
     def vae_loss(self, x, x_decoded_mean_squash):
         x = K.flatten(x)
         x_decoded_mean_squash = K.flatten(x_decoded_mean_squash)
-        xent_loss = metrics.mean_squared_error(x, x_decoded_mean_squash)
-        kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
-        loss =  K.mean(xent_loss + kl_loss)
+        xent_loss = K.mean(
+            K.binary_crossentropy(x, x_decoded_mean_squash, from_logits=True), axis=-1)
+        kl_loss = -0.5 * K.mean(
+            1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
+        loss = K.mean(xent_loss + kl_loss)
         return loss
 
     def call(self, inputs):
@@ -40,12 +42,15 @@ class CustomVariationalLayer(Layer):
         return x
 
 
-
 class ConvolutionalVariationalAutoencoder(Model):
 
-
-    def __init__(self, latent_dim=2, intermediate_dim=120, epsilon_std=1.0,
-                image_dims=(28, 28, 1), filters = 64, kernel_size=3, batch_size=1):
+    def __init__(self,
+                 latent_dim=2,
+                 intermediate_dim=120,
+                 image_dims=(28, 28, 1),
+                 filters=64,
+                 kernel_size=3,
+                 batch_size=1):
 
         img_rows, img_cols, img_chns = image_dims
 
@@ -83,14 +88,9 @@ class ConvolutionalVariationalAutoencoder(Model):
         z_mean = Dense(latent_dim, kernel_initializer='glorot_uniform')(bnorm_hidden)
         z_log_var = Dense(latent_dim, kernel_initializer='glorot_uniform')(hidden)
 
-        self.epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
-                                  mean=0., stddev=epsilon_std)
-        self.sampling = z_mean + K.exp(z_log_var) * self.epsilon
-
         def sampling(args):
             z_mean, z_log_var = args
-            epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim),
-                                      mean=0., stddev=epsilon_std)
+            epsilon = K.random_normal(shape=(K.shape(z_mean)[0], latent_dim))
             return z_mean + K.exp(z_log_var) * epsilon
 
         # note that "output_shape" isn't necessary with the TensorFlow backend
@@ -145,10 +145,9 @@ class ConvolutionalVariationalAutoencoder(Model):
             )
 
         # build a model to project inputs on the latent space
-        self.encoder =  Model(x, z_mean)
+        self.encoder = Model(x, z_mean)
 
         # build a model to project inputs on the latent space
-
 
         # build a digit generator that can sample from the learned distribution
         decoder_input = Input(shape=(latent_dim,))
@@ -163,12 +162,14 @@ class ConvolutionalVariationalAutoencoder(Model):
 
         super(ConvolutionalVariationalAutoencoder, self).__init__(x, y)
 
-
+    def reconstruct(self, x):
+        return self.generator.predict(self.encoder.predict(x))
 
 
 if __name__ == '__main__':
     from scipy.stats import norm
     import matplotlib.pyplot as plt
+    from keras.datasets import mnist
 
     image_dims = (28, 28, 1)
 

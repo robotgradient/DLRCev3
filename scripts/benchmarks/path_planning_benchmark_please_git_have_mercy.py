@@ -35,11 +35,9 @@ def A_start_firstmove(robot, frame,
 
     rob = [0,0,0]
     obj = [100,0]
-    obslist=[[-50,-100],[-50,-90],[-50,-110]]
+    obslist=[[50,0],[60,0],[40,0],[30,0][70,0]]
     Map=create_map(obslist)
-    offsetx=int(round(Map.shape[0]/2))-1
-    offsety=int(round(Map.shape[1]/2))-1
-    rob[0:2]=[rob[0]+offsetx,rob[1]+offsety]
+
     #obj=[obj[0]+offsetx,obj[1]+offsety]
 
 

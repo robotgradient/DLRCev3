@@ -77,7 +77,6 @@ def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,ma
         zerosrot=np.zeros([1,3])
         rot4p2c=np.concatenate((rotp2c,zerosrot), axis=0)
         Tp2c=np.concatenate((rot4p2c,tp2c), axis=1)
-        Tp2c=np.ones([4,4])
         Tp2r=np.ones([4,4])
         Tc2r=Tp2r.dot(np.linalg.inv(Tp2c))
     else:
@@ -188,7 +187,7 @@ H[2,2] = 20
  [  3.92744157e-03,  -3.78157027e-02,   2.00000000e+01]])'''
 
 print ('Homography matrix:',H)
-img2 = cv2.warpPerspective(img,H,(640,460),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
+img2 = cv2.warpPerspective(img,H,(640,480),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 cv2.imshow("waopdst", img2)
 cv2.waitKey()
 ###################################################
