@@ -564,6 +564,15 @@ def A_star_path_planning_control(pos_rob,pos_obj,Map,Ts,K_x=1,K_y = 1, K_an = 1 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	return estim_rob_pos,vel_wheels,new_path
 
+def A_star_control(pos_rob,pos_obj,Map,Ts,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0): 
+	if iteration == 0 :
+		path =compute_A_star_path(pos_rob[0:2],pos_obj,Map)
+	target, new_path = select_target(pos_rob, path)
+	#Only Odometry
+	estim_rob_pos= pos_rob
+	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	return vel_wheels,new_path
+
 def A_star_kalman(pos_rob,pos_obj,Map, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[], real_bot=[]):
 	if iteration == 0 :
 		path =compute_A_star_path(pos_rob[0:2],pos_obj,Map)
