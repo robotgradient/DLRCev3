@@ -73,14 +73,18 @@ def reconstruct_path(parent,current,start):
 
 
 def A_star(start,goal,Map):
-
-	offsetx=int(round(Map.shape[0]/2))-1
-	offsety=int(round(Map.shape[1]/2))-1
-	start=[start[0]+offsetx,start[1]+offsety]
+	start[1]=int(round(start[1]))
+	start[0]=int(round(start[0]))
+	start=np.int_(start)
+	goal[1]=int(round(goal[1]))
+	goal[0]=int(round(goal[0]))
+	offsetx=int(round(Map.shape[0]/2)-1)
+	offsety=int(round(Map.shape[1]/2)-1)
+	start=[start[0]+int(offsetx),start[1]+int(offsety)]
 	goal=[goal[0]+offsetx,goal[1]+offsety]
 	if Map[goal[0],goal[1]]==-100:
 		print("goal not reachable ")
-		return []
+		return np.array([])
 
 	gscore=np.ones(Map.shape)*np.inf
 	#parent contain the previous points
@@ -98,6 +102,7 @@ def A_star(start,goal,Map):
 			total_path=reconstruct_path(parent, current, start)
 			path_array=np.array(total_path,dtype=np.int32)
 			path_array_real=path_array-[offsetx,offsety]
+			#path_array_real=path_array_real[0:-1:5]
 			return path_array_real
 		openlist.remove(current)
 		closelist.append(current)
@@ -114,7 +119,7 @@ def A_star(start,goal,Map):
 				gscore[neighbour[0],neighbour[1]]=possible_gscore
 				fscore[neighbour[0],neighbour[1]]=gscore[neighbour[0],neighbour[1]]+heuristics(neighbour, goal)
 				parent[neighbour[0],neighbour[1]]=current
-	return False
+	return np.array([])
 
 # Main
 if __name__ == '__main__':
@@ -146,8 +151,10 @@ if __name__ == '__main__':
 	ax.set_yticks(np.arange(0, 30, 1))
 	plt.grid()
 	plt.show()'''
-
-	obslist=[[50,0],[70,30]]
+	#obslist=[[15,0],[15,10],[15,-10],[10,-15],[10,15],[0,15],[0,-15]]
+	#obslist=[[50,0],[50,10],[50,-10],[50,20],[50,-20]]
+	obslist=[[40,0],[40,10],[40,-10],[40,20],[40,-20],[40,30],[40,40],[40,50],[40,60]]
+	Map=create_map(obslist)
 
 	Map=create_map(obslist)
 	obs_set,obs_list=obstacle_set(Map)
@@ -155,12 +162,12 @@ if __name__ == '__main__':
 
 
 	start=[0,0]
-	goal=[100,0]
+	goal=[79,23]
 	offsetx=int(round(Map.shape[0]/2))-1
 	offsety=int(round(Map.shape[1]/2))-1
 	#start_map=[start_robotpos[0]+offsetx,start_robotpos[1]+offsety]
 
-	goal=[100,0]
+	
 	#goal_map=[goal[0]+offsetx,goal[1]+offsety]
 
 

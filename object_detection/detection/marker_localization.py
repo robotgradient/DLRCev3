@@ -12,9 +12,9 @@ arucoParams = aruco.DetectorParameters_create()
 aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 
 def read_Tc2r():
-    test=sio.loadmat('Tc2rtheo.mat')
-    Tc2r=test.get('Tc2rtheo')
-    return Tc2r
+	data = np.load('Tc2r.npz')
+	Tc2r=data["arr_0"]
+	return Tc2r
 
 def load_camera_params():
 	data = np.load('camera_parameters.npz')
@@ -93,7 +93,7 @@ def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,ma
 	if isinstance(ids, np.ndarray) and (marker_id in ids): # if aruco marker detected
 		rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
 		position=np.where(ids==marker_id)
-		#frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
+		frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
 		p2c=np.concatenate((tvec[position].T,np.array([[1]])),axis=0)
 		p2r=T.dot(p2c)
 		rotp2c,jac=cv2.Rodrigues(rvec[position])

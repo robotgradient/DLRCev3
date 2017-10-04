@@ -80,35 +80,12 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	L = 14.5
 	R = 1.7
 
-	'''error_x = target[0] - pos_rob[0]
-	error_y = target[1] - pos_rob[1]
+	theta_star=np.arctan2(target[1]-pos_rob[1], target[0]-pos_rob[0])*180/np.pi
+	if theta_star<0:
+		theta_star=360-abs(theta_star)
+	theta=pos_rob[2]
 
-	error_ang = target[2] - pos_rob[2]
-
-
-	if error_ang > 180:
-		error_ang = error_ang - 180
-
-	print("error angle",error_ang)
-
-	vel_x = K_x*error_x
-	vel_y = K_y*error_y
-	vel_ang = K_an*error_ang
-
-
-
-
-	vel_r= np.sqrt(np.power(vel_x,2)+np.power(vel_y,2))
-
-	vel_teta= vel_ang
-
-
-	vel_robot= [vel_r , vel_teta]
-
-	M_r2wheels= np.array([[1/R, -L/(2*R) ],[1/R, L/(2*R)]]) # --> (Vr,Vteta) = M * (w_rigth, w_left)
-
-	vel_wheels= np.matmul(M_r2wheels,vel_robot)'''
-
+	err_theta=theta_star-theta
 
 	# GET wheel velocities through curvature
 	M_r2wheels= np.array([[1/R, -L/(2*R) ],[1/R, L/(2*R)]]) # --> (Vr,Vteta) = M * (w_rigth, w_left)
@@ -121,17 +98,22 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	l= np.sqrt(np.power(target[0]-pos_rob[0],2)+np.power(target[1]-pos_rob[1],2))
 
 	
-	#print("L is: ",l)
+	#print("L is: ",l)()
 
 
-	C  = -2*distance_x/np.power(l,2)
-	w = 3*R;
-
+	C  = -distance_x/np.power(l,2)
+	w = 2*R;
+	kt=0.05
 	#A = (1-(C*L)/2)/(1+(C*L)/2)
 	#vel_wheels[0] = w*L/(R*(1+A))
 	#vel_wheels[1] = vel_wheels[0]*A
+	if abs(err_theta)>135 and abs(err_theta)<225:
+		vel_robot=np.array([0,100])
+	#	print("JUST SPINNING",abs(err_theta),theta_star,theta)
+	else:
+		vel_robot = np.array([w, w*2*C])
+	#print("velocidad del robot",vel_robot)
 
-	vel_robot = np.array([w, w*C])
 	vel_wheels =np.matmul(M_r2wheels,vel_robot)
 
 	vel_wheels[0] = 180/pi * vel_wheels[0]
@@ -140,10 +122,10 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	#print(vel_wheels)
 
 
-	if np.absolute(vel_wheels[0]) > 500 :
-		vel_wheels[0] = np.sign(vel_wheels[0])*500
-	if np.absolute(vel_wheels[1]) > 500:
-		vel_wheels[1] = np.sign(vel_wheels[1])*500
+	if np.absolute(vel_wheels[0]) > 400 :
+		vel_wheels[0] = np.sign(vel_wheels[0])*400
+	if np.absolute(vel_wheels[1]) > 400:
+		vel_wheels[1] = np.sign(vel_wheels[1])*400
 
 
 	#print(vel_wheels)
@@ -176,8 +158,7 @@ def forward_localization(pos_rob, vel_wheels, Ts): # position of the robot (x,y,
 	incr_r = vel_robot[0]*Ts
 	incr_teta = vel_robot[1]*Ts * 180/pi
 
-	print(incr_r)
-	print(incr_teta)
+	
 
 
 	#print('radial increment:',incr_r,' angular increment: ',incr_teta)
@@ -256,7 +237,7 @@ def select_target(pos_rob,path):
 		distance = np.absolute((path[i,0]-pos_rob[0])*np.sin(pos_rob[2]*pi/180) - (path[i,1]-pos_rob[1])*np.cos(pos_rob[2]*pi/180))
 		#distance= np.sqrt(np.power(path[i,0]-pos_rob[0],2)+np.power(path[i,1]-pos_rob[1],2))
 		if distance <= shortest_dist :
-			print("distance",distance)
+			#print("distance",distance)
 			shortest_dist = distance
 			output = i
 			if output == path.shape[0]-1:
@@ -469,11 +450,11 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 
 	pos_incr = np.dot(K,np.add(z,-meas_vec))
 
-	print('expected: ',z)
-	print('real: ', meas_vec)
+	#print('expected: ',z)
+	#print('real: ', meas_vec)
 
 
-	print('measurement error : ',pos_incr)
+	#print('measurement error : ',pos_incr)
 
 	pos_rob = np.add(pos_rob_pred,-pos_incr)
 
@@ -583,40 +564,24 @@ def A_star_path_planning_control(pos_rob,pos_obj,Map,Ts,K_x=1,K_y = 1, K_an = 1 
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
 	return estim_rob_pos,vel_wheels,new_path
 
+def A_star_kalman(pos_rob,pos_obj,Map, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[], real_bot=[]):
+	if iteration == 0 :
+		path =compute_A_star_path(pos_rob[0:2],pos_obj,Map)
+	target, new_path = select_target(pos_rob, path)
+	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
+	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
+	return estim_rob_pos,vel_wheels,new_path , P
 def euclidian_kalman(pos_rob,pos_obj, Ts, points=5,K_x=1,K_y = 1, K_an = 1 , iteration = 0, path = [] , odom_r = 0,odom_l= 0, P=np.identity(3), marker_list = [],marker_map=[], real_bot=[]):
 
 	if iteration == 0 :
 
 		path = compute_euclidean_path(pos_rob,pos_obj,points)
-		print(path.shape)
+		#print(path.shape)
 
 	target, new_path = select_target(pos_rob, path)
-
-	#Only Odometry
-	#estim_rob_pos= odometry_localization(pos_rob,odom_r,odom_l,Ts)
-
-	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
-
-	#return estim_rob_pos,vel_wheels,new_path
-
-
-
-	# Only model
-	#estim_rob_pos = pos_rob
-
-	#vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
-
-	#estim_rob_pos = forward_localization(pos_rob, vel_wheels, Ts)
-
-	#return estim_rob_pos,vel_wheels,new_path
-
-
 	real_robot_pos, marker_list = create_fake_measurements(real_bot, odom_l,odom_r , marker_map)
-
 	estim_rob_pos, P  = kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P)
-
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
-	
 	return estim_rob_pos,vel_wheels,new_path , P , real_robot_pos
 	
 

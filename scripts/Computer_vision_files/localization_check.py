@@ -9,11 +9,10 @@ import scipy.io as sio
 
 
 
-
 def read_Tc2r():
-    test=sio.loadmat('Tc2rtheo.mat')
-    Tc2r=test.get('Tc2rtheo')
-    return Tc2r
+	data = np.load('Tc2r.npz')
+	Tc2r=data["arr_0"]
+	return Tc2r
 
 def load_camera_params():
 	data = np.load('camera_parameters.npz')
@@ -70,7 +69,7 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4)))
 			index_mat=np.where(value==marker_list)
 			print("Rotation vector",rvec[i])
 			#print("Rotation Matrix",roti,"until here")
-			euler=rotationMatrixToEulerAngles(rotc2r)
+			euler=rotationMatrixToEulerAngles(roti)
 			euler2=rotationMatrixToEulerAngles(rotp2r)
 			euler2=euler2*180/3.141592
 			euler=euler*180/3.141592

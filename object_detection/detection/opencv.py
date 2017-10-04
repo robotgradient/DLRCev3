@@ -324,9 +324,9 @@ def get_lego_boxes(frame,Arearef=10):
 	BB_lego=detection_BB(frame,LowH=0, HighH=186, LowS=80 \
 		,HighS=255,LowV=100,HighV=236,sizemorph=(3, 3),Arearef=Arearef)
 	return BB_lego
-def get_sponge_boxes(frame,Arearef=300):
-	BB_sponge=detection_BB(frame, LowH=0, HighH=31, LowS=130, HighS=255,\
-	 LowV=121, HighV=244, sizemorph=(3,3),Arearef=Arearef)
+def get_sponge_boxes(frame,Arearef=100):
+	BB_sponge=detection_BB(frame, LowH=0, HighH=40, LowS=130, HighS=255,\
+	 LowV=190, HighV=255, sizemorph=(3,3),Arearef=Arearef)
 	return BB_sponge
 def get_white_box(frame):
 	white_box = detection(frame, LowH2, HighH2, LowS2, HighV2, LowV2, (3, 11))
