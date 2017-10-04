@@ -17,6 +17,8 @@ import cv2.aruco as aruco
 
 import numpy as np
 
+from math import pi
+
 
 from detection.opencv import get_lego_boxes
 
@@ -94,8 +96,10 @@ def index23(BB_legos,BB_target):
         if box[0]==BB_target[0][0] and box[1] == BB_target[0][1]:
 
             index = i
+            print(index)
+            return index
         i+=1
-    return index
+    return 1000
 
 
 
@@ -112,9 +116,16 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     ################### ESTIMATE ROBOT'S POSE
-    #estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
 
-    #robot.position = estim_rob_pos
+    robot.position = estim_rob_pos
+
+    add = np.ones(3)
+    add[0] = estim_rob_pos[0] + 28*np.cos(estim_rob_pos[2]*pi/180)
+    add[1] = estim_rob_pos[1] + 28*np.sin(estim_rob_pos[2]*pi/180)
+    add[2] = estim_rob_pos[2]
+    R.append(add)
 
     ###################### Information related with lego blocks mapping
 
@@ -135,11 +146,13 @@ def search_target_with_Kalman_and_mapping(robot, frame
     lego_landmarks = mapping.cam2rob(BB_legos,H)
 
     print("lego_landmarks", lego_landmarks)
-
+    print("HOLAAAAAAAAAAAAAAAAAAAAAAAA")
     
 
-    
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
 
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
+    print(mapa)
 
     #DEFINE MOTION CONTROL FOR SEARCHING
 
@@ -155,21 +168,23 @@ def search_target_with_Kalman_and_mapping(robot, frame
         #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
         ############   UPDATE MAP
 
-        mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
-
-        map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
+        
+        
         print("EL MAPA : ", mapa)
         robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  [], "mapa" : mapa}
+        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
     else:
-        robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
+        t2 = time.time()
+        robot.move(vel_left=0, vel_right=0)
+        print('time: ', time.time()-t2)
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
                                         "state_search" : 2, "t1" : t1 }
 
 def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
-                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = []):
+                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [],
+                          delete_countdown=0, robot_trajectory=[], ):
     
 
     new_ltrack_pos = robot.left_track.position
@@ -182,19 +197,44 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
     marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
 
 
+    #####################################
+
+
+    ###################### Information related with lego blocks mapping
+
+    BB_legos=get_lego_boxes(frame)
+
+    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
+
+    BB_target = detect_purple(frame,BB_legos)
+
+    index = 1000
+    if len(BB_target) !=0:
+        index = index23(BB_legos,  BB_target)
+
+    print("INDEX",index)
+    print("BB target", BB_target)
+
+
+    lego_landmarks = mapping.cam2rob(BB_legos,H)
+
     ################### ESTIMATE ROBOT'S POSE
     Ts=0.3
     estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
 
     robot.position = estim_rob_pos
 
-    R.append(robot.position)
+    add = np.ones(3)
+    add[0] = estim_rob_pos[0] + 28*np.cos(estim_rob_pos[2]*pi/180)
+    add[1] = estim_rob_pos[1] + 28*np.sin(estim_rob_pos[2]*pi/180)
+    add[2] = estim_rob_pos[2]
+    R.append(add)
 
 
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
 
     map_renderer.plot_bricks_and_trajectory(mapa, R)
-
-    mapa = mapa
+    print(mapa)
 
     ###################### Information related with lego blocks mapping
 
