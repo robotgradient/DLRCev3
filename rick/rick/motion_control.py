@@ -471,6 +471,44 @@ def kalman_filter(odom_r,odom_l,pos_rob,marker_list, marker_map,Ts,P):
 	return pos_rob,P
 
 
+def odom_estimation(odom_r,odom_l,pos_rob):
+
+
+	L = 14.5
+	R = 1.7
+
+	#From degrees to radians
+
+	odom_l = odom_l*pi/180
+	odom_r = odom_r*pi/180
+
+	# get increments
+
+	incr_r = R/2*(odom_r+odom_l)
+	incr_teta = R/L*(odom_l-odom_r) * 180/pi
+
+	## A and B matrixes
+	increment_R = R/2*(odom_r + odom_l)
+	increment_teta = R/L*(odom_l-odom_r) * 180/pi # We want the increment in teta in degrees
+
+	pos_rob_pred = np.ones(3)
+
+	pos_rob_pred[0] = pos_rob[0] + incr_r*np.cos((pos_rob[2]+incr_teta/2)*pi/180)
+	pos_rob_pred[1] = pos_rob[1] + incr_r*np.sin((pos_rob[2]+incr_teta/2)*pi/180)
+	pos_rob_pred[2] = (pos_rob[2] + incr_teta)*pi/180
+
+	if pos_rob_pred[2] > pi:
+		pos_rob_pred[2] = pos_rob_pred[2]-(2*pi)
+	if pos_rob_pred[2] < -pi:
+		pos_rob_pred[2] = pos_rob_pred[2]+(2*pi)
+
+	pos_rob_pred[2] = pos_rob_pred[2]* 180/pi
+
+	return pos_rob_pred
+
+
+
+
 def create_fake_measurements(pos_rob, odom_l,odom_r , marker_map, num_mar = 4):
 
 	L = 14.5

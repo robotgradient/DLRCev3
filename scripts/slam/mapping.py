@@ -22,12 +22,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index): #mapa = (x,y
 
 				mapa_ar = np.array(mapa)
 
-				if delete_countdown ==5 and mapa_ar.size > 0:
-					mapa_ar[:,4] = np.zeros([mapa_ar.shape[0]])
-					mapa = list(mapa_ar)
-					delete_countdown = 0
-				else:
-					delete_countdown = 0
+
 				sh_dist = 10000;
 				p_already = 0
 				print('new element', i)
@@ -51,7 +46,6 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index): #mapa = (x,y
 					mapa = relocalize_points(mapa, p_already, x_mapa,y_mapa, i)
 
 				if new ==1:
-					print('JODER landmarks', landmarks[i], 'sh distance: ', sh_dist)
 					new_points2add.append(i)
 
 	delete_countdown +=1
@@ -151,39 +145,41 @@ def mapa2grid(mapa):
 
 
 
-def delete_in_mapa(mapa,robot_trajectory):
+def delete_in_mapa(mapa,pos_rob):
 
 	robot_trajectory_ar = np.array(robot_trajectory)
 
-	min_dist = 29
-	max_dist = 60
+	min_dist = 30
+	max_dist = 50
 	min_angle = np.arctan2(29,20)
 	max_angle = np.arctan2(29,-20)
 	mapa_ar = np.array(mapa)
 
 	eliminate_index = []
-	for i in range(0, robot_trajectory_ar.shape[0]):
 
-		for j in range(0, mapa_ar.shape[0]):
 
-			x = mapa_ar[j,0] - robot_trajectory_ar[i,0]
-			y = mapa_ar[j,1] - robot_trajectory_ar[i,1]
+	for j in range(0, mapa_ar.shape[0]):
 
-			distance = np.sqrt(np.power(x,2)+np.power(y,2))
-			angle = np.arctan2(y,x) - robot_trajectory_ar[i,2]*pi/180
-			
-			if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
-				pass
-			elif j not in eliminate_index:
+		x = mapa_ar[j,0] - pos_rob[i,0]
+		y = mapa_ar[j,1] - pos_rob[i,1]
 
-				eliminate_index.append(j)
+		distance = np.sqrt(np.power(x,2)+np.power(y,2))
+		angle = np.arctan2(y,x) - robot_trajectory_ar[i,2]*pi/180
+				
+		if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
+			pass
+		else:
+			not_eliminate_index.append(j)
+
+		if mapa_ar[j,4] ==1:
+			mapa_ar[j,4] = 0
 
 	#print("j: ",eliminate_index)
-	eliminate_index = np.array(eliminate_index)
-	mapa = np.array(mapa)
-	if mapa.size:
-		mapa = mapa[eliminate_index,:]
-	mapa= mapa.tolist()
+	not_eliminate_index = np.array(not_eliminate_index)
+	mapa_ar = np.array(mapa)
+	if mapa_ar.size:
+		mapa_ar = mapa_ar[not_eliminate_index,:]
+	mapa= mapa_ar.tolist()
 	#mapa = mapa[eliminate_index]
 
 	return mapa
@@ -258,6 +254,24 @@ def create_fake_lego_measurements(real_rob_pos, mapa):
 	return fake_landmarks
 
 
+def after_kalman_improvement(mapa, kalman_pos, odom_pos):
+
+	mapa_ar = np.array(mapa)
+
+	dx = kalman_pos[0]-odom_pos[0]
+	dy = kalman_pos[1]-odom_pos[1]
+	dteta = kalman_pos[2] - odom_pos[2]
+	print("diferences : ", dx, dy, dteta)
+
+	for i in range(0, mapa_ar.shape[0]): 
+
+
+		x2 = (mapa[i][0] - odom_pos[0])*np.cos(dteta) + (mapa[i][1] - odom_pos[1])*np.sin(dteta) + kalman_pos[0]
+		y2 = -(mapa[i][0] - odom_pos[0])*np.sin(dteta) + (mapa[i][1] - odom_pos[1])*np.cos(dteta) + kalman_pos[1]
+		mapa[i][0] = x2
+		mapa[i][1] = y2
+
+	return mapa
 
 
 
@@ -272,13 +286,8 @@ def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,i
 	mapa = add_points_in_mapa(landmark_rob,new_points2add,mapa,P,pos_rob,index)
 
 
+	mapa = delete_in_mapa(mapa, robot_trajectory)
 
-
-	if delete_countdown == 5:
-
-		mapa = delete_in_mapa(mapa, robot_trajectory)
-
-		robot_trajectory = [];
 
 
 	return mapa, delete_countdown,robot_trajectory

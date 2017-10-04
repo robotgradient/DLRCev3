@@ -24,7 +24,7 @@ from detection.opencv import get_lego_boxes
 
 
 
-from rick.motion_control import euclidian_kalman , kalman_filter , robot_control
+from rick.motion_control import euclidian_kalman , kalman_filter , robot_control, odom_estimation
 
 import sys
 
@@ -91,8 +91,6 @@ def index23(BB_legos,BB_target):
     index=1000
     i=0
     for box in BB_legos:
-        print("BB_legos", box)
-        print("BB_target",BB_target)
         if box[0]==BB_target[0][0] and box[1] == BB_target[0][1]:
 
             index = i
@@ -113,20 +111,6 @@ def search_target_with_Kalman_and_mapping(robot, frame
     marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
 
 
-    ################### ESTIMATE ROBOT'S POSE
-
-    Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
-
-    robot.position = estim_rob_pos
-
-    d = np.ones(3)
-    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
-    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
-    d[2] = estim_rob_pos[2]
-
-    R.append(d)
-
     ###################### Information related with lego blocks mapping
 
     BB_legos=get_lego_boxes(frame)
@@ -139,21 +123,53 @@ def search_target_with_Kalman_and_mapping(robot, frame
     if len(BB_target) !=0:
         index = index23(BB_legos,  BB_target)
 
-    print("INDEX",index)
-    print("BB target", BB_target)
-
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
 
-    print("lego_landmarks", lego_landmarks)
 
     
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
-    print("MAPA:", mapa)
-
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
     
     print("####################################################################################")
+
+    #################### WHAT SLAM IS!
+
+    ######## 1. ESTIMATE POSITION BY ODOMETRY
+
+    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
+
+
+    ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+
+
+    ####### 3. KALMAN FILTER
+
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position = estim_rob_pos
+
+    #print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
+
+
+    ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
+
+    mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
+
+    print("EL MAPA : ", mapa)
+    #### GET GRIPPER POS
+
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
+
+    R.append(d)
+
+
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
+
+
 
 
     #DEFINE MOTION CONTROL FOR SEARCHING
@@ -170,10 +186,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
         #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
         ############   UPDATE MAP
 
-        mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
-
-        map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
-        print("EL MAPA : ", mapa)
+        
         robot.tracker.init(frame, BB_target[0])
         return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,  "robot_trajectory": robot_trajectory,
                                          "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
@@ -198,21 +211,6 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
     marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
 
 
-    ################### ESTIMATE ROBOT'S POSE
-    Ts=0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
-
-    robot.position = estim_rob_pos
-
-    print("Pos of the rob: ", robot.position)
-    d = np.ones(3)
-    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
-    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
-    d[2] = estim_rob_pos[2]
-
-    R.append(d)
-
-
     #################3 RELATED WITH LEGOS
     BB_legos=get_lego_boxes(frame)
 
@@ -224,23 +222,49 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
     if len(BB_target) !=0:
         index = index23(BB_legos,  BB_target)
 
-    print("INDEX",index)
-    print("BB target", BB_target)
-
+    
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
 
     delete_countdown = 0
-
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
-
-    print("MAPA", mapa)
     print("####################################################################################")
+
+    #################### WHAT SLAM IS!
+
+    ######## 1. ESTIMATE POSITION BY ODOMETRY
+
+    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
+
+
+    ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+
+
+    ####### 3. KALMAN FILTER
+
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position = estim_rob_pos
+
+    print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
+
+    ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
+
+    mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
+
+    print("EL MAPA : ", mapa)
+    #### GET GRIPPER POS
+
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
+
+    R.append(d)
 
 
     map_renderer.plot_bricks_and_trajectory(mapa, R)
-
-    mapa = mapa
 
     ###################### Information related with lego blocks mapping
 
@@ -252,7 +276,9 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
         # BB_legos = map(lambda x: x[0], res)
         BB_target = detect_purple(frame,BB_legos)
         if len(BB_target) == 0:
-            return "SEARCH_TARGET", frame, {}
+            return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
+                                        "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
+                                        "state_search" : 2}
         tracker.init(frame, BB_target[0])        
         bbox = BB_target[0]
 
