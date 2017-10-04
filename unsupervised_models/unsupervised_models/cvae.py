@@ -10,32 +10,36 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
 
-# Custom loss layer
-
 
 class CustomVariationalLayer(Layer):
+    """Custom Loss Layer."""
 
-    def __init__(self, z_log_var, z_mean, img_rows, img_cols, **kwargs):
+    def __init__(self, z_log_var, z_mean, img_rows, img_cols, x_std=0.2, **kwargs):
         self.is_placeholder = True
         self.z_mean = z_mean
         self.z_log_var = z_log_var
         self.img_rows = img_rows
         self.img_cols = img_cols
+        self.x_std = K.variable(value=np.array([x_std]))
         super(CustomVariationalLayer, self).__init__(**kwargs)
 
+    def _nll(self, target, prediction_mean):
+        const_term = 0.5 * K.log(2 * np.pi)
+        sig_term = 0.5 * K.log(self.x_std**2)
+        data_term = 0.5 * ((target - prediction_mean)**2) / (self.x_std**2)
+        point_wise_error = const_term + sig_term + data_term
+        sample_wise_error = K.sum(point_wise_error, axis=[1, 2, 3])
+        return K.mean(sample_wise_error)
+
     def vae_loss(self, x, x_decoded_mean_squash):
-        x = K.flatten(x)
-        x_decoded_mean_squash = K.flatten(x_decoded_mean_squash)
-        xent_loss = K.mean(
-            K.binary_crossentropy(x, x_decoded_mean_squash, from_logits=True), axis=-1)
+        nll = self._nll(x, x_decoded_mean_squash)
         kl_loss = -0.5 * K.mean(
             1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
-        loss = K.mean(xent_loss + kl_loss)
+        loss = K.mean(nll + kl_loss)
         return loss
 
     def call(self, inputs):
-        x = inputs[0]
-        x_decoded_mean_squash = inputs[1]
+        x, x_decoded_mean_squash = inputs
         loss = self.vae_loss(x, x_decoded_mean_squash)
         self.add_loss(loss, inputs=inputs)
         # We don't use this output.
@@ -140,9 +144,7 @@ class ConvolutionalVariationalAutoencoder(Model):
         y = CustomVariationalLayer(z_log_var=z_log_var,
             z_mean=z_mean,
             img_cols=img_cols,
-            img_rows=img_rows)([x, x_decoded_mean_squash],
-            # name="custom_variational_layer"
-            )
+            img_rows=img_rows)([x, x_decoded_mean_squash])
 
         # build a model to project inputs on the latent space
         self.encoder = Model(x, z_mean)
