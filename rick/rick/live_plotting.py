@@ -6,15 +6,15 @@ from collections import deque
 
 def draw_brick(x,y, screen, color=(0, 128, 255)):
 
-    x=int(x/300 * 600)
-    y=int(y/300 * 600)
+    x=int(x/300 * 600+ 100)
+    y=int(y/300 * 600+ 100)
     size = 5
     pygame.draw.rect(screen, color, pygame.Rect(x-size, y-size, 2*size, 2*size))
 
 def draw_ppoint(x,y, screen, color=(0, 128, 30)):
 
-    x=int(x/300 * 600)
-    y=int(y/300 * 600)
+    x=int(x/300 * 600 + 100)
+    y=int(y/300 * 600 + 100)
     size = 2
     pygame.draw.rect(screen, color, pygame.Rect(x-size, y-size, 2*size, 2*size))
 

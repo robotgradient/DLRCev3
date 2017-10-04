@@ -38,22 +38,36 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py
 					p_already = j
 			print("shortest distance:", sh_dist)
 
-			if sh_dist < 20:
+			if sh_dist < 20 and mapa[p_already][4] != 5:
 				print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
 				mapa = np.array(mapa)
 				mapa[p_already,4] = 1
 				mapa = mapa.tolist()
 				new = 0
 
+				mapa = relocalize_points(mapa, p_already, x_mapa,y_mapa, i)
+
 			if new ==1:
 				print('JODER landmarks', landmarks[i], 'sh distance: ', sh_dist)
 				new_points2add.append(i)
-			if new ==2 :
-				update_points.append(i)
-
 
 	delete_countdown +=1
 	return mapa , delete_countdown , new_points2add, update_points
+
+
+def relocalize_points(mapa, p_already,x_mapa, y_mapa,i):
+
+	# Compute new pos
+
+	mapa_ar = np.array(mapa)
+	mapa_ar[p_already, 0] = (mapa_ar[p_already,0] + x_mapa)/2
+	mapa_ar[p_already, 1] = (mapa_ar[p_already,1] + y_mapa)/2
+
+	mapa = mapa_ar.tolist()
+
+	return mapa
+
+
 
 
 def cam2rob(BB_legos, H):
@@ -190,14 +204,26 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 				mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],1]))
 	
 
-	if index ==10000:
-		print("grrrrr")
+	# Computing target position
+
+	if index !=1000 :
+		mapa_ar = np.array(mapa)
+		target_pos = 1000
+		for j in range(0, mapa_ar.shape[0]):
+
+			if  mapa[j][4] == 5:
+
+				target_pos = j
+
 		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
 
 		y_mapa = pos_rob[1] + landmarks[index,1]*np.sin((pos_rob[2])*pi/180+landmarks[index,0])
 
-		if landmarks[index,1] != 0:
+		if target_pos == 1000:
 			mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],5]))
+		else:
+			mapa[target_pos][0] = x_mapa
+			mapa[target_pos][1] = y_mapa
 		
 
 
