@@ -4,52 +4,55 @@ from math import pi
 
 
 
-def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown): #mapa = (x,y, Px,Py, updt)
+def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index): #mapa = (x,y, Px,Py, updt)
 
 	new_points2add = []
 	update_points = []
 	landmarks = np.array(landmarks)
 	for i in range(0,landmarks.shape[0]):
 
-			x_mapa = pos_rob[0] + landmarks[i,1]*np.cos((pos_rob[2])*pi/180+landmarks[i,0])
+			if landmarks[i,1] < 55 and i != index:
 
-			y_mapa = pos_rob[1] + landmarks[i,1]*np.sin((pos_rob[2])*pi/180+landmarks[i,0])
+				x_mapa = pos_rob[0] + landmarks[i,1]*np.cos((pos_rob[2])*pi/180+landmarks[i,0])
+
+				y_mapa = pos_rob[1] + landmarks[i,1]*np.sin((pos_rob[2])*pi/180+landmarks[i,0])
 
 
-			new = 1
+				new = 1
 
-			mapa_ar = np.array(mapa)
+				mapa_ar = np.array(mapa)
 
-			if delete_countdown ==5 and mapa_ar.size > 0:
-				mapa_ar[:,4] = np.zeros([mapa_ar.shape[0]])
-				mapa = list(mapa_ar)
-				delete_countdown = 0
-			else:
-				delete_countdown = 0
-			sh_dist = 10000;
-			p_already = 0
-			print('new element', i)
-			for j in range(0, mapa_ar.shape[0]):
+				if delete_countdown ==5 and mapa_ar.size > 0:
+					mapa_ar[:,4] = np.zeros([mapa_ar.shape[0]])
+					mapa = list(mapa_ar)
+					delete_countdown = 0
+				else:
+					delete_countdown = 0
+				sh_dist = 10000;
+				p_already = 0
+				print('new element', i)
+				for j in range(0, mapa_ar.shape[0]):
 
-				distance = np.sqrt(np.power((x_mapa-mapa_ar[j,0]),2) + np.power((y_mapa - mapa_ar[j,1]),2))
+					distance = np.sqrt(np.power((x_mapa-mapa_ar[j,0]),2) + np.power((y_mapa - mapa_ar[j,1]),2))
 
-				if sh_dist > distance: 
-					sh_dist = distance
-					p_already = j
-			print("shortest distance:", sh_dist)
+					if sh_dist > distance and mapa[j][4] != 5: 
+						sh_dist = distance
+						p_already = j
 
-			if sh_dist < 20 and mapa[p_already][4] != 5:
-				print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
-				mapa = np.array(mapa)
-				mapa[p_already,4] = 1
-				mapa = mapa.tolist()
-				new = 0
+				
 
-				mapa = relocalize_points(mapa, p_already, x_mapa,y_mapa, i)
+				if sh_dist < 10:
+					print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
+					mapa = np.array(mapa)
+					mapa[p_already,4] = 1
+					mapa = mapa.tolist()
+					new = 0
 
-			if new ==1:
-				print('JODER landmarks', landmarks[i], 'sh distance: ', sh_dist)
-				new_points2add.append(i)
+					mapa = relocalize_points(mapa, p_already, x_mapa,y_mapa, i)
+
+				if new ==1:
+					print('JODER landmarks', landmarks[i], 'sh distance: ', sh_dist)
+					new_points2add.append(i)
 
 	delete_countdown +=1
 	return mapa , delete_countdown , new_points2add, update_points
@@ -102,11 +105,8 @@ def cam2rob(BB_legos, H):
 		
 		distance = np.sqrt(np.power(distance_x,2) + np.power(distance_y,2))
 		#print("Distance ", distance, " angle: ", angle)
-		if distance < 55:
-			Lego_list.append([angle,distance])
+		Lego_list.append([angle,distance])
 			#print("angle" , angle*180/pi)
-		else:
-			Lego_list.append([0,0])
 
 	Lego_list = np.array(Lego_list)
 	return Lego_list
@@ -214,6 +214,7 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 			if  mapa[j][4] == 5:
 
 				target_pos = j
+		print(target_pos)
 
 		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
 
@@ -264,7 +265,7 @@ def create_fake_lego_measurements(real_rob_pos, mapa):
 def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,index):
 
 
-	mapa,delete_countdown, new_points2add, update_points = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown)
+	mapa,delete_countdown, new_points2add, update_points = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown, index)
 
 	robot_trajectory.append(pos_rob)
 

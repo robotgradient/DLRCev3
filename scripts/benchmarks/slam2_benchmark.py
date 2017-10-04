@@ -17,6 +17,8 @@ import cv2.aruco as aruco
 
 import numpy as np
 
+from math import pi
+
 
 from detection.opencv import get_lego_boxes
 
@@ -112,9 +114,18 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     ################### ESTIMATE ROBOT'S POSE
-    #estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
 
-    #robot.position = estim_rob_pos
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position = estim_rob_pos
+
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
+
+    R.append(d)
 
     ###################### Information related with lego blocks mapping
 
@@ -137,8 +148,12 @@ def search_target_with_Kalman_and_mapping(robot, frame
     print("lego_landmarks", lego_landmarks)
 
     
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
+    print("MAPA:", mapa)
 
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
     
+    print("####################################################################################")
 
 
     #DEFINE MOTION CONTROL FOR SEARCHING
@@ -160,7 +175,8 @@ def search_target_with_Kalman_and_mapping(robot, frame
         map_renderer.plot_bricks_and_trajectory(mapa, robot_trajectory)
         print("EL MAPA : ", mapa)
         robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "pos_rob" : robot.position,"R" :  [], "mapa" : mapa}
+        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,  "robot_trajectory": robot_trajectory,
+                                         "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
@@ -169,7 +185,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
-                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = []):
+                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
     
 
     new_ltrack_pos = robot.left_track.position
@@ -188,8 +204,38 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
 
     robot.position = estim_rob_pos
 
-    R.append(robot.position)
+    print("Pos of the rob: ", robot.position)
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
 
+    R.append(d)
+
+
+    #################3 RELATED WITH LEGOS
+    BB_legos=get_lego_boxes(frame)
+
+    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
+
+    BB_target = detect_purple(frame,BB_legos)
+
+    index = 1000
+    if len(BB_target) !=0:
+        index = index23(BB_legos,  BB_target)
+
+    print("INDEX",index)
+    print("BB target", BB_target)
+
+
+    lego_landmarks = mapping.cam2rob(BB_legos,H)
+
+    delete_countdown = 0
+
+    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory, index)
+
+    print("MAPA", mapa)
+    print("####################################################################################")
 
 
     map_renderer.plot_bricks_and_trajectory(mapa, R)
