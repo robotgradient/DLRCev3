@@ -32,7 +32,7 @@ def compute_path(robot,frame,box_coords):
     if (y>0 and yaw>-80) or (y<0 and yaw< -100):
         print("NICE PATH")
     thm=40
-    thobj=10
+    thobj=30
 
 
     x2=x+thm*np.sin(yaw*np.pi/180.)
@@ -41,7 +41,8 @@ def compute_path(robot,frame,box_coords):
     xobj=x+thobj*np.sin(yaw*np.pi/180.)
     yobj=y-thobj*np.cos(yaw*np.pi/180.)
 
-    obj=[x,y]
+    obj=[xobj,yobj]
+    print("BOX IN FRONT POINTS",obj)
     obslist=[[40,0],[40,10],[40,-10],[40,20],[40,-20],[40,30],[40,40],[40,50],[40,60]]
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
@@ -94,7 +95,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=0,
             x=box_coords[0]
             y=box_coords[1]
             yaw=box_coords[2]
-            thobj=10
+            thobj=30
             xobj=x+thobj*np.sin(yaw*np.pi/180.)
             yobj=y-thobj*np.cos(yaw*np.pi/180.)
             obj=[xobj+robot.position[0],yobj+robot.position[1]]
@@ -130,7 +131,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=0,
     #print("DIFFERENTCE WITH THE GOAL:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
     
     #CONDITION FOR EXITTING
-    if abs(estim_rob_pos[0]-goal_pos[0])<40 and abs(estim_rob_pos[1]-goal_pos[1])<20:
+    if np.sqrt(np.power(estim_rob_pos[0]-goal_pos[0],2)+np.power(estim_rob_pos[1]-goal_pos[1],2))<30:
         return ("MOVE_TO_BOX_BY_VISION", frame, {})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -139,18 +140,21 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=0,
     return "MOVE_TO_BOX_BLIND", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
 
 
-def move_to_box_by_vision(robot,frame,vel_rot=50, real_center=5,vel_forward=200):
+def move_to_box_by_vision(robot,frame,vel_rot=50, real_center=0,vel_forward=100):
     mtx,dist=load_camera_params()
     frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
     if box_coords:
+        print("BOX_COORDINATES",box_coords)
         x=box_coords[0]
         y=box_coords[1]
-        if x<25:
+        if x<32:
             return "PLACING_OBJECT",frame,{}
-        if abs(y-real_center)>5:
-            vel_wheels=np.asarray([vel_forward,vel_forward])+np.asarray([-vel_rot, vel_rot]) * y
-    
-    vel_wheels=np.asarray([vel_forward,vel_forward])
+        if abs(y-real_center)>10:
+            vel_wheels=np.asarray([vel_rot, -vel_rot])*np.sign(y-real_center)
+        else:    
+             vel_wheels=np.asarray([vel_forward,vel_forward])
+    else:
+         vel_wheels=np.asarray([vel_rot, -vel_rot])
     robot.move(vel_wheels[0],vel_wheels[1])
     return ("MOVE_TO_BOX_BY_VISION", frame, {})
 
