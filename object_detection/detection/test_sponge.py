@@ -33,8 +33,9 @@ if __name__ == "__main__":
 		cv2.imshow("frame", frame)
 		frame2,left_box,right_box=detect_sponges(frame)
 		if len(left_box)>0 and len(right_box)>0:
-			cv2.line(frame2, (left_center,0),(left_center,480), (0,255,0))
-			cv2.line(frame2, (right_center,0),(right_center,480), (0,0,255))
+			cv2.line(frame2, (left_box[2],0),(left_box[2],480), (0,255,0))
+			cv2.line(frame2, (right_box[0],0),(right_box[0],480), (0,0,255))
+			print("left",left_box[2],"right",right_box[0])
 		cv2.imshow("without sponges", frame2)
 		if cv2.waitKey(1) & 0xFF == 27:
 			break

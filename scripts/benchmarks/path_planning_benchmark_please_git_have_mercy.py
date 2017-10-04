@@ -21,11 +21,12 @@ def initialize(robot, frame, vel=60):
                     })
 
 
-def plot_mapa(robot_traj):
+def plot_mapa(robot_traj,path):
     rob = np.array(robot_traj)
     print("Before stop")
     if rob.size > 100:
         plt.plot(rob[:,0],rob[:,1])
+        plt.plot(path[:,0],path[:,1])
         plt.axis([-100, 150, -100, 150])
         plt.legend(["Lego", "path"])
         plt.show()
@@ -34,8 +35,9 @@ def A_start_firstmove(robot, frame,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0):
 
     rob = [0,0,0]
-    obj = [100,0]
-    obslist=[[50,0],[60,0],[40,0],[30,0][70,0]]
+    obj = [120,0]
+    obslist=[[20,0],[20,-10],[80,0],[80,10],[80,20],[80,-10],[80,-20]]
+
     Map=create_map(obslist)
 
     #obj=[obj[0]+offsetx,obj[1]+offsety]
@@ -114,7 +116,10 @@ def A_start_secondmove(robot, frame, goal_pos,Map=[],
     print("INMEDIATE VALUE", new_path[0,0],new_path[0,1])
     print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
     if abs(estim_rob_pos[0]-goal_pos[0])<10 and abs(estim_rob_pos[1]-goal_pos[1])<10:
-        plot_mapa(R)
+        robot.reset()
+        path=A_star([0,0],[120,0], Map)
+        plot_mapa(R,path)
+
         return "FINAL_STATE"
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
 

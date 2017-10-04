@@ -101,7 +101,7 @@ def piecewise_move_to_box_blind(robot, frame, path_points,
     print("goal pose",goal_pos)
     #print("ROBOT POSITION: ", estim_rob_pos)
     print("Difference with goal:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
-    if abs(estim_rob_pos[0]-goal_pos[0])<25 and abs(estim_rob_pos[1]-goal_pos[1])<80:
+    if abs(estim_rob_pos[0]-goal_pos[0])<10 and abs(estim_rob_pos[1]-goal_pos[1])<50:
         return "PLACE_OBJECT", frame, {}
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])

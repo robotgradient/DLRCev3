@@ -8,6 +8,7 @@ from time import sleep
 import cv2.aruco as aruco
 
 arucoParams = aruco.DetectorParameters_create()
+aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 
 def load_camera_params():
     data = np.load('camera_parameters.npz')
@@ -63,22 +64,22 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4)))
             located_matrix[index_mat,:]=[d,theta]
     return located_matrix
 
-def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,markerLength=4.8):
-    Tp2r=np.ones([4,4])
-    rotc2r=T[0:3,0:3]
+def get_T_from_marker(frame,mtx,dist,marker_id,arucoParams=arucoParams,aruco_dict=aruco_dict,markerLength=4.8):
+    Tp2r=np.array([[1,0,0,32.4],[0,1,0,1.2],[0,0,1,0],[0,0,0,1]])
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
     if isinstance(ids, np.ndarray) and (marker_id in ids): # if aruco marker detected
         rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners, markerLength, mtx, dist) # For a single marker
         position=np.where(ids==marker_id)
-        #frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
+        frame = aruco.drawAxis(frame, mtx, dist, rvec[position], tvec[position], 15)
         tp2c=np.concatenate((tvec[position].T,np.array([[1]])),axis=0)
         rotp2c,jac=cv2.Rodrigues(rvec[position])
         zerosrot=np.zeros([1,3])
         rot4p2c=np.concatenate((rotp2c,zerosrot), axis=0)
         Tp2c=np.concatenate((rot4p2c,tp2c), axis=1)
-        Tp2r=np.ones([4,4])
-        Tc2r=Tp2r.dot(np.linalg.inv(Tp2c))
+        print("T point with respect to camera",Tp2c)
+        Tr2c=Tp2c.dot(np.linalg.inv(Tp2r))
+        Tc2r=np.linalg.inv(Tr2c)
     else:
         Tc2r=[]
     return Tc2r
@@ -151,6 +152,8 @@ while True:
 #img=cv2.imread('Chessboard_10.jpg')
 gray = cv2.cvtColor(dst,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
+
+
 ret, corners = cv2.findChessboardCorners(dst, (9,6),None, 1 | 4)
 
 #corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) 
@@ -192,12 +195,18 @@ cv2.imshow("waopdst", img2)
 cv2.waitKey()
 ###################################################
 print("homography",H)
-#CAMERA TO ROBOT FRAME
-
-############################################
-
 np.savez("Homographygood",H)
-
+#CAMERA TO ROBOT FRAME
+print("Now GET THE CAMERA WITH RESPECT ROBOT TRANSFORMATION")
+############################################
+while True:
+    ret,frame=cap.read()
+    Tc2r=get_T_from_marker(frame, mtx, dist, 1)
+    cv2.imshow("marker windows", frame)
+    if cv2.waitKey(100) & 0xFF==27:
+        break  
+print("Transformation camera with respect robot",Tc2r)
+np.savez("Tc2r",Tc2r)
 
 
 
