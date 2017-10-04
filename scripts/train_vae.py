@@ -14,10 +14,10 @@ from unsupervised_models.cvae import ConvolutionalVariationalAutoencoder
 IM_SIZE = 64
 
 latent_dim = int(sys.argv[1])
-batch_size = 1
+batch_size = 16
 
 epochs = 20
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 
 import os
 from pathlib import Path
