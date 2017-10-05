@@ -14,10 +14,10 @@ from unsupervised_models.cvae import ConvolutionalVariationalAutoencoder
 IM_SIZE = 64
 
 latent_dim = int(sys.argv[1])
-batch_size = 1
+batch_size = 16
 
-epochs = 20
-LEARNING_RATE = 0.01
+epochs = 200
+LEARNING_RATE = 0.001
 
 import os
 from pathlib import Path
@@ -53,7 +53,7 @@ checkpoint_callback = ModelCheckpoint(
     verbose=1,
     save_weights_only=False,
     mode='auto',
-    period=2)
+    period=10)
 
 tb_dir = PREFIX / ('tensorboard-logdir/latent_dims_' + str(latent_dim))
 os.makedirs(tb_dir, exist_ok=True)
