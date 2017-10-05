@@ -17,7 +17,7 @@ latent_dim = int(sys.argv[1])
 batch_size = 16
 
 epochs = 200
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.004
 
 import os
 from pathlib import Path
@@ -30,8 +30,8 @@ def blender_data_gen(directory, batch_size):
     """Feeds data in a way that plays well with Keras's `fit_generator`"""
     paths = chunked(img_paths(directory), batch_size)
     for batch in cycle(paths):
-        arrays = map(lambda i: i / 255., map(img_array, batch))
-        yield (np.stack(list(arrays), axis=0), None)
+        arrays = map(img_array, batch)
+        yield (np.stack(list(arrays), axis=0) / 255, None)
 
 
 vae = ConvolutionalVariationalAutoencoder(
@@ -46,7 +46,9 @@ vae.compile(
     loss=None,)
 print(vae.summary())
 
-weights_dir = PREFIX / ('weights/latent_dims_' + str(latent_dim))
+RUN_NAME = 'latent_dims_' + str(latent_dim)
+
+weights_dir = PREFIX / 'weights' / RUN_NAME
 os.makedirs(weights_dir, exist_ok=True)
 checkpoint_callback = ModelCheckpoint(
     str(weights_dir / "weights.{epoch:02d}.hdf5"),
@@ -55,7 +57,7 @@ checkpoint_callback = ModelCheckpoint(
     mode='auto',
     period=10)
 
-tb_dir = PREFIX / ('tensorboard-logdir/latent_dims_' + str(latent_dim))
+tb_dir = PREFIX / 'tensorboard-logdir' / RUN_NAME
 os.makedirs(tb_dir, exist_ok=True)
 tensorboard_callback = TensorBoard(
     log_dir=str(tb_dir),
@@ -64,7 +66,7 @@ tensorboard_callback = TensorBoard(
     write_graph=True,
     write_grads=False,
     write_images=True,
-    embeddings_freq=5,
+    embeddings_freq=10,
     embeddings_layer_names=["conv2d_transpose_3"],
     embeddings_metadata=None)
 
