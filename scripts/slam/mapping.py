@@ -147,24 +147,22 @@ def mapa2grid(mapa):
 
 def delete_in_mapa(mapa,pos_rob):
 
-	robot_trajectory_ar = np.array(robot_trajectory)
-
 	min_dist = 30
 	max_dist = 50
 	min_angle = np.arctan2(29,20)
 	max_angle = np.arctan2(29,-20)
 	mapa_ar = np.array(mapa)
 
-	eliminate_index = []
+	not_eliminate_index = []
 
 
 	for j in range(0, mapa_ar.shape[0]):
 
-		x = mapa_ar[j,0] - pos_rob[i,0]
-		y = mapa_ar[j,1] - pos_rob[i,1]
+		x = mapa_ar[j,0] - pos_rob[0]
+		y = mapa_ar[j,1] - pos_rob[1]
 
 		distance = np.sqrt(np.power(x,2)+np.power(y,2))
-		angle = np.arctan2(y,x) - robot_trajectory_ar[i,2]*pi/180
+		angle = np.arctan2(y,x) - pos_rob[2]*pi/180
 				
 		if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
 			pass

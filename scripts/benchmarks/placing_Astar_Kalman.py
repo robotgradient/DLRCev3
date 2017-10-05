@@ -7,6 +7,7 @@ import time
 import cv2
 from ev3control.rpc import Robot
 from rick.controllers import *
+from rick.A_star_planning import *
 from rick.core import State
 from rick.core import main_loop
 from rick.async import AsyncCamera
@@ -18,8 +19,9 @@ from detection.marker_localization import get_marker_pose, load_camera_params
 import cv2.aruco as aruco
 
 
+from detection.marker_localization import get_specific_marker_pose, load_camera_params
 import numpy as np
-
+from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path, A_star_control
 from math import pi
 
 
@@ -86,7 +88,7 @@ def search_control(state_search,mapa, pos_rob, t_old):
     
     elif state_search ==2:
 
-        vel_wheels = [50,160]
+        vel_wheels = [100,100]
 
     return vel_wheels,state_search,t1
 
@@ -102,7 +104,7 @@ def index23(BB_legos,BB_target):
 
 
 
-def search_target_with_Kalman_and_mapping(robot, frame
+def search_box(robot, frame
                             , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0):
 
     new_ltrack_pos = robot.left_track.position
@@ -143,7 +145,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
 
 
     ####### 3. KALMAN FILTER
@@ -158,7 +160,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
 
-    mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
+    #mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
 
     print("EL MAPA : ", mapa)
     #### GET GRIPPER POS
@@ -216,7 +218,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     yobj=y-thobj*np.cos(yaw*np.pi/180.)
 
     obj=[x,y]
-    obslist=[[40,0],[40,10],[40,-10],[40,20],[40,-20],[40,30],[40,40],[40,50],[40,60]]
+    obslist=[]
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
     plt.plot(path[:,0],path[:,1])
@@ -248,10 +250,12 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
         xobj=x+thobj*np.sin(yaw*np.pi/180.)
         yobj=y-thobj*np.cos(yaw*np.pi/180.)
         obj=[xobj+robot.position[0],yobj+robot.position[1]]
-        marker_list.append(obj)
+        angle = np.arctan2(obj[1],obj[0])
+        distance = np.sqrt(np.power(obj[0],2) + np.power(np.power(obj[1],2)))
+        marker_list.append([angle,distance])
 
 
-    marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
+    marker_map = np.array([[150,0,0]])
 
     Ts = 0.3
     estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
@@ -260,28 +264,143 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
 
 
     #update map
-    path=A_star(robot.position[0:2], marker_map[0], Map)
+    path=A_star(robot.position[0:2], marker_map[0,:], Map)
     
     replan=1
-    goal_pos=marker_map[0]
+    goal_pos=marker_map[0,:]
 
     t0 = time.time()
 
-    estim_rob_pos, vel_wheels, new_path = A_star_path_planning_control(robot.position,goal_pos,
-                                                                          Map, robot.sampling_rate,
-                                                                          odom_r= odom_r,odom_l=odom_l,
-                                                                          iteration=iteration, path=path)
+    vel_wheels, new_path = A_star_control(robot.position,goal_pos,
+    									Map, robot.sampling_rate,
+                                             odom_r= odom_r,odom_l=odom_l,
+                                        iteration=iteration, path=path)
     
     
 
     #print("DIFFERENTCE WITH THE GOAL:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
     
     #CONDITION FOR EXITTING
-    if abs(estim_rob_pos[0]-goal_pos[0])<40 and abs(estim_rob_pos[1]-goal_pos[1])<20:
-        return ("MOVE_TO_BOX_BY_VISION", frame, {})
+
+    distance_to_target = np.sqrt(np.power(estim_rob_pos[0]-goal_pos[0],2)+ np.power(estim_rob_pos[1]-goal_pos[1],2))
+
+    print("###########################################################################################################")
+    print("disatnce to target: ", distance_to_target)
+    print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
+    print("###########################################################################################################")
+    
+    if distance_to_target < 40:
+        return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
    
-    return "MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0}
+    return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
+def PID_control(robot, goal):
+
+	er_x = goal[0]- 30 - robot[0]
+	er_y = goal[1] - robot[1]
+
+	angle = np.arctan2(er_y,er_x)
+	distance = np.sqrt(np.power(er_x,2)+np.power(er_y,2))
+
+
+	if abs(angle - robot[2]*pi/180)>1 and distance >5:
+		vel_wheels = [-100,100]
+	elif distance >5:
+		vel_wheels = [100,100]
+	elif abs(robot[2]*pi/180)>1:
+		vel_wheels = [-100,100]
+	else:
+		vel_wheels=[0,0]
+
+	return vel_wheels
+
+
+
+
+
+def move_to_box_by_vision(robot, frame, replan=1,
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3)):
+    mtx,dist=load_camera_params()
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
+
+    new_ltrack_pos = robot.left_track.position
+    new_rtrack_pos = robot.right_track.position
+    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+    
+
+
+    marker_list = []
+    if box_coords:
+        print("REPLANNNIG")
+        x=box_coords[0]
+        y=box_coords[1]
+        yaw=box_coords[2]
+        thobj=10
+        xobj=x+thobj*np.sin(yaw*np.pi/180.)
+        yobj=y-thobj*np.cos(yaw*np.pi/180.)
+        obj=[xobj+robot.position[0],yobj+robot.position[1]]
+        angle = np.arctan2(obj[1],obj[0])
+        distance = np.sqrt(np.power(obj[0],2) + np.power(np.power(obj[1],2)))
+        marker_list.append([angle,distance])
+
+
+    marker_map = np.array([[200,100,0]])
+
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position= estim_rob_pos
+
+
+    vel_wheels = PID_control(estim_rob_pos, marker_map[0,:])
+
+    x = 1
+    if x<-1:
+        return "MOVE_TO_BOX_BY_VISION",frame,{"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos}
+ 
+    robot.move(vel_wheels[0],vel_wheels[1])
+    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos})
+
+with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
+    robot.map = [(200, 0)]
+    robot.sampling_rate = 0.1
+    print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
+    # Define the state graph, we can do this better, currently each method
+    # returns the next state name
+    states = [
+        State(
+            name="SEARCH_TARGET",
+            act=search_box,
+            default_args={
+                "ltrack_pos": robot.left_track.position,
+                "rtrack_pos": robot.right_track.position,
+            }
+        ),
+        State(
+             name="COMPUTE_PATH",
+             act=compute_path,
+         ),
+         State(
+             name="MOVE_TO_BOX",
+             act=A_star_move_to_box_blind,
+            default_args={
+                "ltrack_pos": robot.left_track.position,
+                "rtrack_pos": robot.right_track.position,
+                "TIME": time.time()
+            }
+         ),
+        State(
+             name="MOVE_TO_BOX_BY_VISION",
+             act=move_to_box_by_vision,
+         ),
+    ]
+    state_dict = {}
+    for state in states:
+        state_dict[state.name] = state
+
+    start_state = states[0]
+
+    main_loop(robot, start_state, state_dict, delay=0.1)

@@ -117,7 +117,11 @@ aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 
 #loading camera parameters
 mtx,dist=load_camera_params()
-
-
-
-
+cap=cv2.VideoCapture(1)
+while True:
+	ret,frame=cap.read()
+	frame,coords=get_specific_marker_pose(frame, mtx, dist, 0)
+	cv2.imshow("frame", frame)
+	print(coords)
+	cv2.waitKey(10)
+	

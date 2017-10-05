@@ -24,7 +24,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
         print("elapsed time :",tend-tstart)
 
         #draw_lines(frame)
-        print("Current state: ", state.name, kwargs)
+        #print("Current state: ", state.name, kwargs)
         _, frame = robot.cap.read()
         next_state_name, processed_frame, kwargs = state.act(robot,frame, **kwargs)
         state = state_dict[next_state_name]

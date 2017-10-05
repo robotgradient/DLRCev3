@@ -225,4 +225,4 @@ with Robot(cv2.VideoCapture(1)) as robot:
 
     start_state = states[0]
 
-    main_loop(robot, start_state, state_dict, delay=0.1)
+    main_loop(robot, start_state, state_dict, delay=0)
