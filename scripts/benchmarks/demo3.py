@@ -350,7 +350,16 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     print("###########################################################################################################")
     
     if distance_to_target < 20:
-        return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
+
+        
+
+
+
+
+
+
+        
+        return ("MOVE_TO_BOX_BY_VISION", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
