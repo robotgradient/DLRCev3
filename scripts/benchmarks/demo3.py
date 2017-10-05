@@ -53,6 +53,21 @@ map_renderer = MapRenderer()
 similarity_detector = EuclidianNNFeaturesBrickFinder()
 
 
+def acquire_target(robot, frame, **kwargs):
+    """Callback for acquiring a lego target."""
+    BB_legos = get_lego_boxes(frame)
+
+    # We wait until there's only one lego in view
+    if len(BB_legos) == 1:
+        print("found a brick")
+        bboxes = [frame[bbox[0]:bbox[2], bbox[1]:bbox[3]] for bbox in BB_legos]
+        robot.target = bounding_box_features = similarity_detector.extract_features(bboxes)[0]
+        return "SEARCH_TARGET", frame, {}
+    else:
+        print(len(BB_legos))
+        return "ACQUIRE_TARGET", frame, {}
+
+
 def plot_mapa(mapa,robot_traj):
 
 
