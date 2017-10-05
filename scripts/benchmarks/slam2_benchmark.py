@@ -139,8 +139,8 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
-
+    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    mapa=[]
 
     ####### 3. KALMAN FILTER
 
@@ -196,9 +196,9 @@ def search_target_with_Kalman_and_mapping(robot, frame
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
                                         "state_search" : 2, "t1" : t1 }
 
-def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
-                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
-                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
+def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
+                         vel_forward = 299, vel_rot = 50, atol_move_blind=70, 
+                         fail_counter=0, center_position_error = 75, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
     
 
     new_ltrack_pos = robot.left_track.position
@@ -237,7 +237,7 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
 
 
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
 
 
     ####### 3. KALMAN FILTER
@@ -286,11 +286,12 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
     img_center = img_res / 2 - center_position_error 
     #img_center[0] = 285
     error = img_center - coords
-    atol = 10 + coords[1]/480 * 40
+    atol = 5 + coords[1]/480 * 40
+    cv2.line(frame, (int(img_center[0]),0), (int(img_center[0]),480), (0,255,0))
 
     print("Errror:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
-    img_center = img_res/2.
+    #img_center = img_res/2.
 
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
         robot.move_straight(vel_forward, 500)

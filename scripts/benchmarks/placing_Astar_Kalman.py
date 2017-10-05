@@ -208,7 +208,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     if (y>0 and yaw>-80) or (y<0 and yaw< -100):
         print("NICE PATH")
     thm=40
-    thobj=40
+    thobj=50
 
 
     x2=x+thm*np.sin(yaw*np.pi/180.)
@@ -246,7 +246,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
         x=box_coords[0]
         y=box_coords[1]
         yaw=box_coords[2]
-        thobj=40
+        thobj=50
         xobj=x+thobj*np.sin(yaw*np.pi/180.)
         yobj=y-thobj*np.cos(yaw*np.pi/180.)
         obj=[xobj+robot.position[0],yobj+robot.position[1]]
@@ -304,7 +304,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
     print("###########################################################################################################")
     
-    if distance_to_target < 20:
+    if abs(estim_rob_pos[0]-marker_map_obj[0,0]) < 10 and abs(estim_rob_pos[1]-marker_map_obj[0,1]) < 10:
         return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -316,11 +316,12 @@ def PID_control(robot, marker_map, box_coords,hist):
     vel_st=100
     vel_rot=60
     lat_tol=4
+    yshift=6
     er_x = marker_map[0,0] - robot[0]
     er_y = marker_map[0,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
-    print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x),robot[2])
+    print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2])
 
     if er_angle > pi:
         er_angle = er_angle - 2*pi
@@ -331,7 +332,7 @@ def PID_control(robot, marker_map, box_coords,hist):
 
     if box_coords:
 
-        if abs(box_coords[1])>lat_tol:
+        if abs(box_coords[1]+yshift)>lat_tol:
             vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1])
             print("GUIDDE BY VISION")
         elif box_coords[0]>35:
@@ -403,8 +404,8 @@ def move_to_box_by_vision(robot, frame, replan=1,
 
     
     vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
-    #if hist==0:
-        #return "PLACE_OBJECT_IN_THE_BOX",frame,{}
+    if hist==0:
+        return "PLACE_OBJECT_IN_THE_BOX",frame,{}
     
     robot.move(vel_wheels[0],vel_wheels[1])
     return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist})

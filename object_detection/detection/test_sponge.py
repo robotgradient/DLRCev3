@@ -37,5 +37,7 @@ if __name__ == "__main__":
 			cv2.line(frame2, (right_box[0],0),(right_box[0],480), (0,0,255))
 			print("left",left_box[2],"right",right_box[0])
 		cv2.imshow("without sponges", frame2)
+		frame3=eliminate_grip(frame)
+		cv2.imshow("with the manual one",frame3)
 		if cv2.waitKey(1) & 0xFF == 27:
 			break
