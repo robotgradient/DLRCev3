@@ -120,7 +120,7 @@ mtx,dist=load_camera_params()
 cap=cv2.VideoCapture(1)
 while True:
 	ret,frame=cap.read()
-	frame,coords=get_specific_marker_pose(frame, mtx, dist, 0)
+	frame,coords=get_specific_marker_pose(frame, mtx, dist, 0,markerLength=8.6)
 	cv2.imshow("frame", frame)
 	print(coords)
 	cv2.waitKey(10)
