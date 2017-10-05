@@ -25,7 +25,7 @@ from detection.opencv import get_lego_boxes
 
 
 
-from rick.motion_control import euclidian_kalman , kalman_filter , robot_control, odom_estimation
+from rick.motion_control import euclidian_kalman , kalman_filter , kalman_filter2 , robot_control, odom_estimation
 
 import sys
 
@@ -86,6 +86,7 @@ def plot_mapa(mapa,robot_traj):
     print("After stop")
 
 
+
 def search_control(state_search,mapa, pos_rob, t_old):
 
     t1 = 0
@@ -125,7 +126,8 @@ def wait_for_target(robot, frame):
 
 
 def search_target_with_Kalman_and_mapping(robot, frame
-                            , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0):
+                            , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0, 
+                            iteration = 0,feature_map = []):
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
@@ -139,19 +141,6 @@ def search_target_with_Kalman_and_mapping(robot, frame
     ###################### Information related with lego blocks mapping
 
     BB_legos=get_lego_boxes(frame)
-
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-
-    #Feature extraction from bounding boxes
-
-    bboxes = [frame[bbox[0]:bbox[2], bbox[1]:bbox[3]] for bbox in BB_legos]
-    bounding_box_features = similarity_detector.extract_features(bboxes)
-    BB_target = detect_purple(frame,BB_legos)
-
-    index = 1000
-    if len(BB_target) !=0:
-        index = index23(BB_legos,  BB_target)
-
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
 
@@ -168,7 +157,11 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+
+    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    
+
 
 
     ####### 3. KALMAN FILTER
@@ -200,6 +193,21 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
 
+    #Feature extraction from bounding boxes
+    bboxes = []
+    for i in range(0,len(links)):
+
+        bbox = BB_legos[links[i][0]]
+        bboxes.append(frame[bbox[0]:bbox[2], bbox[1]:bbox[3]])
+
+    bounding_box_features = similarity_detector.extract_features(bboxes)
+
+    for i in range(0,len(links)):
+
+        feature_map[links[i][1]] = bounding_box_features[i]
+
+
+
 
     #DEFINE MOTION CONTROL FOR SEARCHING
 
@@ -208,22 +216,148 @@ def search_target_with_Kalman_and_mapping(robot, frame
     vel_wheels,state_search,t1 = search_control(state_search, mapa, robot.position, t1)
 
     
-    
-    if len(BB_target) > 0:
+    iteration += 1 
+    if iteration == 100 :
 
-        # return "GO_TO_TARGET", frame, {"iteration" : 0, "path" : [], "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": time.time() , "P": P , "marker_list": marker_list,
-        #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
-        ############   UPDATE MAP
+        closest_feature_index = None
+        closest_score = -1000000
+        target = robot.target_features
+        for i, feature in enumerate(feature_map):
+            score = -np.sum(np.square(target - feature))
+            if score > closest_score:
+                closest_score = score
+                closest_feature_index = i
+        target_point[0] = mapa[i][0]
+        target_point[1] = mapa[i][1]
+        mapa[i][4] = 5
+
+        map_renderer.plot_bricks_and_trajectory(mapa, R)
 
         
-        robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,  "robot_trajectory": robot_trajectory,
-                                         "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
+        return "GO_TO_TARGET", frame, { "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,
+                                         "R" :  R, "obj" = target_point, "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
-                                        "state_search" : 2, "t1" : t1 }
+                                        "state_search" : 2, "t1" : t1, "iteration" : iteration, "feature_map":feature_map }
+
+def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),R=[], mapa = []):
+
+
+    ################## RELATED WITH DETECTING THE BOX 
+    mtx,dist=load_camera_params()
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
+    old_path=path
+    #REPLANNING
+
+    new_ltrack_pos = robot.left_track.position
+    new_rtrack_pos = robot.right_track.position
+    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+    
+    marker_list = []
+    if box_coords:
+        print("REPLANNNIG")
+        x=box_coords[0]
+        y=box_coords[1]
+        yaw=box_coords[2]
+        thobj=40
+        xobj=x+thobj*np.sin(yaw*np.pi/180.)
+        yobj=y-thobj*np.cos(yaw*np.pi/180.)
+        obj=[xobj+robot.position[0],yobj+robot.position[1]]
+
+        angle = np.arctan2(yobj,xobj)
+        distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
+        marker_list.append([angle,distance,(yaw+90)*pi/180])
+        print("MARKER POSITION X AND Y: ", x , y)
+
+    
+    marker_map = np.array([[150,0,0]])
+    marker_map_obj = np.array([[110,0,0]])
+
+    print("####################################################################################")
+
+    ################## DETECT THE LEGO BOXES ##############################################
+
+    BB_legos=get_lego_boxes(frame)
+
+    lego_landmarks = mapping.cam2rob(BB_legos,H)
+
+    #################### WHAT SLAM IS!
+
+    ######## 1. ESTIMATE POSITION BY ODOMETRY
+
+    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
+
+
+    ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
+    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+
+    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
+    
+
+    ####### 3. KALMAN FILTER
+
+    Ts = 0.3
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+
+    robot.position = estim_rob_pos
+
+    #print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
+
+
+    ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
+
+    mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
+
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
+
+    R.append(d)
+    mapa=[]
+
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
+    robot.position= estim_rob_pos
+    print("robot_estim_pos_Astar: ", robot.position)
+
+    #update map
+    path=A_star(robot.position[0:2], obj, Map)
+    
+    replan=1
+    goal_pos=obj
+
+    t0 = time.time()
+
+    vel_wheels, new_path = A_star_control(robot.position,goal_pos,
+                                        Map, robot.sampling_rate,
+                                             odom_r= odom_r,odom_l=odom_l,
+                                        iteration=iteration, path=path)
+    
+    
+
+    #print("DIFFERENTCE WITH THE GOAL:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
+    
+    #CONDITION FOR EXITTING
+
+    distance_to_target = np.sqrt(np.power(estim_rob_pos[0]-marker_map_obj[0,0],2)+ np.power(estim_rob_pos[1]-marker_map_obj[0,1],2))
+
+    print("###########################################################################################################")
+    print("distance to target: ", distance_to_target)
+    print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
+    print("###########################################################################################################")
+    
+    if distance_to_target < 20:
+        return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
+
+    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
+    iteration += 1
+   
+    return ("GO_TO_TARGET", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, 
+                "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R, "mapa" : mapa})
+
 
 def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
                          vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
@@ -337,104 +471,6 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
         robot.rotate_right(vel=vel_rot)
         return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
     
-def euclidian_move_with_kalman_and_map(robot, frame,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P=np.identity(3), marker_list = [], delete_countdown =0 , mapa = [], robot_trajectory = [],R=[] ):
-    
-    #DEFINE TARGET POSITION
-    brick_position = robot.map[0]
-
-
-    t0 = time.time()
-    print('t0 ', t0, 'TIME', TIME)
-    time_diff = t0 - TIME
-    print('time',time_diff)
-    new_ltrack_pos = robot.left_track.position
-    new_rtrack_pos = robot.right_track.position
-    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-
-    print("odometry: ", odom_r,odom_l)
-
- 
-    # Markers information coming from the compuetr vision stuff
-    
-    t2 = time.time()
-    frame,marker_list  = camera_related(frame = frame)
-    marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
-
-    t3 =time.time()
-
-    print("time for optical markers: ",t3-t2)
-
-    #print("marker_list1: ",marker_list)
-    t2 = time.time()
-    estim_rob_pos, vel_wheels, new_path , P ,  = euclidian_kalman(robot.position,
-                                                                          brick_position, robot.sampling_rate,
-                                                                          odom_r= odom_r,odom_l=odom_l,
-                                                                          iteration=iteration, path=path,
-                                                                          P=P, marker_list = marker_list ,marker_map=marker_map)
-    t3 = time.time()
-    print("time for Kalman",t3-t2)
-    print("estimated position: ",estim_rob_pos)
-
-   
-
-    robot.position = estim_rob_pos
-
-    # Information related with lego blocks mapping
-    t2 = time.time()
-    BB_legos=get_lego_boxes(frame)
-
-
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-
-    BB_target = detect_purple(frame,BB_legos)
-
-
-    lego_landmarks = mapping.cam2rob(BB_target,H)
-
-    print("lego_landmarks", lego_landmarks)
-
-    t3 = time.time()
-    print("time to detect legos", t3-t2)
-    #UPDATE MAP
-
-    t2 = time.time()
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,robot.position,P,delete_countdown, robot_trajectory)
-    t3 = time.time()
-
-    t2 = time.time()
-    vel_wheels = [0,0]
-    print("time updating map", t3-t2)
-    robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
-    iteration += 1
-    t3 = time.time()
-    print("send command", t3-t2)
-    
-    t2 = time.time()
-    R.append(estim_rob_pos)
-    
-    t3 = time.time()
-    print("send command", t3-t2)
-
-
-    print("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{")
-
-    #COMPUTE DISTANCE TO THE TARGET
-    distance = np.sqrt(np.power(estim_rob_pos[0]-brick_position[0],2) + np.power(estim_rob_pos[1]-brick_position[1],2))
-
-    print("time in Main code : ", time.time()-t0)
-    if (distance < -5) :
-        return "PICK_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": marker_list,
-                                        "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
-    else:
-        # return "GO_TO_TARGET", frame, {"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0 , "P": P , "marker_list": marker_list,
-        #                             "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R}
-        map_renderer.plot_bricks_and_trajectory(mapa, R)
-        robot.tracker.init(frame, BB_target[0])
-        return "GO_TO_TARGET", frame, {"tracker" : robot.tracker}
-
-
-
 def search_and_pick(robot, frame
                             , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown =0 , mapa = [], robot_trajectory = [],R=[] ):
 
@@ -470,7 +506,8 @@ with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
                 "P" : np.identity(3),
                 "delete_countdown" : 0,
                 "mapa": [], 
-                "robot_trajectory": []
+                "robot_trajectory": [],
+                "feature_map" : [0] * 300
             }
          ),
         # State(
@@ -488,20 +525,14 @@ with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
         #     ),
          State(
             name="GO_TO_TARGET",
-            act=move_to_brick_v3,
-            default_args={
-            "vel_forward" : 200,
-            "vel_rot" : 60,
-            "atol_move_blind" : 100
-            }
+            act= A_star_move_to_box_blind,
+            default_args={}
             ),
 
         State(
-             name="MOVE_TO_BRICK_BLIND_AND_GRIP",
-             act=move_to_brick_blind_and_grip,
-             default_args={"vel": 250,
-                           "t" : 1200
-                           }
+             name="MOVE_TO_BOX_BY_VISION",
+             act= move_to_brick_v3,
+             default_args={}
          )
     ]
     print(states[0])

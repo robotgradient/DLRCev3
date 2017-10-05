@@ -4,7 +4,7 @@ from math import pi
 
 
 
-def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index): #mapa = (x,y, Px,Py, updt)
+def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index, linker = []): #mapa = (x,y, Px,Py, updt)
 
 	new_points2add = []
 	update_points = []
@@ -44,12 +44,13 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index): #mapa = (x,y
 					new = 0
 
 					mapa = relocalize_points(mapa, p_already, x_mapa,y_mapa, i)
+					linker.append([i, p_already])
 
 				if new ==1:
 					new_points2add.append(i)
 
 	delete_countdown +=1
-	return mapa , delete_countdown , new_points2add, update_points
+	return mapa , delete_countdown , new_points2add, update_points, linker
 
 
 def relocalize_points(mapa, p_already,x_mapa, y_mapa,i):
@@ -226,6 +227,53 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 	return mapa
 
 
+def add_points_in_mapa2(landmarks,new_points2add,mapa, P ,pos_rob,index,linker = []):
+
+	landmarks = np.array(landmarks)
+
+
+	mapa_size = len(mapa)
+	count = 0
+	for i in new_points2add:
+
+			x_mapa = pos_rob[0] + landmarks[i,1]*np.cos((pos_rob[2])*pi/180+landmarks[i,0])
+
+			y_mapa = pos_rob[1] + landmarks[i,1]*np.sin((pos_rob[2])*pi/180+landmarks[i,0])
+
+			if landmarks[i,1] != 0:
+				mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],1]))
+				linker.append([i, mapa_size + count])
+				count += 1
+	
+
+	# Computing target position
+
+	if index !=1000 :
+		mapa_ar = np.array(mapa)
+		target_pos = 1000
+		for j in range(0, mapa_ar.shape[0]):
+
+			if  mapa[j][4] == 5:
+
+				target_pos = j
+		print(target_pos)
+
+		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
+
+		y_mapa = pos_rob[1] + landmarks[index,1]*np.sin((pos_rob[2])*pi/180+landmarks[index,0])
+
+		if target_pos == 1000:
+			mapa.append(np.array([x_mapa,y_mapa,P[0,0],P[1,1],5]))
+		else:
+			mapa[target_pos][0] = x_mapa
+			mapa[target_pos][1] = y_mapa
+		
+
+
+
+	return mapa, linker
+
+
 
 
 def create_fake_lego_measurements(real_rob_pos, mapa):
@@ -277,7 +325,7 @@ def after_kalman_improvement(mapa, kalman_pos, odom_pos):
 def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,index):
 
 
-	mapa,delete_countdown, new_points2add, update_points = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown, index)
+	mapa,delete_countdown, new_points2add, update_points, linker = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown, index, linker = [])
 
 	robot_trajectory.append(pos_rob)
 
@@ -289,6 +337,24 @@ def update_mapa(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,i
 
 
 	return mapa, delete_countdown,robot_trajectory
+
+
+def update_mapa2(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,index):
+
+
+	mapa,delete_countdown, new_points2add, update_points, linker = points2mapa(landmark_rob, pos_rob, mapa, P, delete_countdown, index, linker = [])
+
+	robot_trajectory.append(pos_rob)
+
+	mapa, linker = add_points_in_mapa2(landmark_rob,new_points2add,mapa,P,pos_rob,index, linker)
+
+
+	mapa = delete_in_mapa(mapa, robot_trajectory)
+
+
+
+	return mapa, delete_countdown,robot_trajectory, linker
+
 
 
 

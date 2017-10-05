@@ -133,6 +133,31 @@ def search_box(robot, frame
     lego_landmarks = mapping.cam2rob(BB_legos,H)
 
 
+
+    # DETECT MARKERS
+
+
+    marker_list = []
+    if box_coords:
+        print("REPLANNNIG")
+        x=box_coords[0]
+        y=box_coords[1]
+        yaw=box_coords[2]
+        thobj=40
+        xobj=x+thobj*np.sin(yaw*np.pi/180.)
+        yobj=y-thobj*np.cos(yaw*np.pi/180.)
+        obj=[xobj+robot.position[0],yobj+robot.position[1]]
+
+        angle = np.arctan2(yobj,xobj)
+        distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
+        marker_list.append([angle,distance,(yaw+90)*pi/180])
+        print("MARKER POSITION X AND Y: ", x , y)
+
+    
+    marker_map = np.array([[150,0,0]])
+    marker_map_obj = np.array([[110,0,0]])
+
+
     
     
     print("####################################################################################")
@@ -151,7 +176,7 @@ def search_box(robot, frame
     ####### 3. KALMAN FILTER
 
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
     robot.position = estim_rob_pos
 
