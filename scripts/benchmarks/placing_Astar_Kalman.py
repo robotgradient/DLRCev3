@@ -29,7 +29,7 @@ from detection.opencv import get_lego_boxes
 
 
 
-from rick.motion_control import euclidian_kalman , kalman_filter , robot_control, odom_estimation
+from rick.motion_control import euclidian_kalman , kalman_filter , kalman_filter2 , robot_control, odom_estimation
 
 import sys
 
@@ -68,7 +68,7 @@ def plot_mapa(mapa,robot_traj):
         plt.plot(rob[:,0],rob[:,1])
         plt.axis([-100, 150, -100, 150])
         plt.legend(["Lego", "path"])
-        plt.show()
+        plt.show(block=False)
     print("After stop")
 
 
@@ -222,14 +222,15 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
     robot.grip.close()
+    R=R
     
     return ("MOVE_TO_BOX",frame, {"Map": Map, "obj":obj,  "ltrack_pos": ltrack_pos,
                 "rtrack_pos": rtrack_pos,
-                "TIME": time.time()})
+                "TIME": time.time(), "R":R})
 
 
 def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3)):
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),R=[]):
     mtx,dist=load_camera_params()
     frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
     old_path=path
@@ -252,7 +253,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
 
         angle = np.arctan2(yobj,xobj)
         distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
-        marker_list.append([angle,distance])
+        marker_list.append([angle,distance,(yaw+90)*pi/180])
         print("MARKER POSITION X AND Y: ", x , y)
 
     
@@ -260,8 +261,18 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     marker_map_obj = np.array([[110,0,0]])
 
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
+
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
+    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
+    d[2] = estim_rob_pos[2]
+
+    R.append(d)
+    mapa=[]
+
+    map_renderer.plot_bricks_and_trajectory(mapa, R)
     robot.position= estim_rob_pos
     print("robot_estim_pos_Astar: ", robot.position)
 
@@ -293,13 +304,13 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
     print("###########################################################################################################")
     
-    if distance_to_target < 10:
+    if distance_to_target < 20:
         return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
    
-    return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
+    return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R})
 
 def PID_control(robot, marker_map, box_coords,hist):
     vel_st=100
@@ -308,6 +319,8 @@ def PID_control(robot, marker_map, box_coords,hist):
     er_x = marker_map[0,0] - robot[0]
     er_y = marker_map[0,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
+    er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
+    print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x),robot[2])
 
     if er_angle > pi:
         er_angle = er_angle - 2*pi
@@ -374,7 +387,7 @@ def move_to_box_by_vision(robot, frame, replan=1,
         obj=[xobj+robot.position[0],yobj+robot.position[1]]
         angle = np.arctan2(yobj,xobj)
         distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
-        marker_list.append([angle,distance])
+        marker_list.append([angle,distance,(yaw+90)*pi/180])
         print("MARKER POSITION X AND Y: ", x , y)
 
 
@@ -383,15 +396,15 @@ def move_to_box_by_vision(robot, frame, replan=1,
     marker_map_obj = np.array([[110,0,0]])
 
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
     robot.position= estim_rob_pos
     print("robot_estim_pos_PID: ", robot.position)
 
     
     vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
-    if hist==0:
-        return "PLACE_OBJECT_IN_THE_BOX",frame,{}
+    #if hist==0:
+        #return "PLACE_OBJECT_IN_THE_BOX",frame,{}
     
     robot.move(vel_wheels[0],vel_wheels[1])
     return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist})
@@ -401,6 +414,7 @@ def place_object_in_the_box(robot,frame):
     print("MOVING")
     robot.left_track.wait_until_not_moving(timeout=3000)
     robot.reset()
+    robot.grip.wait_until_not_moving(timeout=3000)
     print("finish")
     return "FINAL_STATE"
 
