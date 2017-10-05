@@ -12,7 +12,7 @@ from rick.core import State
 from rick.core import main_loop
 from rick.async import AsyncCamera
 from rick.utils import TrackerWrapper
-from nn_object_detection.object_detectors import NNObjectDetector
+#from nn_object_detection.object_detectors import NNObjectDetector
 from rick.live_plotting import MapRenderer
 
 from detection.marker_localization import get_marker_pose, load_camera_params
@@ -88,7 +88,7 @@ def search_control(state_search,mapa, pos_rob, t_old):
     
     elif state_search ==2:
 
-        vel_wheels = [100,100]
+        vel_wheels = [-100,100]
 
     return vel_wheels,state_search,t1
 
@@ -179,7 +179,7 @@ def search_box(robot, frame
     ## DETECT THE BOX
 
     mtx,dist=load_camera_params()
-    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
 
 
 
@@ -208,7 +208,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     if (y>0 and yaw>-80) or (y<0 and yaw< -100):
         print("NICE PATH")
     thm=40
-    thobj=10
+    thobj=40
 
 
     x2=x+thm*np.sin(yaw*np.pi/180.)
@@ -221,9 +221,8 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     obslist=[]
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
-    plt.plot(path[:,0],path[:,1])
-    plt.axis([-100, 150, -100, 150])
-    plt.show()
+    robot.grip.close()
+    
     return ("MOVE_TO_BOX",frame, {"Map": Map, "obj":obj,  "ltrack_pos": ltrack_pos,
                 "rtrack_pos": rtrack_pos,
                 "TIME": time.time()})
@@ -232,7 +231,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
 def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3)):
     mtx,dist=load_camera_params()
-    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
     old_path=path
     #REPLANNING
 
@@ -246,28 +245,33 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
         x=box_coords[0]
         y=box_coords[1]
         yaw=box_coords[2]
-        thobj=10
+        thobj=40
         xobj=x+thobj*np.sin(yaw*np.pi/180.)
         yobj=y-thobj*np.cos(yaw*np.pi/180.)
         obj=[xobj+robot.position[0],yobj+robot.position[1]]
-        angle = np.arctan2(obj[1],obj[0])
-        distance = np.sqrt(np.power(obj[0],2) + np.power(np.power(obj[1],2)))
+
+        angle = np.arctan2(yobj,xobj)
+        distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
         marker_list.append([angle,distance])
+        print("MARKER POSITION X AND Y: ", x , y)
 
-
+    
     marker_map = np.array([[150,0,0]])
+    marker_map_obj = np.array([[110,0,0]])
 
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
     robot.position= estim_rob_pos
+    print("robot_estim_pos_Astar: ", robot.position)
+
 
 
     #update map
-    path=A_star(robot.position[0:2], marker_map[0,:], Map)
+    path=A_star(robot.position[0:2], marker_map_obj[0,:], Map)
     
     replan=1
-    goal_pos=marker_map[0,:]
+    goal_pos=marker_map_obj[0,:]
 
     t0 = time.time()
 
@@ -282,14 +286,14 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     
     #CONDITION FOR EXITTING
 
-    distance_to_target = np.sqrt(np.power(estim_rob_pos[0]-goal_pos[0],2)+ np.power(estim_rob_pos[1]-goal_pos[1],2))
+    distance_to_target = np.sqrt(np.power(estim_rob_pos[0]-marker_map_obj[0,0],2)+ np.power(estim_rob_pos[1]-marker_map_obj[0,1],2))
 
     print("###########################################################################################################")
     print("disatnce to target: ", distance_to_target)
     print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
     print("###########################################################################################################")
     
-    if distance_to_target < 40:
+    if distance_to_target < 10:
         return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -297,34 +301,61 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
    
     return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
-def PID_control(robot, goal):
+def PID_control(robot, marker_map, box_coords,hist):
+    vel_st=100
+    vel_rot=60
+    lat_tol=4
+    er_x = marker_map[0,0] - robot[0]
+    er_y = marker_map[0,1] - robot[1]
+    er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
 
-	er_x = goal[0]- 30 - robot[0]
-	er_y = goal[1] - robot[1]
+    if er_angle > pi:
+        er_angle = er_angle - 2*pi
+    if er_angle < -pi:
+        er_angle = er_angle + 2*pi
 
-	angle = np.arctan2(er_y,er_x)
-	distance = np.sqrt(np.power(er_x,2)+np.power(er_y,2))
+    distance = np.sqrt(np.power(er_x,2)+np.power(er_y,2))
+
+    if box_coords:
+
+        if abs(box_coords[1])>lat_tol:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1])
+            print("GUIDDE BY VISION")
+        elif box_coords[0]>35:
+            vel_wheels=np.asarray([vel_st,vel_st])
+            print("GUIDDE BY VISION")
+        else:
+            vel_wheels=np.asarray([0,0])
+            hist = 0
+            print("STOP")
 
 
-	if abs(angle - robot[2]*pi/180)>1 and distance >5:
-		vel_wheels = [-100,100]
-	elif distance >5:
-		vel_wheels = [100,100]
-	elif abs(robot[2]*pi/180)>1:
-		vel_wheels = [-100,100]
-	else:
-		vel_wheels=[0,0]
+    else:
+        if hist == 0:
+            vel_wheels=np.asarray([0,0])
+        elif er_angle > 0.4:
+            vel_wheels=np.asarray([vel_rot,-vel_rot])
+            hist = 1
+        elif er_angle <-0.4:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])
+            hist = -1
+        elif hist ==1 : 
+            vel_wheels=np.asarray([vel_rot,-vel_rot])
+        else : 
+            vel_wheels=np.asarray([-vel_rot,vel_rot])
+        print("CORRECTING ANGLE",er_angle)
+    return vel_wheels, hist
 
-	return vel_wheels
 
 
 
 
 
 def move_to_box_by_vision(robot, frame, replan=1,
-                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3)):
+                            path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),
+                            histeresis = 1):
     mtx,dist=load_camera_params()
-    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
 
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
@@ -334,35 +365,44 @@ def move_to_box_by_vision(robot, frame, replan=1,
 
     marker_list = []
     if box_coords:
-        print("REPLANNNIG")
         x=box_coords[0]
         y=box_coords[1]
         yaw=box_coords[2]
-        thobj=10
+        thobj=40
         xobj=x+thobj*np.sin(yaw*np.pi/180.)
         yobj=y-thobj*np.cos(yaw*np.pi/180.)
         obj=[xobj+robot.position[0],yobj+robot.position[1]]
-        angle = np.arctan2(obj[1],obj[0])
-        distance = np.sqrt(np.power(obj[0],2) + np.power(np.power(obj[1],2)))
+        angle = np.arctan2(yobj,xobj)
+        distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
         marker_list.append([angle,distance])
+        print("MARKER POSITION X AND Y: ", x , y)
 
 
-    marker_map = np.array([[200,100,0]])
+
+    marker_map = np.array([[150,0,0]])
+    marker_map_obj = np.array([[110,0,0]])
 
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
     robot.position= estim_rob_pos
+    print("robot_estim_pos_PID: ", robot.position)
 
-
-    vel_wheels = PID_control(estim_rob_pos, marker_map[0,:])
-
-    x = 1
-    if x<-1:
-        return "MOVE_TO_BOX_BY_VISION",frame,{"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos}
- 
+    
+    vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
+    if hist==0:
+        return "PLACE_OBJECT_IN_THE_BOX",frame,{}
+    
     robot.move(vel_wheels[0],vel_wheels[1])
-    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos})
+    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist})
+
+def place_object_in_the_box(robot,frame):
+    robot.move(vel_left=100,vel_right=100,time=2000)
+    print("MOVING")
+    robot.left_track.wait_until_not_moving(timeout=3000)
+    robot.reset()
+    print("finish")
+    return "FINAL_STATE"
 
 with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
     robot.map = [(200, 0)]
@@ -396,6 +436,14 @@ with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
              name="MOVE_TO_BOX_BY_VISION",
              act=move_to_box_by_vision,
          ),
+        State(
+             name="PLACE_OBJECT_IN_THE_BOX",
+             act=place_object_in_the_box,
+         ),
+        State(
+            name="FINAL_STATE",
+            act=lambda robot, frame, **args: time.sleep(.5)
+        )
     ]
     state_dict = {}
     for state in states:
@@ -403,4 +451,4 @@ with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
 
     start_state = states[0]
 
-    main_loop(robot, start_state, state_dict, delay=0.1)
+    main_loop(robot, start_state, state_dict, delay=0)
