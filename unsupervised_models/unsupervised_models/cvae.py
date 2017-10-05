@@ -11,6 +11,13 @@ from keras.models import Model
 from keras import backend as K
 
 
+def _dummy_bnorm():
+    def wrapped_bnorm(layer):
+        return layer
+
+    return wrapped_bnorm
+
+
 class CustomVariationalLayer(Layer):
     """Custom Loss Layer."""
 
@@ -54,11 +61,15 @@ class ConvolutionalVariationalAutoencoder(Model):
                  image_dims=(28, 28, 1),
                  filters=64,
                  kernel_size=3,
-                 batch_size=1):
+                 batch_size=1,
+                 batch_normalization=False):
 
         img_rows, img_cols, img_chns = image_dims
 
-        bnorm = BatchNormalization
+        if batch_normalization:
+            bnorm = BatchNormalization
+        else:
+            bnorm = _dummy_bnorm
 
         if K.image_data_format() == 'channels_first':
             original_img_size = (img_chns, img_rows, img_cols)

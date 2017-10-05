@@ -39,7 +39,7 @@ vae = ConvolutionalVariationalAutoencoder(
     batch_size=batch_size,
     latent_dim=latent_dim,
     filters=32,
-    intermediate_dim=latent_dim * 2,)
+    intermediate_dim=100)
 
 vae.compile(
     optimizer=RMSprop(lr=LEARNING_RATE),
@@ -72,5 +72,5 @@ data_dir = PREFIX / "data"
 vae.fit_generator(
     blender_data_gen(data_dir, batch_size),
     steps_per_epoch=13000,
-    epochs=epochs,
-    callbacks=[checkpoint_callback, tensorboard_callback],)
+    callbacks=[checkpoint_callback, tensorboard_callback],
+    epochs=epochs)
