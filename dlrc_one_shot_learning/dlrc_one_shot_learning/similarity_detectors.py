@@ -51,6 +51,8 @@ class EuclidianNNFeaturesBrickFinder(SimilarityDetector):
     def extract_features(self, bboxes):
         features = []
         for bbox in bboxes:
+            
+            #print("############# ", bbox)
             bbox = cv2.resize(bbox, (224,224))
             features.append(self.model.predict(np.expand_dims(bbox, 0)).reshape(-1)[color_feature_indices])
         return features

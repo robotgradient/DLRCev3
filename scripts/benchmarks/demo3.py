@@ -103,9 +103,52 @@ def search_control(state_search,mapa, pos_rob, t_old):
     
     elif state_search ==2:
 
-        vel_wheels = [50,160]
+        vel_wheels = [100,100]
 
     return vel_wheels,state_search,t1
+
+def naive_obstacle_avoidance_control(mapa, pos_rob): 
+
+
+    max_dist = 40
+    min_angle = -pi/2
+    max_angle = pi/2
+    mapa_ar = np.array(mapa)
+    
+
+    vel_wheels = [160,150]
+
+
+    for i in range(0, len(mapa)):
+
+        er_x = mapa[i][0] - pos_rob[0]
+        er_y = mapa[i][1] - pos_rob[1]
+
+        distance = np.sqrt(np.power(er_x,2) + np.power(er_y,2))
+
+        er_ angle = np.arctan2(er_y, er_x) - pos_rob[2]*pi/180
+
+        if er_angle >pi:
+            er_angle = er_angle -2*pi
+        if er_angle < -pi:
+            er_angle = er_angle +2*pi
+
+        next_x = pos_rob[0] + 10*np.cos(pos_rob[3] * pi/180)
+        next_y = pos_rob[1] + 10*np.sin(pos_rob[3] * pi/180)
+
+        if (distance< max_dist and angle > min_angle and angle< max_angle): # AVOID OBSTACLES
+            vel_wheels = [-100,100]
+            break
+        elif next_x < 0 or next_x > 300 or next_y < 0 or next_y> 300:
+            vel_wheels = [-100,100]
+
+    return vel_wheels
+
+    
+    
+
+
+
 
 def index23(BB_legos,BB_target):
     index=1000
@@ -141,8 +184,15 @@ def search_target_with_Kalman_and_mapping(robot, frame
     ###################### Information related with lego blocks mapping
 
     BB_legos=get_lego_boxes(frame)
+    BB_legos2 = []
 
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
+    for bbox in BB_legos:
+        if np.abs(bbox[0] - bbox[2]) >2 and np.abs(bbox[1] - bbox[3]) >2:
+            BB_legos2.append(bbox)
+
+
+
+    lego_landmarks = mapping.cam2rob(BB_legos2,H)
 
 
     
@@ -159,6 +209,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
     #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
 
+    index = 1000
     mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
     
 
@@ -178,7 +229,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
 
-    print("EL MAPA : ", mapa)
+    
     #### GET GRIPPER POS
 
     d = np.ones(3)
@@ -195,16 +246,25 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     #Feature extraction from bounding boxes
     bboxes = []
+
     for i in range(0,len(links)):
-
-        bbox = BB_legos[links[i][0]]
-        bboxes.append(frame[bbox[0]:bbox[2], bbox[1]:bbox[3]])
-
+        bbox = BB_legos2[links[i][0]]
+        #print(bbox)
+        bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2],:])
     bounding_box_features = similarity_detector.extract_features(bboxes)
 
+    #print(links)
+
+    #print(len(bounding_box_features))
+    print(len(links))
+    #print(len(BB_legos2))
     for i in range(0,len(links)):
 
         feature_map[links[i][1]] = bounding_box_features[i]
+
+
+    print("EL MAPA : ", mapa)
+    print("FEATURE MAP : ", feature_map)
 
 
 
@@ -235,7 +295,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
         
         return "GO_TO_TARGET", frame, { "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,
-                                         "R" :  R, "obj" = target_point, "mapa" : mapa}
+                                         "R" :  R, "obj" : target_point, "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],

@@ -156,27 +156,29 @@ def delete_in_mapa(mapa,pos_rob):
 
 	not_eliminate_index = []
 
-
-	for j in range(0, mapa_ar.shape[0]):
-
-		x = mapa_ar[j,0] - pos_rob[0]
-		y = mapa_ar[j,1] - pos_rob[1]
-
-		distance = np.sqrt(np.power(x,2)+np.power(y,2))
-		angle = np.arctan2(y,x) - pos_rob[2]*pi/180
-				
-		if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
-			pass
-		else:
-			not_eliminate_index.append(j)
-
-		if mapa_ar[j,4] ==1:
-			mapa_ar[j,4] = 0
-
-	#print("j: ",eliminate_index)
-	not_eliminate_index = np.array(not_eliminate_index)
-	mapa_ar = np.array(mapa)
 	if mapa_ar.size:
+		for j in range(0, mapa_ar.shape[0]):
+			#print("map:", mapa_ar, mapa_ar[j,1])
+			#print("robot", pos_rob)
+
+			print(j)
+			x = mapa_ar[j,0] - pos_rob[0]
+			y = mapa_ar[j,1] - pos_rob[1]
+
+			distance = np.sqrt(np.power(x,2)+np.power(y,2))
+			angle = np.arctan2(y,x) - pos_rob[2]*pi/180
+					
+			if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
+				pass
+			else:
+				not_eliminate_index.append(j)
+
+			if mapa_ar[j,4] ==1:
+				mapa_ar[j,4] = 0
+
+		#print("j: ",eliminate_index)
+		not_eliminate_index = np.array(not_eliminate_index)
+		mapa_ar = np.array(mapa)
 		mapa_ar = mapa_ar[not_eliminate_index,:]
 	mapa= mapa_ar.tolist()
 	#mapa = mapa[eliminate_index]
@@ -349,7 +351,7 @@ def update_mapa2(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,
 	mapa, linker = add_points_in_mapa2(landmark_rob,new_points2add,mapa,P,pos_rob,index, linker)
 
 
-	mapa = delete_in_mapa(mapa, robot_trajectory)
+	#mapa = delete_in_mapa(mapa, pos_rob)
 
 
 
