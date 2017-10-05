@@ -5,12 +5,12 @@ import cv2.aruco as aruco
 dictionary =aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
 board = aruco.CharucoBoard_create(3,4,.025,.0125,dictionary)
 #aruco.drawMarker( dict, id of the marker, size of the image in pixels)
-marker0=aruco.drawMarker(dictionary,0,600)
-marker1=aruco.drawMarker(dictionary,1,600)
-marker2=aruco.drawMarker(dictionary,2,600)
-marker3=aruco.drawMarker(dictionary,3,600)
-marker4=aruco.drawMarker(dictionary,4,600)
-marker5=aruco.drawMarker(dictionary,5,600)
+marker0=aruco.drawMarker(dictionary,0,250)
+marker1=aruco.drawMarker(dictionary,1,250)
+marker2=aruco.drawMarker(dictionary,2,250)
+marker3=aruco.drawMarker(dictionary,3,250)
+marker4=aruco.drawMarker(dictionary,4,250)
+marker5=aruco.drawMarker(dictionary,5,250)
 #number of chessboard markers and size in metesrs
 img=board.draw((200*3,200*4))#number of pixesls
 cv2.imwrite("Marker_id_0.JPEG",marker0)

@@ -65,7 +65,7 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[1,2,3,4,5],T=np.ones((4,4)))
     return located_matrix
 
 def get_T_from_marker(frame,mtx,dist,marker_id,arucoParams=arucoParams,aruco_dict=aruco_dict,markerLength=4.8):
-    Tp2r=np.array([[1,0,0,32.4],[0,1,0,1.2],[0,0,1,0],[0,0,0,1]])
+    Tp2r=np.array([[1,0,0,31.4],[0,1,0,0.8],[0,0,1,0],[0,0,0,1]])
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) # Detect aruco
     if isinstance(ids, np.ndarray) and (marker_id in ids): # if aruco marker detected

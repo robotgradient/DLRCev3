@@ -102,7 +102,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 
 	C  = -distance_x/np.power(l,2)
-	w = 2*R;
+	w = 1*R;
 	kt=0.05
 	#A = (1-(C*L)/2)/(1+(C*L)/2)
 	#vel_wheels[0] = w*L/(R*(1+A))
