@@ -34,7 +34,8 @@ try:
         #img = cv2.filter2D(img,-1,kernel)
         img = eliminate_grip(img)
         #image_np_expanded = np.expand_dims(img, axis=0)
-        res = detector.detect_with_threshold(img, threshold=0.9, return_closest=False)
+        res = detector.detect_with_threshold(img, threshold=0.9, return_closest=True)[0]
+        res = [res]
         if res:
             for lego in res:
                 box, score = lego

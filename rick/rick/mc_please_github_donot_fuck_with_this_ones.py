@@ -107,7 +107,7 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 	#A = (1-(C*L)/2)/(1+(C*L)/2)
 	#vel_wheels[0] = w*L/(R*(1+A))
 	#vel_wheels[1] = vel_wheels[0]*A
-	if abs(err_theta)>135 and abs(err_theta)<225:
+	if abs(err_theta)>60 and abs(err_theta)<300:
 		vel_robot=np.array([0,60])
 	#	print("JUST SPINNING",abs(err_theta),theta_star,theta)
 	else:

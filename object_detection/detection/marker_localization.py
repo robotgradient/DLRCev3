@@ -71,8 +71,9 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[0,1,2,3,4,5],T=np.ones((4,4)
 			y=p2r[1,0]
 			distance=np.sqrt(np.power(x,2)+np.power(y,2))
 			theta=np.arctan2(y,x)
-			index_mat=marker_list.index(value)
-			located_matrix[index_mat,:]=[theta,distance,yaw]
+			if value<len(marker_list):
+				index_mat=marker_list.index(value)
+				located_matrix[index_mat,:]=[theta,distance,yaw]
 	return located_matrix
 
 

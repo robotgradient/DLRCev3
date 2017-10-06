@@ -81,6 +81,7 @@ def A_star(start,goal,Map):
 	robot_width=10
 	goal[1]=int(round(goal[1]))
 	goal[0]=int(round(goal[0]))
+	print("Goal type",goal[1])
 	offsetx=int(round(Map.shape[0]/2)-1)
 	offsety=int(round(Map.shape[1]/2)-1)
 	start=[start[0]+int(offsetx),start[1]+int(offsety)]

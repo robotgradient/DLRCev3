@@ -64,8 +64,8 @@ def get_centers(img,Arearef=130):
 	return center_list,closest_list
 
 def eliminate_grip(frame):
-	frame[420:,129:221]=[0,0,0]
-	frame[420:,330:416]=[0,0,0]
+	frame[437:,125:216]=[0,0,0]
+	frame[450:,323:395]=[0,0,0]
 	return frame
 
 def get_BB(img,Arearef=130):
