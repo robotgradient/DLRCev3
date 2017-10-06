@@ -148,7 +148,7 @@ def mapa2grid(mapa):
 
 def delete_in_mapa(mapa,pos_rob):
 
-	min_dist = 30
+	min_dist = 0
 	max_dist = 50
 	min_angle = np.arctan2(29,20)
 	max_angle = np.arctan2(29,-20)
@@ -169,12 +169,11 @@ def delete_in_mapa(mapa,pos_rob):
 			angle = np.arctan2(y,x) - pos_rob[2]*pi/180
 					
 			if (distance > min_dist and distance< max_dist and angle > min_angle and angle< max_angle) and  mapa_ar[j,4] == 0 :
-				pass
+				continue
 			else:
 				not_eliminate_index.append(j)
-
-			if mapa_ar[j,4] ==1:
 				mapa_ar[j,4] = 0
+
 
 		#print("j: ",eliminate_index)
 		not_eliminate_index = np.array(not_eliminate_index)
@@ -351,7 +350,7 @@ def update_mapa2(mapa,landmark_rob,pos_rob,P,delete_countdown, robot_trajectory,
 	mapa, linker = add_points_in_mapa2(landmark_rob,new_points2add,mapa,P,pos_rob,index, linker)
 
 
-	#mapa = delete_in_mapa(mapa, pos_rob)
+	mapa = delete_in_mapa(mapa, pos_rob)
 
 
 
