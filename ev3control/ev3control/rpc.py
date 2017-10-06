@@ -1,5 +1,4 @@
 from pathlib import Path
-from contextlib import AbstractContextManager
 
 import rpyc
 
@@ -10,7 +9,7 @@ ev3 = conn.modules['ev3dev.ev3']  # import ev3dev.ev3 remotely
 objects = conn.modules['ev3control.objects']
 
 
-class Robot(AbstractContextManager):
+class Robot:
     """This robot rocks!!"""
 
     def __init__(self, camera_capture, object_detector=None, tracker=None):
@@ -55,6 +54,10 @@ class Robot(AbstractContextManager):
         self.elevator.up()
         self.left_track.stop(stop_action="brake")
         self.right_track.stop(stop_action="brake")
+
+    def __enter__(self):
+        """Needed for python <= 3.5 compatibility."""
+        return self
 
     def __exit__(self, type, value, traceback):
         self.reset()
