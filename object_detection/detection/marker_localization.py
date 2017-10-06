@@ -66,12 +66,13 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[0,1,2,3,4,5],T=np.ones((4,4)
 			eulerrad=rotationMatrixToEulerAngles(rotp2r)
 			eulerangles=180*eulerrad/np.pi
 			yaw=eulerangles[2]
+			yaw=(yaw+90)*np.pi/180
 			x=p2r[0,0]
 			y=p2r[1,0]
 			distance=np.sqrt(np.power(x,2)+np.power(y,2))
 			theta=np.arctan2(y,x)
 			index_mat=marker_list.index(value)
-			located_matrix[index_mat,:]=[distance,theta,yaw]
+			located_matrix[index_mat,:]=[theta,distance,yaw]
 	return located_matrix
 
 
@@ -85,7 +86,7 @@ def get_marker_pose(frame,mtx,dist,arucoParams=arucoParams,marker_list=[0,1,2,3,
 			frame = aruco.drawAxis(frame, mtx, dist, rvec[i], tvec[i], 15)
 		located_matrix=locate_markers_robot(ids,rvec,tvec,T=Tc2rtheo)  
 	else:
-		located_matrix=999*np.ones((len(marker_list),2))
+		located_matrix=999*np.ones((len(marker_list),3))
 	return frame,located_matrix
 
 

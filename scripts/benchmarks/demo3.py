@@ -4,6 +4,7 @@ import time
 import cv2
 from ev3control.rpc import Robot
 from rick.controllers import *
+from rick.A_star_planning import *
 from rick.core import State
 from rick.core import main_loop
 from rick.async import AsyncCamera
@@ -14,6 +15,8 @@ from rick.live_plotting import MapRenderer
 from detection.marker_localization import get_marker_pose, load_camera_params
 import cv2.aruco as aruco
 from dlrc_one_shot_learning.similarity_detectors import EuclidianNNFeaturesBrickFinder
+
+from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path, A_star_control
 
 
 import numpy as np
@@ -227,8 +230,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
         map_renderer.plot_bricks_and_trajectory(mapa, R)
 
         
-        return "SELECT_AND_GO", frame, {"ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position,
-                                         "R" :  R, "mapa" : mapa}
+        return "SELECT_AND_GO", frame, {"ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos,"R" :  R, "mapa" : mapa}
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
@@ -239,7 +241,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.identity(3),R=[], mapa = [],tracker=None
                     ,img_res=np.asarray((640, 480)), atol=10,
-                         vel_forward = 299, vel_rot = 50, atol_move_blind=70, 
+                         vel_forward = 299, vel_rot = 100, atol_move_blind=140, 
                          fail_counter=0, center_position_error = 75, robot_trajectory = []):
     
     
@@ -269,6 +271,9 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
 
+    print("robot pos in blind grip: ", robot.position)
+
+
 
 
     ################################## control################################
@@ -284,7 +289,7 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     if not ok:
         
         if len(BB_target) == 0:
-            robot.rotate_left(vel=60)
+            robot.rotate_left(vel=100)
             return "SELECT_AND_GO", frame, {"cluster" : cluster, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "R" :  R, "mapa" : mapa}
         
         else:  
@@ -299,7 +304,6 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
 
     print("Errror:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
-    img_center = img_res/2.
 
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
         robot.move_straight(vel_forward, 500)
@@ -337,12 +341,14 @@ def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
+    print("robot pos in blind grip: ", robot.position)
 
-    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
-    return "SEARCH_BOX", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos
-                                         , "mapa": mapa,  "R" : R, "cluster" : cluster}
+    obj_list = []
+    Map = create_map(obj_list)
+    return "GO_TO_BOX", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos
+                                         , "mapa": mapa,  "R" : R, "cluster" : cluster, "Map" : Map}
 
 
 
@@ -354,7 +360,7 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[100,0,0],[0,0,0],[0,0,0],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
+    marker_map = np.array([[150,0,0],[0,0,0],[0,0,0],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
     BB_legos=get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
@@ -363,9 +369,9 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     print("####################################################################################")
     estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
     index = 1000
-    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,0, robot_trajectory, index)
+    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,0, [], index)
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
     d = np.ones(3)
@@ -377,7 +383,8 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     ############################################
     print("robot_estim_pos_Astar: ", robot.position)
 
-    marker_map_obj = [[60,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    marker_map_obj = [[110,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    marker_map_obj = np.array(marker_map_obj)
     obj = marker_map_obj[cluster]
     #update map
     path=A_star(robot.position[0:2], obj, Map)
@@ -406,12 +413,12 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     print("###########################################################################################################")
     
     if distance_to_target < 20: 
-        return ("MOVE_TO_BOX_BY_VISION", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa})
+        return ("MOVE_TO_BOX_BY_VISION", frame, { "cluster": cluster,"ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "mapa":mapa})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
    
-    return ("GO_TO_BOX", frame, {"cluster":cluster, "replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, 
+    return ("GO_TO_BOX", frame, {"cluster":cluster, "replan":replan,"Map":Map,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, 
                 "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R, "mapa" : mapa})
 
 def PID_control(robot, marker_map, box_coords,hist):
@@ -460,14 +467,14 @@ def PID_control(robot, marker_map, box_coords,hist):
             vel_wheels=np.asarray([-vel_rot,vel_rot])
         print("CORRECTING ANGLE",er_angle)
     return vel_wheels, hist
-def move_to_box_by_vision(robot, frame, replan=1,
+def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),
-                            histeresis = 1):
+                            histeresis = 1,mapa=[],robot_trajectory=[]):
     ################ THIS IS ALLL
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[100,0,0],[0,0,0],[0,0,0],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
+    marker_map = np.array([[150,0,0],[0,0,0],[0,0,0],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
     BB_legos=get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
@@ -478,146 +485,72 @@ def move_to_box_by_vision(robot, frame, replan=1,
     index = 1000
     mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,0, robot_trajectory, index)
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
     d = np.ones(3)
     d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
-    R.append(d)
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
+    #R.append(d)
+    #map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
-    print("robot_estim_pos_Astar: ", robot.position)
+    print("######################################")
+    print("robot_estim_pos_vision: ", robot.position)
+    print("######################################")
 
     marker_map_obj = [[60,0,0],[0,0,0],[0,0,0],[0,0,0]]
     obj = marker_map_obj[cluster]
     print("robot_estim_pos_PID: ", robot.position)
 
     
+    box_coords = [marker_list[cluster,1]*np.cos(marker_list[cluster,0]),marker_list[cluster,1]*np.sin(marker_list[cluster,0])]
     vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
     if hist==0:
-        return "PLACE_OBJECT_IN_THE_BOX",frame,{}
+        return "PLACE_OBJECT_IN_THE_BOX",frame,{"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "mapa" : mapa}
     
     robot.move(vel_wheels[0],vel_wheels[1])
-    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist})
+    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist, "cluster": cluster})
 
-def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=5,
-                         vel_forward = 299, vel_rot = 50, atol_move_blind=90, 
-                         fail_counter=0, center_position_error = 10, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
-    
 
+def place_object_in_the_box(robot,frame, ltrack_pos=0, rtrack_pos=0, P = np.identity(3), mapa = []):
+
+    ################ THIS IS ALLL
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-
-    ######################  Markers information coming from the compuetr vision stuff
-    
-    #frame,marker_list  = camera_related(frame = frame)
-    marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
-
-
-    #################3 RELATED WITH LEGOS
+    marker_map = np.array([[150,0,0],[0,0,0],[0,0,0],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
     BB_legos=get_lego_boxes(frame)
 
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-
-    BB_target = detect_purple(frame,BB_legos)
-
-    index = 1000
-    if len(BB_target) !=0:
-        index = index23(BB_legos,  BB_target)
-
-    
-
     lego_landmarks = mapping.cam2rob(BB_legos,H)
-
-    delete_countdown = 0
+    mtx,dist=load_camera_params()
+    frame,marker_list=get_marker_pose(frame,mtx,dist,marker_list=[0,1,2,3],markerLength=8.6)
     print("####################################################################################")
-
-    #################### WHAT SLAM IS!
-
-    ######## 1. ESTIMATE POSITION BY ODOMETRY
-
     estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
-
-
-    ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
-
-
-    ####### 3. KALMAN FILTER
-
+    index = 1000
+    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,0, [], index)
     Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
-
+    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
-
-    print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
-
-    ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
-
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
-
-    print("EL MAPA : ", mapa)
-    #### GET GRIPPER POS
-
     d = np.ones(3)
     d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
-
-    R.append(d)
-
-
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
-
-    ###################### Information related with lego blocks mapping
-
-    ok, bbox = tracker.update(frame)
-
-    if not ok:
-        BB_legos=get_lego_boxes(frame)
-        # res = robot.object_detector.detect_with_threshold(frame,threshold=0.9, return_closest=False)
-        # BB_legos = map(lambda x: x[0], res)
-        BB_target = detect_purple(frame,BB_legos)
-        if len(BB_target) == 0:
-            return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
-                                        "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
-                                        "state_search" : 2}
-        tracker.init(frame, BB_target[0])        
-        bbox = BB_target[0]
-
-    coords = bbox_center(*bbox)
-    img_center = img_res / 2 - center_position_error 
-    #img_center[0] = 285
-    error = img_center - coords
-    atol = 10 + coords[1]/480 * 40
-
-    print("Errror:", error, "Coords ", coords, " ok ", ok)
-    frame = plot_bbox(frame,bbox, 0, (255,0,0))
-    img_center = img_res/2.
-
-    if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
-        robot.move_straight(vel_forward, 500)
-        return "MOVE_TO_BRICK_BLIND_AND_GRIP", frame, {}
-
-    if np.isclose(coords[0], img_center[0], atol=atol):
-        print("Move straight")
-        robot.move_straight(vel_forward)
-        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
-    elif error[0] < 0:
-        robot.rotate_left(vel=vel_rot)
-        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
-    else:
-        # Positive velocity for turning left
-        robot.rotate_right(vel=vel_rot)
-        return "GO_TO_TARGET", frame, {"tracker" : tracker, "ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos, "pos_rob" : robot.position,"R" :  R, "mapa" : mapa}
-    
-
-
-       
-
+    #R.append(d)
+    #map_renderer.plot_bricks_and_trajectory(mapa, R)
+    ############################################
+    robot.move(vel_left=100,vel_right=100,time=2000)
+    print("MOVING")
+    robot.left_track.wait_until_not_moving(timeout=3000)
+    robot.reset()
+    robot.grip.wait_until_not_moving(timeout=3000)
+    robot.move_straight(vel=-100,time=2000)
+    robot.left_track.wait_until_not_moving(timeout=3000)
+    robot.rotate_left(100,time=6000)
+    robot.left_track.wait_until_not_moving(timeout=10000)
+    print("finish")
+    return "SELECT_AND_GO", frame, {"ltrack_pos" :  new_ltrack_pos ,"rtrack_pos" :  new_ltrack_pos,"R" :  [], "mapa" : mapa}
 
 
 def camera_related(frame):
@@ -683,7 +616,13 @@ with Robot(AsyncCamera(0)) as robot:
              name="MOVE_TO_BOX_BY_VISION",
              act= move_to_box_by_vision,
              default_args={}
+         ),
+        State(
+             name="PLACE_OBJECT_IN_THE_BOX",
+             act= place_object_in_the_box,
+             default_args={}
          )
+
     ]
     print(states[0])
     state_dict = {}
