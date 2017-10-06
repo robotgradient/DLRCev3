@@ -390,16 +390,20 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
 
     R.append(d)
     mapa=[]
-    Map=Map
     map_renderer.plot_bricks_and_trajectory(mapa, R)
     robot.position= estim_rob_pos
     print("robot_estim_pos_Astar: ", robot.position)
 
     #update map
     #plt.close()
+    #fig = plt.figure()
+    #ax = fig.gca()
+    #ax.set_xticks(np.arange(-10, 150, 1))
+    #ax.set_yticks(np.arange(-40, 40, 1))
     #path=A_star(robot.position[0:2], marker_map_obj[0,0:2], Map)
     #plt.plot(path[:,0],path[:,1])
     #plt.show(block=False)
+
     #print("PATH FROM THE REPLANNING",path.shape)
 
     replan=1
@@ -437,7 +441,7 @@ def PID_control(robot, marker_map, box_coords,hist):
     vel_st=100
     vel_rot=60
     lat_tol=4
-    yshift=6
+    yshift=2
     er_x = marker_map[0,0] - robot[0]
     er_y = marker_map[0,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
