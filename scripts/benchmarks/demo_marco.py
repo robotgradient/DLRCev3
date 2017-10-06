@@ -543,7 +543,7 @@ def place_object_in_the_box(robot,frame):
     print("finish")
     return "FINAL_STATE"
 
-with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
+with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
