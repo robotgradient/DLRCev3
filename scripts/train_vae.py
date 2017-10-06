@@ -15,10 +15,10 @@ IM_SIZE = 64
 
 LATENT_DIMS = int(sys.argv[1])
 RUN_NAME = 'latent_dims_' + str(LATENT_DIMS)
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
 N_EPOCHS = 200
-LEARNING_RATE = 0.004
+LEARNING_RATE = 0.002
 
 # PREFIX = Path.home()
 # PREFIX = PREFIX / "dlrc"
@@ -29,6 +29,7 @@ vae = ConvolutionalVariationalAutoencoder(
     batch_size=BATCH_SIZE,
     latent_dim=LATENT_DIMS,
     filters=32,
+    x_std=0.4,
     intermediate_dim=100)
 
 vae.compile(
@@ -61,6 +62,7 @@ tensorboard_callback = TensorBoard(
 data_dir = PREFIX / "data"
 vae.fit_generator(
     keras_data_gen(data_dir, ("legos", "Data", "rendered2", "2x2"), BATCH_SIZE),
-    steps_per_epoch=13000,
     callbacks=[checkpoint_callback, tensorboard_callback],
+    # this is approx dataset size / batch_size
+    steps_per_epoch=770,
     epochs=N_EPOCHS)
