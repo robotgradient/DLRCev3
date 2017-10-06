@@ -18,7 +18,7 @@ RUN_NAME = 'latent_dims_' + str(LATENT_DIMS)
 BATCH_SIZE = 32
 
 N_EPOCHS = 200
-LEARNING_RATE = 0.002
+LEARNING_RATE = 0.01
 
 # PREFIX = Path.home()
 # PREFIX = PREFIX / "dlrc"
@@ -29,11 +29,11 @@ vae = ConvolutionalVariationalAutoencoder(
     batch_size=BATCH_SIZE,
     latent_dim=LATENT_DIMS,
     filters=32,
-    x_std=0.4,
+    x_std=0.1,
     intermediate_dim=100)
 
 vae.compile(
-    optimizer=RMSprop(lr=LEARNING_RATE),
+    optimizer=RMSprop(lr=LEARNING_RATE, clipvalue=0.2),
     loss=None,)
 print(vae.summary())
 
