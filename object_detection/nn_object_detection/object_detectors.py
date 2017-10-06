@@ -17,7 +17,7 @@ NUM_CLASSES = 2
 
 def sorting_key(element1):
     bbox1=element1[0]
-    return bbox1[2]/2
+    return bbox1[3]/2
 img_res = (640,480) 
 
 def func(res):
@@ -86,12 +86,7 @@ class NNObjectDetector(object):
         return results
     else:
         sorted_boxes = sorted(results, key=sorting_key, reverse=True)
-        if len(sorted_boxes) == 0:
-            return sorted_boxes
-        else:
-            closest = sorted_boxes[0]
         return sorted_boxes
- 
 
 
 
