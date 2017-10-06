@@ -1,6 +1,23 @@
 import numpy as np
 import cv2
-from .utils import *
+from functools import wraps
+import inspect
+
+def _nicer_repr(bound_args):
+    return "({})".format(", ".join("{0}={1}".format(k, repr(v))
+        for k, v in bound_args.arguments.items()))
+
+def debug_print(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        sig = inspect.signature(fn)
+        bound_args = sig.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        bound_args = _nicer_repr(bound_args)
+        ret = fn(*args, **kwargs)
+        print("Calling function: {0}{1} --> {2}".format(fn.__name__, bound_args, repr(ret)))
+        return ret
+    return wrapper
 
 def flip_coords(bbox):
     """

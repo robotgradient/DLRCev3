@@ -19,7 +19,7 @@ from rick.motion_control import (euclidian_kalman, kalman_filter, kalman_filter2
                                  odom_estimation)
 from rick.mc_please_github_donot_fuck_with_this_ones import (A_star_path_planning_control,
                                                              compute_A_star_path, A_star_control)
-from rick.utils import TrackerWrapper
+from rick.utils import TrackerWrapper, debug_print
 from nn_object_detection.object_detectors import NNObjectDetector
 from detection.marker_localization import get_marker_pose, load_camera_params
 from detection.marker_localization import get_specific_marker_pose, load_camera_params
@@ -39,6 +39,9 @@ MARKER_MAP = np.array([
     [200, 0, 0]
     ])
 # yapf: enable
+KALMAN_SAMPLE_TIME = 0.3
+
+H = np.load('Homographygood.npz')["arr_0"]
 
 map_renderer = MapRenderer()
 
@@ -47,17 +50,13 @@ def plot_mapa(mapa, robot_traj):
 
     mapa1 = np.array(mapa)
     rob = np.array(robot_traj)
-    print("Before stop")
     if mapa1.size:
-        print("In")
         plt.scatter(mapa1[:, 0], mapa1[:, 1])
-        print("Out")
     if rob.size > 100:
         plt.plot(rob[:, 0], rob[:, 1])
         plt.axis([-100, 150, -100, 150])
         plt.legend(["Lego", "path"])
         plt.show(block=False)
-    print("After stop")
 
 
 def search_control(state_search, mapa, pos_rob, t_old):
@@ -98,7 +97,6 @@ def PID_control(robot, marker_map, box_coords, hist):
     er_x = marker_map[0, 0] - robot[0]
     er_y = marker_map[0, 1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2] * pi / 180
-    print("ANGLES WITH MARKER AND ERROR", np.arctan2(er_y, er_x) * 180 / pi, robot[2])
 
     if er_angle > pi:
         er_angle = er_angle - 2 * pi
@@ -108,17 +106,13 @@ def PID_control(robot, marker_map, box_coords, hist):
     distance = np.sqrt(np.power(er_x, 2) + np.power(er_y, 2))
 
     if box_coords:
-        print("Y_DISTANCE_TO_MARKER", box_coords[1])
         if abs(box_coords[1] + yshift) > lat_tol:
             vel_wheels = np.asarray([-vel_rot, vel_rot]) * np.sign(-box_coords[1])
-            print("GUIDDE BY VISION")
         elif box_coords[0] > 35:
             vel_wheels = np.asarray([vel_st, vel_st])
-            print("GUIDDE BY VISION")
         else:
             vel_wheels = np.asarray([0, 0])
             hist = 0
-            print("STOP")
 
     else:
         if hist == 0:
@@ -133,7 +127,6 @@ def PID_control(robot, marker_map, box_coords, hist):
             vel_wheels = np.asarray([vel_rot, -vel_rot])
         else:
             vel_wheels = np.asarray([-vel_rot, vel_rot])
-        print("CORRECTING ANGLE", er_angle)
     return vel_wheels, hist
 
 
@@ -154,7 +147,6 @@ def explore_workspace(robot,
                       R=None,
                       state_search=2,
                       t1=0):
-    """Search target."""
     marker_list = [] if marker_list is None else marker_list
     mapa = [] if mapa is None else mapa
     robot_trajectory = [] if robot_trajectory is None else robot_trajectory
@@ -164,27 +156,18 @@ def explore_workspace(robot,
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
 
-    # Markers information coming from the compuetr vision stuff
 
-    # Information related with lego blocks mapping
     BB_legos = get_lego_boxes(frame)
 
-    # GET LIST OF LEGO LANDMARKS
     lego_landmarks = mapping.cam2rob(BB_legos, H)
-    print("####################################################################################")
-    # WHAT SLAM IS!
 
-    # 1. ESTIMATE POSITION BY ODOMETRY
     estim_rob_pos_odom = odom_estimation(odom_r, odom_l, robot.position)
     # 2. UPDATE THE MAP WITH ODOMETRY INFO
     #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
-    marker_map = MARKER_MAP
 
-    # 3. KALMAN FILTER
-    Ts = 0.3
-    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map, Ts, P)
+    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, MARKER_MAP,
+                                     KALMAN_SAMPLE_TIME, P)
     robot.position = estim_rob_pos
-    #print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
     # 4. UPDATE MAP POINTS RELATED TO KALMAN
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
 
@@ -272,8 +255,6 @@ def search_target_with_Kalman_and_mapping(robot,
 
     lego_landmarks = mapping.cam2rob(BB_legos2, H)
 
-    print("####################################################################################")
-
     # WHAT SLAM IS!
 
     # 1. ESTIMATE POSITION BY ODOMETRY
@@ -289,12 +270,10 @@ def search_target_with_Kalman_and_mapping(robot,
 
     # 3. KALMAN FILTER
 
-    Ts = 0.3
-    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map, Ts, P)
+    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map,
+                                     KALMAN_SAMPLE_TIME, P)
 
     robot.position = estim_rob_pos
-
-    #print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
 
     # 4. UPDATE MAP POINTS RELATED TO KALMAN
 
@@ -316,21 +295,12 @@ def search_target_with_Kalman_and_mapping(robot,
 
     for i in range(0, len(links)):
         bbox = BB_legos2[links[i][0]]
-        # print(bbox)
         bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2], :])
     bounding_box_features = similarity_detector.extract_features(bboxes)
 
-    # print(links)
-
-    # print(len(bounding_box_features))
-    print(len(links))
-    # print(len(BB_legos2))
     for i in range(0, len(links)):
 
         feature_map[links[i][1]] = bounding_box_features[i]
-
-    print("EL MAPA : ", mapa)
-    print("FEATURE MAP : ", feature_map)
 
     # DEFINE MOTION CONTROL FOR SEARCHING
 
@@ -423,8 +393,6 @@ def move_to_brick_v3(robot,
     lego_landmarks = mapping.cam2rob(BB_legos, H)
     delete_countdown = 0
 
-    print("####################################################################################")
-
     # WHAT SLAM IS!
 
     # 1. ESTIMATE POSITION BY ODOMETRY
@@ -435,10 +403,9 @@ def move_to_brick_v3(robot,
     # 3. KALMAN FILTER
     marker_map = MARKER_MAP
 
-    Ts = 0.3
-    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map, Ts, P)
+    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map,
+                                     KALMAN_SAMPLE_TIME, P)
     robot.position = estim_rob_pos
-    print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
     # 4. UPDATE MAP POINTS RELATED TO KALMAN
     #mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
 
@@ -497,7 +464,6 @@ def move_to_brick_v3(robot,
         })
 
     if np.isclose(coords[0], img_center[0], atol=atol):
-        print("Move straight")
         robot.move_straight(vel_forward)
         return ("GO_TO_TARGET", frame, {
             "tracker": tracker,
@@ -545,10 +511,7 @@ def move_to_brick_blind_and_grip(robot,
     R = [] if R is None else R
     # Make sure the grip is open
     robot.grip.open()
-    print("Velocity: ", vel)
     # Make sure the elevator is down
-    print(robot.elevator.is_raised)
-    print(robot.elevator.position)
     robot.elevator.down()
     robot.elevator.wait_until_not_moving()
     robot.move_straight(vel=vel, time=t)
@@ -562,8 +525,8 @@ def move_to_brick_blind_and_grip(robot,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    Ts = 0.3
-    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map, Ts, P)
+    estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map,
+                                     KALMAN_SAMPLE_TIME, P)
     robot.position = estim_rob_pos
 
     estim_rob_pos_odom = odom_estimation(odom_r, odom_l, robot.position)
@@ -601,9 +564,8 @@ def search_box(robot,
     marker_map = np.array([[150, 0, 0]])
     marker_map_obj = np.array([[110, 0, 0]])
 
-    Ts = 0.3
     estim_rob_pos, P = kalman_filter(odom_r, odom_l, robot.position, marker_list, marker_map_obj,
-                                     Ts, P)
+                                     KALMAN_SAMPLE_TIME, P)
 
     robot.position = estim_rob_pos
 
@@ -655,7 +617,6 @@ def compute_path(robot, frame, box_coords, ltrack_pos=0, rtrack_pos=0, mapa=None
     y = box_coords[1]
     yaw = box_coords[2]
     if (y > 0 and yaw > -80) or (y < 0 and yaw < -100):
-        print("NICE PATH")
     thm = 40
     thobj = 40
 
@@ -709,7 +670,6 @@ def A_star_move_to_box_blind(robot,
 
     marker_list = []
     if box_coords:
-        print("REPLANNNIG")
         x = box_coords[0]
         y = box_coords[1]
         yaw = box_coords[2]
@@ -721,14 +681,12 @@ def A_star_move_to_box_blind(robot,
         angle = np.arctan2(yobj, xobj)
         distance = np.sqrt(np.power(xobj, 2) + np.power(yobj, 2))
         marker_list.append([angle, distance, (yaw + 90) * pi / 180])
-        print("MARKER POSITION X AND Y: ", x, y)
 
     marker_map = np.array([[150, 0, 0]])
     marker_map_obj = np.array([[110, 0, 0]])
 
-    Ts = 0.3
     estim_rob_pos, P = kalman_filter2(odom_r, odom_l, robot.position, marker_list, marker_map_obj,
-                                      Ts, P)
+                                      KALMAN_SAMPLE_TIME, P)
 
     d = np.ones(3)
     d[0] = estim_rob_pos[0] + 28 * np.cos(estim_rob_pos[2] * pi / 180)
@@ -740,14 +698,6 @@ def A_star_move_to_box_blind(robot,
     Map = Map
     map_renderer.plot_bricks_and_trajectory(mapa, R)
     robot.position = estim_rob_pos
-    print("robot_estim_pos_Astar: ", robot.position)
-
-    # update map
-    # plt.close()
-    #path=A_star(robot.position[0:2], marker_map_obj[0,0:2], Map)
-    # plt.plot(path[:,0],path[:,1])
-    # plt.show(block=False)
-    #print("PATH FROM THE REPLANNING",path.shape)
 
     replan = 1
     goal_pos = marker_map_obj[0, :]
@@ -763,22 +713,9 @@ def A_star_move_to_box_blind(robot,
         iteration=iteration,
         path=path)
 
-    #print("DIFFERENTCE WITH THE GOAL:",abs(estim_rob_pos[0]-goal_pos[0]),abs(estim_rob_pos[1]-goal_pos[1]))
-
-    # CONDITION FOR EXITTING
-
     distance_to_target = np.sqrt(
         np.power(estim_rob_pos[0] - marker_map_obj[0, 0], 2) + np.power(
             estim_rob_pos[1] - marker_map_obj[0, 1], 2))
-
-    print(
-        "###########################################################################################################"
-    )
-    print("disatnce to target: ", distance_to_target)
-    print("estimated vs goal", estim_rob_pos[0:2], goal_pos)
-    print(
-        "###########################################################################################################"
-    )
 
     if abs(estim_rob_pos[0] - marker_map_obj[0, 0]) < 15 and abs(estim_rob_pos[1] -
                                                                  marker_map_obj[0, 1]) < 20:
@@ -839,17 +776,14 @@ def move_to_box_by_vision(robot,
         angle = np.arctan2(yobj, xobj)
         distance = np.sqrt(np.power(xobj, 2) + np.power(yobj, 2))
         marker_list.append([angle, distance, (yaw + 90) * pi / 180])
-        print("MARKER POSITION X AND Y: ", x, y)
 
     marker_map = np.array([[150, 0, 0]])
     marker_map_obj = np.array([[110, 0, 0]])
 
-    Ts = 0.3
     estim_rob_pos, P = kalman_filter2(odom_r, odom_l, robot.position, marker_list, marker_map_obj,
-                                      Ts, P)
+                                      KALMAN_SAMPLE_TIME, P)
 
     robot.position = estim_rob_pos
-    print("robot_estim_pos_PID: ", robot.position)
 
     vel_wheels, hist = PID_control(estim_rob_pos, marker_map, box_coords, histeresis)
     if hist == 0:
@@ -865,11 +799,9 @@ def move_to_box_by_vision(robot,
 
 def place_object_in_the_box(robot, frame):
     robot.move(vel_left=100, vel_right=100, time=2000)
-    print("MOVING")
     robot.left_track.wait_until_not_moving(timeout=3000)
     robot.reset()
     robot.grip.wait_until_not_moving(timeout=3000)
-    print("finish")
     return ("FINAL_STATE", frame, {})
 
 
@@ -878,8 +810,6 @@ with Robot(
         object_detector=None) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
-    print("These are the robot motor positions before planning:", robot.left_track.position,
-          robot.right_track.position)
     states = [
         State(
             name="EXPLORE",
