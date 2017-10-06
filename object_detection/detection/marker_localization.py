@@ -54,20 +54,22 @@ def rotationMatrixToEulerAngles(R) :
 def locate_markers_robot(ids,rvec,tvec,marker_list=[0,1,2,3,4,5],T=np.ones((4,4))):
 	rotc2r=T[0:3,0:3]
 	transl=tvec
-	located_matrix=999*np.ones((len(marker_list),2))
+	located_matrix=999*np.ones((len(marker_list),3))
 
 	if len(transl.shape)==3:
 		
 		for i,value in enumerate(ids):
 			p2c=np.concatenate((tvec[i].T,np.array([[1]])),axis=0)
 			p2r=T.dot(p2c)
+			rotp2c,jac=cv2.Rodrigues(rvec[i])
+			rotp2r=rotc2r.dot(rotp2c)
+			eulerrad=rotationMatrixToEulerAngles(rotp2r)
+			eulerangles=180*eulerrad/np.pi
+			yaw=eulerangles[2]
 			x=p2r[0,0]
 			y=p2r[1,0]
-			d=np.sqrt(np.power(x,2)+np.power(y,2))
-			theta=np.arctan2(y,x)
-			gamma=rvec[i,0,2]
 			index_mat=marker_list.index(value)
-			located_matrix[index_mat,:]=[theta,d]
+			located_matrix[index_mat,:]=[x,y,yaw]
 	return located_matrix
 
 
@@ -115,8 +117,7 @@ def get_specific_marker_pose(frame,mtx,dist,marker_id,arucoParams=arucoParams,ma
 # Setting dictionary 
 aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 
-#loading camera parameters
-mtx,dist=load_camera_params()
+
 
 
 
