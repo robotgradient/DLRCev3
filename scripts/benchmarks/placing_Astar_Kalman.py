@@ -104,127 +104,22 @@ def index23(BB_legos,BB_target):
 
 
 
-def search_box(robot, frame
-                            , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0):
+def search_box(robot, frame, ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0):
 
-    new_ltrack_pos = robot.left_track.position
-    new_rtrack_pos = robot.right_track.position
-    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-
-    ######################  Markers information coming from the compuetr vision stuff
-    
-    #frame,marker_list  = camera_related(frame = frame)
-    marker_map = np.array([[200,100,0],[50, 0 , 0],[100,0,0],[0,100,0],[100,100,0],[200,0,0]])
-
-
-    ###################### Information related with lego blocks mapping
-
-    BB_legos=get_lego_boxes(frame)
-
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-
-    BB_target = detect_purple(frame,BB_legos)
-
-    index = 1000
-    if len(BB_target) !=0:
-        index = index23(BB_legos,  BB_target)
-
-
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
-
-
-
-    # DETECT MARKERS
-
-
-    marker_list = []
-    if box_coords:
-        print("REPLANNNIG")
-        x=box_coords[0]
-        y=box_coords[1]
-        yaw=box_coords[2]
-        thobj=40
-        xobj=x+thobj*np.sin(yaw*np.pi/180.)
-        yobj=y-thobj*np.cos(yaw*np.pi/180.)
-        obj=[xobj+robot.position[0],yobj+robot.position[1]]
-
-        angle = np.arctan2(yobj,xobj)
-        distance = np.sqrt(np.power(xobj,2) + np.power(yobj,2))
-        marker_list.append([angle,distance,(yaw+90)*pi/180])
-        print("MARKER POSITION X AND Y: ", x , y)
-
-    
-    marker_map = np.array([[150,0,0]])
-    marker_map_obj = np.array([[110,0,0]])
-
-
-    
-    
-    print("####################################################################################")
-
-    #################### WHAT SLAM IS!
-
-    ######## 1. ESTIMATE POSITION BY ODOMETRY
-
-    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
-
-
-    ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
-    #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
-
-
-    ####### 3. KALMAN FILTER
-
-    Ts = 0.3
-    estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
-
-    robot.position = estim_rob_pos
-
-    #print("rob_pos odom:", estim_rob_pos_odom, " rob_pos -Kalman", estim_rob_pos)
-
-
-    ####### 4. UPDATE MAP POINTS RELATED TO KALMAN
-
-    #mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
-
-    print("EL MAPA : ", mapa)
-    #### GET GRIPPER POS
-
-    d = np.ones(3)
-    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
-    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
-    d[2] = estim_rob_pos[2]
-
-    R.append(d)
-
-
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
-
-
-    ## DETECT THE BOX
 
     mtx,dist=load_camera_params()
-    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
-
-
-
-
-    #DEFINE MOTION CONTROL FOR SEARCHING
-
-    # THE CONTROL IS : 1. GO TO THE CENTER OF THE WORKSPACE, 2. ROUND FOR 2 secs ,  SELECT A POINT CLOSE TO THE CENTER as new target
-
-    vel_wheels,state_search,t1 = search_control(state_search, mapa, robot.position, t1)
-
-    
-    
+    frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0)
     if box_coords:
-
-        return ("COMPUTE_PATH", frame, {"box_coords": box_coords, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "mapa": mapa, "R" : R })
+        #robot.left_track.stop(stop_action="brake")
+        #robot.right_track.stop(stop_action="brake")
+        print("BOX_COORDINATES:",box_coords[0],box_coords[1],box_coords[2])
+        return ("COMPUTE_PATH", frame, {
+                        "box_coords": box_coords
+                    })
     else:
-        robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
-        return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
-                                        "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
-                                        "state_search" : 2, "t1" : t1 }
+        robot.rotate(100)
+        return "SEARCH_TARGET", frame, {}
+
 
 def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = [], R = []):
     x=box_coords[0]
@@ -243,7 +138,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     yobj=y-thobj*np.cos(yaw*np.pi/180.)
 
     obj=[x,y]
-    obslist=[]
+    obslist=[[50,0]]
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
     robot.grip.close()
@@ -335,7 +230,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
    
-    return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R})
+    return ("MOVE_TO_BOX", frame, {"replan":replan,"Map":Map,"obj":goal_pos,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R,"P":P})
 
 def PID_control(robot, marker_map, box_coords,hist):
     vel_st=100

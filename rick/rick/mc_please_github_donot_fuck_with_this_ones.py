@@ -102,16 +102,16 @@ def robot_control(pos_rob,target, K_x=1,K_y=1,K_an=1): #pos_rob is a 1x3 matrix 
 
 
 	C  = -distance_x/np.power(l,2)
-	w = 1*R;
+	w = 2*R;
 	kt=0.05
 	#A = (1-(C*L)/2)/(1+(C*L)/2)
 	#vel_wheels[0] = w*L/(R*(1+A))
 	#vel_wheels[1] = vel_wheels[0]*A
 	if abs(err_theta)>135 and abs(err_theta)<225:
-		vel_robot=np.array([0,100])
+		vel_robot=np.array([0,60])
 	#	print("JUST SPINNING",abs(err_theta),theta_star,theta)
 	else:
-		vel_robot = np.array([w, w*2*C])
+		vel_robot = np.array([w, w*C])
 	#print("velocidad del robot",vel_robot)
 
 	vel_wheels =np.matmul(M_r2wheels,vel_robot)
@@ -568,6 +568,11 @@ def A_star_control(pos_rob,pos_obj,Map,Ts,K_x=1,K_y = 1, K_an = 1 , iteration = 
 	if iteration == 0 :
 		path =compute_A_star_path(pos_rob[0:2],pos_obj,Map)
 	target, new_path = select_target(pos_rob, path)
+	print("###########################################")
+	print("target: ", target)
+	print("pos rob: ", pos_rob)
+	print("###########################################")
+	
 	#Only Odometry
 	estim_rob_pos= pos_rob
 	vel_wheels = robot_control(estim_rob_pos, target, K_x,K_y,K_an)
