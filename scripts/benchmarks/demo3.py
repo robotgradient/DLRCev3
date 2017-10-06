@@ -187,7 +187,8 @@ def search_target_with_Kalman_and_mapping(robot, frame
     BB_legos2 = []
 
     for bbox in BB_legos:
-        if np.abs(bbox[0] - bbox[2]) >2 and np.abs(bbox[1] - bbox[3]) >2:
+
+        if np.abs(bbox[0] - bbox[2]) >2 and np.abs(bbox[1] - bbox[3]) >2 and iteration>5:
             BB_legos2.append(bbox)
 
 
@@ -559,7 +560,7 @@ def camera_related(frame):
 
 
 
-with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
+with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=NNObjectDetector(PATH_TO_CKPT, PATH_TO_LABELS) ) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
