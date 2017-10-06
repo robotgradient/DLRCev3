@@ -126,17 +126,17 @@ def naive_obstacle_avoidance_control(mapa, pos_rob):
 
         distance = np.sqrt(np.power(er_x,2) + np.power(er_y,2))
 
-        er_ angle = np.arctan2(er_y, er_x) - pos_rob[2]*pi/180
+        er_angle = np.arctan2(er_y, er_x) - pos_rob[2]*pi/180
 
         if er_angle >pi:
             er_angle = er_angle -2*pi
         if er_angle < -pi:
             er_angle = er_angle +2*pi
 
-        next_x = pos_rob[0] + 10*np.cos(pos_rob[3] * pi/180)
-        next_y = pos_rob[1] + 10*np.sin(pos_rob[3] * pi/180)
+        next_x = pos_rob[0] + 10*np.cos(pos_rob[2] * pi/180)
+        next_y = pos_rob[1] + 10*np.sin(pos_rob[2] * pi/180)
 
-        if (distance< max_dist and angle > min_angle and angle< max_angle): # AVOID OBSTACLES
+        if (distance< max_dist and er_angle > min_angle and er_angle< max_angle): # AVOID OBSTACLES
             vel_wheels = [-100,100]
             break
         elif next_x < 0 or next_x > 300 or next_y < 0 or next_y> 300:
@@ -274,8 +274,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     # THE CONTROL IS : 1. GO TO THE CENTER OF THE WORKSPACE, 2. ROUND FOR 2 secs ,  SELECT A POINT CLOSE TO THE CENTER as new target
 
-    vel_wheels,state_search,t1 = search_control(state_search, mapa, robot.position, t1)
-
+    vel_wheels = naive_obstacle_avoidance_control(mapa, robot.position)
     
     iteration += 1 
     if iteration == 100 :

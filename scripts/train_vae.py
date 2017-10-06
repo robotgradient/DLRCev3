@@ -1,52 +1,41 @@
 import os
 import sys
+import os
+from pathlib import Path
 
-from itertools import cycle
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import RMSprop
-
 from scipy import misc
 import numpy as np
 
-from duckdata.blender import img_array, chunked, img_paths
+from duckdata import keras_data_gen
 from unsupervised_models.cvae import ConvolutionalVariationalAutoencoder
 
 IM_SIZE = 64
 
-latent_dim = int(sys.argv[1])
-batch_size = 16
+LATENT_DIMS = int(sys.argv[1])
+RUN_NAME = 'latent_dims_' + str(LATENT_DIMS)
+BATCH_SIZE = 32
 
-epochs = 200
-LEARNING_RATE = 0.004
+N_EPOCHS = 200
+LEARNING_RATE = 0.01
 
-import os
-from pathlib import Path
 # PREFIX = Path.home()
 # PREFIX = PREFIX / "dlrc"
 PREFIX = Path("/")
 
-
-def blender_data_gen(directory, batch_size):
-    """Feeds data in a way that plays well with Keras's `fit_generator`"""
-    paths = chunked(img_paths(directory), batch_size)
-    for batch in cycle(paths):
-        arrays = map(img_array, batch)
-        yield (np.stack(list(arrays), axis=0) / 255, None)
-
-
 vae = ConvolutionalVariationalAutoencoder(
     image_dims=(IM_SIZE, IM_SIZE, 3),
-    batch_size=batch_size,
-    latent_dim=latent_dim,
+    batch_size=BATCH_SIZE,
+    latent_dim=LATENT_DIMS,
     filters=32,
+    x_std=0.1,
     intermediate_dim=100)
 
 vae.compile(
-    optimizer=RMSprop(lr=LEARNING_RATE),
+    optimizer=RMSprop(lr=LEARNING_RATE, clipvalue=0.2),
     loss=None,)
 print(vae.summary())
-
-RUN_NAME = 'latent_dims_' + str(latent_dim)
 
 weights_dir = PREFIX / 'weights' / RUN_NAME
 os.makedirs(weights_dir, exist_ok=True)
@@ -62,7 +51,7 @@ os.makedirs(tb_dir, exist_ok=True)
 tensorboard_callback = TensorBoard(
     log_dir=str(tb_dir),
     histogram_freq=0,
-    batch_size=batch_size,
+    batch_size=BATCH_SIZE,
     write_graph=True,
     write_grads=False,
     write_images=True,
@@ -72,7 +61,8 @@ tensorboard_callback = TensorBoard(
 
 data_dir = PREFIX / "data"
 vae.fit_generator(
-    blender_data_gen(data_dir, batch_size),
-    steps_per_epoch=13000,
+    keras_data_gen(data_dir, ("legos", "Data", "rendered2", "2x2"), BATCH_SIZE),
     callbacks=[checkpoint_callback, tensorboard_callback],
-    epochs=epochs)
+    # this is approx dataset size / batch_size
+    steps_per_epoch=770,
+    epochs=N_EPOCHS)

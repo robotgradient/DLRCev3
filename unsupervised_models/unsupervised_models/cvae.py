@@ -62,6 +62,7 @@ class ConvolutionalVariationalAutoencoder(Model):
                  filters=64,
                  kernel_size=3,
                  batch_size=1,
+                 x_std=0.2,
                  batch_normalization=False):
 
         img_rows, img_cols, img_chns = image_dims
@@ -154,6 +155,7 @@ class ConvolutionalVariationalAutoencoder(Model):
 
         y = CustomVariationalLayer(z_log_var=z_log_var,
             z_mean=z_mean,
+            x_std=x_std,
             img_cols=img_cols,
             img_rows=img_rows)([x, x_decoded_mean_squash])
 

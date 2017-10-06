@@ -4,7 +4,7 @@ def create_map(obslist):
 	#offset ensures probability of negative values in the map
 
 	robot_width=10
-	Map=np.ones([300,300])*np.infty
+	Map=np.ones([500,500])*np.infty
 	offsetx=int(round(Map.shape[0]/2))-1
 	offsety=int(round(Map.shape[1]/2))-1
 	for obs in obslist:
@@ -73,9 +73,12 @@ def reconstruct_path(parent,current,start):
 
 
 def A_star(start,goal,Map):
-	start[1]=int(round(start[1]))
-	start[0]=int(round(start[0]))
+	start1=start
+	start = (int(round(start[0])), int(round(start[1])))
+	#start[1]=int(round(start[1]))
+	#start[0]=int(round(start[0]))
 	start=np.int_(start)
+	
 	goal[1]=int(round(goal[1]))
 	goal[0]=int(round(goal[0]))
 	offsetx=int(round(Map.shape[0]/2)-1)
@@ -86,6 +89,9 @@ def A_star(start,goal,Map):
 		print("goal not reachable ")
 		return np.array([])
 
+	if Map[start[0],start[1]]==-100:
+		print("wE ARE IN A OBSTACLE")
+		return np.array([])
 	gscore=np.ones(Map.shape)*np.inf
 	#parent contain the previous points
 	parent=np.ones([Map.shape[0],Map.shape[1],2],dtype=np.int32)

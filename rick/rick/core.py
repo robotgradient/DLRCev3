@@ -18,6 +18,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
     tstart = time.time()
 
     while True:
+        print("CURRENT_STATE",state.name)
         tend=tstart
         time.sleep(max(0, delay-( time.time()-tstart)))
         tstart = time.time()
