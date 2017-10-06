@@ -46,6 +46,19 @@ H = np.load('Homographygood.npz')["arr_0"]
 map_renderer = MapRenderer()
 
 
+def add_gripper_coords(trajectory, estim_rob_pos):
+    d = np.ones(3)
+    d[0] = estim_rob_pos[0] + 28 * np.cos(estim_rob_pos[2] * pi / 180)
+    d[1] = estim_rob_pos[1] + 28 * np.sin(estim_rob_pos[2] * pi / 180)
+    d[2] = estim_rob_pos[2]
+    return R + [d]
+
+def tracks_odometry(robot, ltrack_pos, rtrack_pos):
+    new_ltrack_pos = robot.left_track.position
+    new_rtrack_pos = robot.right_track.position
+    return new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
+
+
 def plot_mapa(mapa, robot_traj):
 
     mapa1 = np.array(mapa)
@@ -152,16 +165,14 @@ def explore_workspace(robot,
     robot_trajectory = [] if robot_trajectory is None else robot_trajectory
     R = [] if R is None else R
 
-    new_ltrack_pos = robot.left_track.position
-    new_rtrack_pos = robot.right_track.position
-    odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-
 
     BB_legos = get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos, H)
 
+    odom_l, odom_r = tracks_odometry(robot, ltrack_pos, rtrack_pos)
     estim_rob_pos_odom = odom_estimation(odom_r, odom_l, robot.position)
+
     # 2. UPDATE THE MAP WITH ODOMETRY INFO
     #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
 
@@ -172,12 +183,7 @@ def explore_workspace(robot,
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
 
     # GET GRIPPER POS
-
-    d = np.ones(3)
-    d[0] = estim_rob_pos[0] + 28 * np.cos(estim_rob_pos[2] * pi / 180)
-    d[1] = estim_rob_pos[1] + 28 * np.sin(estim_rob_pos[2] * pi / 180)
-    d[2] = estim_rob_pos[2]
-    R.append(d)
+    R = add_gripper_coords(R, estim_rob_pos)
     # SHOW THE MAP
     map_renderer.plot_bricks_and_trajectory(mapa, R)
 
