@@ -11,7 +11,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index, linker = []):
 	landmarks = np.array(landmarks)
 	for i in range(0,landmarks.shape[0]):
 
-			if landmarks[i,1] < 55 and i != index:
+			if landmarks[i,1] < 75 and i != index:
 
 				x_mapa = pos_rob[0] + landmarks[i,1]*np.cos((pos_rob[2])*pi/180+landmarks[i,0])
 
@@ -25,7 +25,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index, linker = []):
 
 				sh_dist = 10000;
 				p_already = 0
-				print('new element', i)
+				#print('new element', i)
 				for j in range(0, mapa_ar.shape[0]):
 
 					distance = np.sqrt(np.power((x_mapa-mapa_ar[j,0]),2) + np.power((y_mapa - mapa_ar[j,1]),2))
@@ -37,7 +37,7 @@ def points2mapa(landmarks,pos_rob,mapa,P, delete_countdown, index, linker = []):
 				
 
 				if sh_dist < 10:
-					print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
+					#print('landmarks', landmarks[i], 'sh distance: ', sh_dist)
 					mapa = np.array(mapa)
 					mapa[p_already,4] = 1
 					mapa = mapa.tolist()
@@ -161,7 +161,7 @@ def delete_in_mapa(mapa,pos_rob):
 			#print("map:", mapa_ar, mapa_ar[j,1])
 			#print("robot", pos_rob)
 
-			print(j)
+			#print(j)
 			x = mapa_ar[j,0] - pos_rob[0]
 			y = mapa_ar[j,1] - pos_rob[1]
 
@@ -210,7 +210,7 @@ def add_points_in_mapa(landmarks,new_points2add,mapa, P ,pos_rob,index):
 			if  mapa[j][4] == 5:
 
 				target_pos = j
-		print(target_pos)
+		#print(target_pos)
 
 		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
 
@@ -257,7 +257,7 @@ def add_points_in_mapa2(landmarks,new_points2add,mapa, P ,pos_rob,index,linker =
 			if  mapa[j][4] == 5:
 
 				target_pos = j
-		print(target_pos)
+		#print(target_pos)
 
 		x_mapa = pos_rob[0] + landmarks[index,1]*np.cos((pos_rob[2])*pi/180+landmarks[index,0])
 
@@ -307,7 +307,7 @@ def after_kalman_improvement(mapa, kalman_pos, odom_pos):
 
 	dx = kalman_pos[0]-odom_pos[0]
 	dy = kalman_pos[1]-odom_pos[1]
-	dteta = kalman_pos[2] - odom_pos[2]
+	dteta = (kalman_pos[2] - odom_pos[2])*pi/180
 	print("diferences : ", dx, dy, dteta)
 
 	for i in range(0, mapa_ar.shape[0]): 

@@ -726,6 +726,13 @@ def odom_estimation(odom_r,odom_l,pos_rob):
 
 	pos_rob_pred[2] = pos_rob_pred[2]* 180/pi
 
+	if pos_rob_pred[2] > 360:
+		pos_rob_pred[2] = pos_rob_pred[2]-360
+	if pos_rob_pred[2] < 0:
+		pos_rob_pred[2] = pos_rob_pred[2]+360
+
+
+
 	return pos_rob_pred
 
 
