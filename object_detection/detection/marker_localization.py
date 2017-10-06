@@ -68,8 +68,10 @@ def locate_markers_robot(ids,rvec,tvec,marker_list=[0,1,2,3,4,5],T=np.ones((4,4)
 			yaw=eulerangles[2]
 			x=p2r[0,0]
 			y=p2r[1,0]
+			distance=np.sqrt(np.power(x,2)+np.power(y,2))
+			theta=np.arctan2(y,x)
 			index_mat=marker_list.index(value)
-			located_matrix[index_mat,:]=[x,y,yaw]
+			located_matrix[index_mat,:]=[distance,theta,yaw]
 	return located_matrix
 
 
