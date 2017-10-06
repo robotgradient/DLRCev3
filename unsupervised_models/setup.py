@@ -7,5 +7,6 @@ setup(
     install_requires=[
         "Keras==2.0.8",
         "scipy==0.19.1",
-        "h5py==2.7.1"
+        "h5py==2.7.1",
+        "scikit-learn==0.19.0"
     ],)
