@@ -21,13 +21,13 @@ def _dummy_bnorm():
 class CustomVariationalLayer(Layer):
     """Custom Loss Layer."""
 
-    def __init__(self, z_log_var, z_mean, img_rows, img_cols, x_std=0.2, **kwargs):
+    def __init__(self, z_log_var, z_mean, img_rows, img_cols, x_std=K.constant(0.2), **kwargs):
         self.is_placeholder = True
         self.z_mean = z_mean
         self.z_log_var = z_log_var
         self.img_rows = img_rows
         self.img_cols = img_cols
-        self.x_std = K.variable(value=np.array([x_std]))
+        self.x_std = x_std
         super(CustomVariationalLayer, self).__init__(**kwargs)
 
     def _nll(self, target, prediction_mean):
