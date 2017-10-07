@@ -57,27 +57,6 @@ NUM_CLUSTERS = 2
 
 
 
-def plot_mapa(mapa,robot_traj):
-
-
-    mapa1 = np.array(mapa)
-    rob = np.array(robot_traj)
-    print("Before stop")
-    if mapa1.size:
-        print("In")
-        plt.scatter(mapa1[:,0],mapa1[:,1])
-        print("Out")
-    if rob.size > 100:
-        plt.plot(rob[:,0],rob[:,1])
-        plt.axis([-100, 150, -100, 150])
-        plt.legend(["Lego", "path"])
-        plt.show()
-    print("After stop")
-
-
-
-
-
 def naive_obstacle_avoidance_control(mapa, pos_rob): 
 
 
@@ -154,6 +133,7 @@ def explore_workspace(robot, frame
     mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
     estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
+    print("ROBOT ESTIAMTED POSITION",estim_rob_pos)
     mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
     d = np.ones(3)
     d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
@@ -284,7 +264,7 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     error = img_center - coords
     atol = 10 + coords[1]/480 * 40
     cv2.line(frame,(img_center[0],0),(img_center[0],480),(0,255,0))
-    print("Errror:", error, "Coords ", coords, " ok ", ok)
+    #print("Error:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
 
     if np.isclose(coords[0], img_center[0], atol=atol) and np.isclose(coords[1], img_res[1], atol=atol_move_blind):
@@ -385,7 +365,7 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
     iteration += 1
 
-    print("###########################################################################################################")
+    
     print("distance to target: ", distance_to_target)
     print("estimated vs goal", estim_rob_pos[0:2],obj)
     print("###########################################################################################################")
@@ -401,7 +381,7 @@ def PID_control(robot, marker_map, box_coords,hist):
     er_x = marker_map[0,0] - robot[0]
     er_y = marker_map[0,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
-    print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2])
+    print("ANGLES WITH MARKER AND",np.arctan2(er_y, er_x)*180/pi,robot[2])
 
     if er_angle > pi:
         er_angle = er_angle - 2*pi
@@ -413,7 +393,7 @@ def PID_control(robot, marker_map, box_coords,hist):
     if box_coords:
         print("Y_DISTANCE_TO_MARKER",box_coords[1])
         if abs(box_coords[1]+yshift)>lat_tol:
-            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1]-yshift)
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-abs(box_coords[1]+yshift))
             print("GUIDDE BY VISION")
         elif box_coords[0]>35:
             vel_wheels=np.asarray([vel_st,vel_st])
@@ -487,22 +467,7 @@ def place_object_in_the_box(robot,frame, ltrack_pos=0, rtrack_pos=0, P = np.iden
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    BB_legos=get_lego_boxes(frame)
-
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
-    frame,marker_list=get_marker_pose(frame,mtx,dist,marker_list=marker_total_list,markerLength=8.6)
-    print("####################################################################################")
-    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
-    index = 1000
-    mapa, delete_countdown,robot_trajectory, links = mapping.update_mapa2(mapa,lego_landmarks,estim_rob_pos_odom,P,0, [], index)
-    estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
-    robot.position = estim_rob_pos
-    mapa = mapping.after_kalman_improvement(mapa, robot.position, estim_rob_pos_odom)
-    d = np.ones(3)
-    d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
-    d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
-    d[2] = estim_rob_pos[2]
-    #R.append(d)
+    
     #map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
     robot.move(vel_left=100,vel_right=100,time=2000)

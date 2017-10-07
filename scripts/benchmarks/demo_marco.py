@@ -335,7 +335,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
     yobj=y-thobj*np.cos(yaw*np.pi/180.)
 
     obj=[x,y]
-    obslist=[[50,0]]
+    obslist=[]
     Map=create_map(obslist)
     path=A_star([0,0],obj, Map)
     robot.grip.close()
@@ -346,7 +346,7 @@ def compute_path(robot,frame,box_coords, ltrack_pos = 0, rtrack_pos = 0, mapa = 
                 "TIME": time.time(), "R":R})
 
 
-def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
+def A_star_move_to_box_blind(robot, frame, Map,obj=[100,0,0], replan=1,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),R=[]):
     mtx,dist=load_camera_params()
     frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
@@ -374,8 +374,8 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
         print("MARKER POSITION X AND Y: ", x , y)
 
     
-    marker_map = np.array([[150,0,0]])
-    marker_map_obj = np.array([[110,0,0]])
+    marker_map = np.array([[100,0,0]])
+    marker_map_obj = np.array([[60,0,0]])
 
     Ts = 0.3
     estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
@@ -426,7 +426,7 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
     print("estimated vs goal", estim_rob_pos[0:2],goal_pos)
     print("###########################################################################################################")
     
-    if abs(estim_rob_pos[0]-marker_map_obj[0,0]) < 15 and abs(estim_rob_pos[1]-marker_map_obj[0,1]) < 20:
+    if abs(estim_rob_pos[0]-marker_map_obj[0,0]) < 20 and abs(estim_rob_pos[1]-marker_map_obj[0,1]) < 10:
         return ("MOVE_TO_BOX_BY_VISION", frame, {"replan":replan,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "TIME": t0})
 
     robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -437,13 +437,14 @@ def A_star_move_to_box_blind(robot, frame, Map,obj, replan=1,
 
 def PID_control(robot, marker_map, box_coords,hist):
     vel_st=100
-    vel_rot=60
+    vel_rot=40
     lat_tol=4
+    vel_st2=100
     yshift=2
     er_x = marker_map[0,0] - robot[0]
     er_y = marker_map[0,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
-    print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2])
+    print("ANGLES WITH MARKER,WITH WORLD AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2],er_angle*180/pi)
 
     if er_angle > pi:
         er_angle = er_angle - 2*pi
@@ -454,12 +455,15 @@ def PID_control(robot, marker_map, box_coords,hist):
 
     if box_coords:
         print("Y_DISTANCE_TO_MARKER",box_coords[1])
-        if abs(box_coords[1]+yshift)>lat_tol:
-            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1])
-            print("GUIDDE BY VISION")
+        if abs(box_coords[1]+yshift)>lat_tol and box_coords[0]>35:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1]-yshift)+np.asarray([vel_st2,vel_st2])
+            print("Case 1")
+        if abs(box_coords[1]+yshift)>lat_tol and box_coords[0]<35:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1]-yshift)
+            print("Case 2")
         elif box_coords[0]>35:
             vel_wheels=np.asarray([vel_st,vel_st])
-            print("GUIDDE BY VISION")
+            print("Case3")
         else:
             vel_wheels=np.asarray([0,0])
             hist = 0
@@ -469,6 +473,11 @@ def PID_control(robot, marker_map, box_coords,hist):
     else:
         if hist == 0:
             vel_wheels=np.asarray([0,0])
+
+        elif hist==2:
+            vel_wheels=np.asarray([vel_rot,-vel_rot])*np.sign(er_angle)
+            hist=np.sign(er_angle)
+            print("first hist",hist)
         elif er_angle > 0.7:
             vel_wheels=np.asarray([vel_rot,-vel_rot])
             hist = 1
@@ -477,9 +486,10 @@ def PID_control(robot, marker_map, box_coords,hist):
             hist = -1
         elif hist ==1 : 
             vel_wheels=np.asarray([vel_rot,-vel_rot])
-        else : 
+        elif hist==-1 : 
             vel_wheels=np.asarray([-vel_rot,vel_rot])
-        print("CORRECTING ANGLE",er_angle)
+
+        print("CORRECTING ANGLE and HISTERESIS",er_angle,hist)
     return vel_wheels, hist
 
 
@@ -489,7 +499,7 @@ def PID_control(robot, marker_map, box_coords,hist):
 
 def move_to_box_by_vision(robot, frame, replan=1,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),
-                            histeresis = 1):
+                            histeresis = 2):
     mtx,dist=load_camera_params()
     frame,box_coords = get_specific_marker_pose(frame=frame,mtx=mtx,dist=dist,marker_id=0,markerLength=8.6)
 
@@ -515,14 +525,14 @@ def move_to_box_by_vision(robot, frame, replan=1,
 
 
 
-    marker_map = np.array([[150,0,0]])
-    marker_map_obj = np.array([[110,0,0]])
+    marker_map = np.array([[100,0,0]])
+    marker_map_obj = np.array([[60,0,0]])
 
     Ts = 0.3
     estim_rob_pos, P  = kalman_filter2(odom_r,odom_l,robot.position,marker_list, marker_map_obj,Ts,P)
 
     robot.position= estim_rob_pos
-    print("robot_estim_pos_PID: ", robot.position)
+    print("robot_estim_pos: ", robot.position)
 
     
     vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
@@ -541,7 +551,7 @@ def place_object_in_the_box(robot,frame):
     print("finish")
     return "FINAL_STATE"
 
-with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
+with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object_detector=None ) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
@@ -591,7 +601,7 @@ with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
         State(
              name="COMPUTE_PATH",
              act=compute_path,
-             default_args={"box_coords": [200,0,0],
+             default_args={"box_coords": [100,0,0],
                 "ltrack_pos": robot.left_track.position,
                 "rtrack_pos": robot.right_track.position,
                 }
@@ -608,6 +618,11 @@ with Robot(AsyncCamera(0), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
         State(
              name="MOVE_TO_BOX_BY_VISION",
              act=move_to_box_by_vision,
+             default_args={
+                "ltrack_pos": robot.left_track.position,
+                "rtrack_pos": robot.right_track.position,
+                "TIME": time.time()
+            }
          ),
         State(
              name="PLACE_OBJECT_IN_THE_BOX",
