@@ -269,8 +269,6 @@ def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,rtrack_pos=0,m
     Ts = 0.3
     estim_rob_pos, P  = kalman_filter(odom_r,odom_l,robot.position,marker_list, marker_map,Ts,P)
     robot.position = estim_rob_pos
-
-    estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
     return "SEARCH_BOX", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos
                                          , "mapa": mapa,  "R" : R}
 #SEARCH BOX

@@ -135,10 +135,13 @@ cap = cv2.VideoCapture(1)
 #img = cv2.imread('Chessboard_9.jpg')
 while True:
     ret,img=cap.read()
-    cv2.imshow("actual image",img)
+
     h,  w = img.shape[:2]
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
     dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    cv2.line(img, (320,0),(320,480), (0,255,0))
+    cv2.line(img, (0,240),(640,240), (0,255,0))
+    cv2.imshow("actual image",img)
     print("newcameramtx",newcameramtx)
     np.savez("newcameramtx",newcameramtx)
     cv2.imshow("distorsion", dst)
