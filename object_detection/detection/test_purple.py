@@ -74,6 +74,8 @@ while True:
 	BB_target = np.array(BB_target)
 	lego_purple = cam2rob(BB_target,H)
 
+	if BB_target.shape[0]>0:
+		cv2.rectangle(frame, (BB_target[0,0],BB_target[0,1]), (BB_target[0,2],BB_target[0,3]), (0,0,255))
 	cv2.line(frame, (320,0), (320,480), (0,0,255))
 	cv2.imshow('frame', frame)
 

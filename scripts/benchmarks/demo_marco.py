@@ -225,6 +225,7 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
     error = img_center - coords
     atol = 5 + coords[1]/480 * 40
     cv2.line(frame, (int(img_center[0]),0), (int(img_center[0]),480), (0,255,0))
+    cv2.line(frame,(0,480-atol_move_blind),(640,480-atol_move_blind), (0,255,0))
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
     #img_center = img_res/2.
 
@@ -637,7 +638,7 @@ with Robot(AsyncCamera(1), tracker=TrackerWrapper(cv2.TrackerKCF_create), object
     for state in states:
         state_dict[state.name] = state
 
-    start_state = states[4]
+    start_state = states[0]
 
     main_loop(robot, start_state, state_dict, delay=0)
 
