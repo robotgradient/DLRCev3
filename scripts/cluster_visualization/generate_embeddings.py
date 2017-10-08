@@ -9,7 +9,6 @@ import sys
 
 tf.__version__
 
-clusters_path = sys.argv[3]
 # THE SCRIPT FOR GENERATING DATA FOR TENSORBOARD EMBEDDINGS VISUALIZATION
 # example call: python generate_embeddings.py PATH_TO_IMAGES  PATH_TO_FEATURES PATH_TO_CLUSTER_LABELS PATH_TO_LOG_DIR
 # see function description for explanation
@@ -17,7 +16,7 @@ clusters_path = sys.argv[3]
 
 
 
-def generate_tensorboard_embeddings(images_path, features_path, clusters_path, logdir_path):
+def generate_tensorboard_embeddings(images_path, features_path, logdir_path, clusters_path):
     """
     Function that generates tensorflow data for embeddings visualization
     :param images_path: Path to the images directory, images have to be stored in this directory, not hierarchically
@@ -42,7 +41,6 @@ def generate_tensorboard_embeddings(images_path, features_path, clusters_path, l
 
     # %%
 
-    clusters = np.loadtxt(clusters_path)
     feature_vectors = np.loadtxt(features_path)
     print("feature_vectors_shape:", feature_vectors.shape)
     print("num of images:", feature_vectors.shape[0])
@@ -52,9 +50,11 @@ def generate_tensorboard_embeddings(images_path, features_path, clusters_path, l
 
     features = tf.Variable(feature_vectors, name='features')
 
-    y = np.ones((num_of_samples,), dtype='int64')
-
-    y= clusters.astype(np.int8)
+    if clusters is None:
+        y = np.ones((num_of_samples,), dtype='int64')
+    else:
+        clusters = np.loadtxt(clusters_path)
+        y= clusters.astype(np.int8)
 
 
     # with open(metadata, 'w') as metadata_file:
@@ -138,5 +138,6 @@ def generate_tensorboard_embeddings(images_path, features_path, clusters_path, l
 if __name__ == "__main__":
     images_path = sys.argv[1]
     features_path = sys.argv[2]
-    logdir_path = sys.argv[4]
-    generate_tensorboard_embeddings(images_path, features_path, clusters_path, logdir_path)
+    logdir_path = sys.argv[3]
+    # logdir_path = sys.argv[4]
+    generate_tensorboard_embeddings(images_path, features_path, logdir_path)
