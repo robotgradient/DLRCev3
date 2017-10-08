@@ -5,7 +5,7 @@ import numpy as np
 from detection.opencv import get_lego_boxes
 from detection.opencv import detection_lego_outside_white
 from detection.opencv import get_brown_box
-from detection.opencv import get_purple_lego
+from detection.opencv import get_purple_lego,BB_ligth_green
 import time
 import cv2
 
@@ -66,13 +66,10 @@ while True:
 	cv2.imshow("frame",frame)
 	dst = cv2.warpPerspective(frame,H,(640,480),flags= cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS+cv2.WARP_INVERSE_MAP)
 
-	BB_legos=get_lego_boxes(frame)
+	BB_green=BB_ligth_green(frame)
 
-
-	BB_target = detect_purple(frame,BB_legos)
-
-	BB_target = np.array(BB_target)
-	lego_purple = cam2rob(BB_target,H)
+	if len(BB_green):
+		cv2.rectangle(frame, (BB_green[0][0], BB_green[0][1]),(BB_green[0][2], BB_green[0][3]), (0,255,0))
 
 	cv2.line(frame, (320,0), (320,480), (0,0,255))
 	cv2.imshow('frame', frame)

@@ -23,7 +23,8 @@ import numpy as np
 from math import pi
 
 
-from detection.opencv import get_lego_boxes, eliminate_grip
+from detection.opencv import eliminate_grip
+from detection.opencv import get_lego_boxes as gl
 from clustering import BBoxKMeansClustering
 
 
@@ -39,7 +40,7 @@ import matplotlib.pyplot as plt
 
 from detection.opencv import detect_purple
 
-PATH_TO_CKPT = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/models/faster_rcnn_resnet_lego_v1/train/frozen_inference_graph.pb"
+PATH_TO_CKPT = "/home/julen/dlrc_models/frozen_inference_graph.pb"
 PATH_TO_LABELS = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/data/label_map.pbtxt"
 
 
@@ -152,9 +153,12 @@ def naive_obstacle_avoidance_control(mapa, pos_rob):
     return vel_wheels
     
 def get_lego_boxes(frame, threshold=0.9, return_closest=False):
-    res = object_detector.detect_with_threshold(frame,threshold=threshold, return_closest=return_closest)
-    BB_legos = map(lambda x: x[0], res)
-    return list(BB_legos)
+    #res = object_detector.detect_with_threshold(frame,threshold=threshold, return_closest=return_closest)
+    #BB_legos = map(lambda x: x[0], res)
+    #return list(BB_legos)
+    BB_legos=gl(frame)
+    return BB_legos
+
 
 
 def index23(BB_legos,BB_target):
@@ -213,7 +217,11 @@ def search_target_with_Kalman_and_mapping(robot, frame
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
     R.append(d)
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
+
+    box_print = [x + [0] for x in marker_map.tolist()]
+
+    map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
+  
     ############################################
     print("odom :", estim_rob_pos_odom, "kalmancito" , estim_rob_pos )
 
@@ -247,7 +255,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
                 clust_feats.append(item)
 
         clustering_alg.fit(clust_feats, n_clusters=NUM_CLUSTERS)
-        map_renderer.plot_bricks_and_trajectory(mapa, R)
+        map_renderer.plot_bricks_and_trajectory_and_robot(mapa, R, d)
 
         
         return "SELECT_AND_GO", frame, {"ltrack_pos" : new_ltrack_pos ,"rtrack_pos" : new_rtrack_pos,"R" :  R, "mapa" : mapa}
@@ -296,7 +304,10 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
     R.append(d)
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
+
+    box_print = [x + [0] for x in marker_map.tolist()]
+
+    map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
     ############################################
 
     print("robot pos in blind grip: ", robot.position)
@@ -426,7 +437,13 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
     R.append(d)
-    map_renderer.plot_bricks_and_trajectory(mapa, R)
+
+    box_print = [x + [0] for x in marker_map.tolist()]
+
+    box_print[cluster][3] = 1
+
+    map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
+  
     ############################################
     print("robot_estim_pos_Astar: ", robot.position)
 
@@ -543,7 +560,14 @@ def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
     d[0] = estim_rob_pos[0] + 28 *np.cos(estim_rob_pos[2] * pi/180)
     d[1] = estim_rob_pos[1] + 28* np.sin(estim_rob_pos[2]*pi/180)
     d[2] = estim_rob_pos[2]
-    #R.append(d)
+    R.append(d)
+
+    box_print = [x + [0] for x in marker_map.tolist()]
+
+    box_print[cluster][3] = 1
+
+    map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
+  
     #map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
     print("######################################")
@@ -618,7 +642,7 @@ def camera_related(frame):
 
 
 
-with Robot(AsyncCamera(0)) as robot:
+with Robot(AsyncCamera(1)) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
@@ -679,7 +703,7 @@ with Robot(AsyncCamera(0)) as robot:
     for state in states:
         state_dict[state.name] = state
 
-    start_state = states[1]
+    start_state = states[0]
 
     main_loop(robot, start_state, state_dict, delay=0)
 
