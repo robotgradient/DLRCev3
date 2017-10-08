@@ -6,12 +6,13 @@ from rick.A_star_planning import *
 from rick.core import State
 from rick.core import main_loop
 from rick.async import AsyncCamera
-from rick.utils import TrackerWrapper
+from rick.utils import TrackerWrapper,plot_bbox
 from nn_object_detection.object_detectors import NNObjectDetector
 from rick.live_plotting import MapRenderer
 
 from detection.marker_localization import get_marker_pose, load_camera_params
 import cv2.aruco as aruco
+
 
 
 from detection.marker_localization import get_specific_marker_pose, load_camera_params
@@ -20,7 +21,7 @@ from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning
 from math import pi
 
 
-from detection.opencv import get_lego_boxes
+from detection.opencv import get_lego_boxes,BB_ligth_green
 from rick.motion_control import euclidian_kalman , kalman_filter , kalman_filter2 , robot_control, odom_estimation
 
 import sys
@@ -96,15 +97,17 @@ def search_target_with_Kalman_and_mapping(robot, frame
     ######################  Markers information coming from the compuetr vision stuff
 
     ###################### Information related with lego blocks mapping
-    BB_legos=get_lego_boxes(frame)
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-    BB_target = detect_purple(frame,BB_legos)
-    index = 1000
-    if len(BB_target) !=0:
-        index = index23(BB_legos,  BB_target)
+    BB_target2=BB_ligth_green(frame)
+    if BB_target2:
+        BB_target=BB_target2[0]
+        plot_bbox(frame, BB_target)
+    else:
+        BB_target=[]
+ 
 
+    delete_countdown=0
     #GET LIST OF LEGO LANDMARKS
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
+    #lego_landmarks = mapping.cam2rob(BB_legos,H)
     print("####################################################################################")
     #################### WHAT SLAM IS!
 
@@ -140,7 +143,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
     vel_wheels,state_search,t1 = search_control(state_search, mapa, robot.position, t1)
 
     if len(BB_target) > 0:
-        robot.tracker.init(frame, BB_target[0])
+        robot.tracker.init(frame, BB_target)
         return ("GO_TO_TARGET", frame, {"tracker" : robot.tracker, "ltrack_pos" : robot.left_track.position ,"rtrack_pos" : robot.right_track.position, "robot_trajectory": robot_trajectory,"pos_rob" : robot.position,"R" :  R, "mapa" : mapa})
     else:
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
@@ -151,8 +154,8 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 #GO TO TARGET
 def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
-                         vel_forward = 299, vel_rot = 50, atol_move_blind=70, 
-                         fail_counter=0, center_position_error = 75, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
+                         vel_forward = 200, vel_rot = 50, atol_move_blind=30, 
+                         fail_counter=0, center_position_error = 25, tracker=None,ltrack_pos=0 ,rtrack_pos=0, pos_rob=[],marker_list=[],P = np.identity(3),R = [], mapa = [], robot_trajectory = []):
     
     #LOCALIZATION AND MAPPING
     new_ltrack_pos = robot.left_track.position
@@ -161,22 +164,19 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
 
     ######################  Markers information coming from the compuetr vision stuff
     #################3 RELATED WITH LEGOS
-    BB_legos=get_lego_boxes(frame)
-    #######################     DETECT IF ANY OF THE BOXES IS PURPLE
-    BB_target = detect_purple(frame,BB_legos)
-    index = 1000
-    if len(BB_target) !=0:
-        index = index23(BB_legos,  BB_target)
-    #GET LEGOS LANDMARKS
-    lego_landmarks = mapping.cam2rob(BB_legos,H)
-    delete_countdown = 0
+    BB_target2=BB_ligth_green(frame)
+    if BB_target2:
+        BB_target=BB_target2[0]
+        plot_bbox(frame, BB_target)
+    else:
+        BB_target=[]
 
     print("####################################################################################")
 
     #################### WHAT SLAM IS!
 
     ######## 1. ESTIMATE POSITION BY ODOMETRY
-
+    delete_countdown=0
     estim_rob_pos_odom = odom_estimation(odom_r,odom_l,robot.position)
     ####### 2. UPDATE THE MAP WITH ODOMETRY INFO
     #mapa, delete_countdown,robot_trajectory = mapping.update_mapa(mapa,lego_landmarks,estim_rob_pos_odom,P,delete_countdown, robot_trajectory, index)
@@ -221,11 +221,16 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
 
 
     coords = bbox_center(*bbox)
+
     img_center = img_res / 2 - center_position_error 
     error = img_center - coords
-    atol = 5 + coords[1]/480 * 40
+    atol = 5 + coords[1]/480 * 25
+    cv2.line(frame, (5+int(img_center[0]),0), (25+int(img_center[0]),480), (255,0,0))
+    cv2.line(frame, (-5+int(img_center[0]),0), (-25+int(img_center[0]),480), (255,0,0))
     cv2.line(frame, (int(img_center[0]),0), (int(img_center[0]),480), (0,255,0))
+
     cv2.line(frame,(0,480-atol_move_blind),(640,480-atol_move_blind), (0,255,0))
+
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
     #img_center = img_res/2.
 
@@ -248,7 +253,7 @@ def move_to_brick_v3(robot, frame, img_res=np.asarray((640, 480)), atol=10,
        
 
 #MOVE TO BRICK BLIND
-def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,rtrack_pos=0,marker_list=[],mapa=[], vel=400, t=1700):
+def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,rtrack_pos=0,marker_list=[],mapa=[], vel=500, t=1500):
     # Make sure the grip is open
     robot.grip.open()
     print("Velocity: ", vel)

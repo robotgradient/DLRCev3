@@ -1,3 +1,4 @@
+
 # Euclidean path planning control with Kalman filter for localization
 
 import time
@@ -9,6 +10,7 @@ import cv2
 import cv2.aruco as aruco
 import matplotlib.pyplot as plt
 
+
 from ev3control.rpc import Robot
 from rick.controllers import *
 from rick.A_star_planning import *
@@ -16,6 +18,7 @@ from rick.core import State
 from rick.core import main_loop
 from rick.async import AsyncCamera
 from rick.utils import TrackerWrapper, bbox_center
+
 from rick.live_plotting import MapRenderer
 from rick.motion_control import euclidian_kalman, kalman_filter, kalman_filter2, robot_control, odom_estimation
 from rick.mc_please_github_donot_fuck_with_this_ones import (A_star_path_planning_control,
@@ -35,6 +38,7 @@ PATH_TO_LABELS = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detecti
 
 print("Creating robot...")
 
+
 # GLOBAL VARIABLES
 
 # HKMOGRAPHY MATRIX
@@ -49,14 +53,18 @@ marker_map = np.array([[150, 0, 0], [91, 110, pi / 2], [0, 41, pi], [0, 0, 0]])
 marker_total_list = [0, 1, 2, 3]
 marker_map_obj = [[110, 0, 0], [91, 70, pi / 2], [40, 41, pi], [0, 0, 0]]
 
+
 map_renderer = MapRenderer()
 object_detector = NNObjectDetector(PATH_TO_CKPT, PATH_TO_LABELS)
 similarity_detector = EuclidianNNFeaturesBrickFinder()
 clustering_alg = BBoxKMeansClustering()
 
+
 Ts = 0.3
 
+
 NUM_CLUSTERS = 2
+
 
 
 def naive_obstacle_avoidance_control(mapa, pos_rob):
@@ -71,6 +79,7 @@ def naive_obstacle_avoidance_control(mapa, pos_rob):
 
         er_x = mapa[i][0] - pos_rob[0]
         er_y = mapa[i][1] - pos_rob[1]
+
 
         distance = np.sqrt(np.power(er_x, 2) + np.power(er_y, 2))
 
@@ -99,6 +108,7 @@ def get_lego_boxes(frame, threshold=0.9, return_closest=False):
         frame, threshold=threshold, return_closest=return_closest)
     BB_legos = map(lambda x: x[0], res)
     return list(BB_legos)
+
 
 
 def explore_workspace(robot,
@@ -156,6 +166,7 @@ def explore_workspace(robot,
     map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
 
+
     # Feature extraction from bounding boxes
     bboxes = []
 
@@ -170,6 +181,7 @@ def explore_workspace(robot,
 
     print("SHAPE: ", len(feature_map))
     #print("FEAT" , feature_map)
+
     # DEFINE MOTION CONTROL FOR SEARCHING
 
     # THE CONTROL IS : 1. GO TO THE CENTER OF THE WORKSPACE, 2. ROUND FOR 2
@@ -182,6 +194,7 @@ def explore_workspace(robot,
         clust_feats = []
         for item in feature_map:
             if not np.all(item == 0):
+
                 clust_feats.append(item)
 
         clustering_alg.fit(clust_feats, n_clusters=NUM_CLUSTERS)
@@ -231,6 +244,7 @@ def select_and_go(robot,
                   prev_BB_target=[]):
 
     # THIS IS ALLL
+
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
@@ -266,14 +280,17 @@ def select_and_go(robot,
     if not tracker:
         tracker = TrackerWrapper(cv2.TrackerKCF_create)
 
+
     ################################## control################################
     #print("BB target ", BB_target)
 
     ok, BB_target = tracker.update(frame)
     print("BB LEGOS", len(BB_legos))
     if not ok:
+
         if len(BB_legos) > 0:
             if len(prev_BB_target) > 0:
+
                 center_old = bbox_center(*prev_BB_target)
                 sh_dist = 999999999999
                 for box in BB_legos:
@@ -281,6 +298,7 @@ def select_and_go(robot,
                     distance = np.sqrt(
                         np.power(center_new[0] - center_old[0], 2) + np.power(
                             center_new[1] - center_old[1], 2))
+
                     if distance < sh_dist:
 
                         sh_dist = distance
@@ -303,6 +321,7 @@ def select_and_go(robot,
     print("EL TARGET", BB_target)
     bbox = BB_target
     bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2], :])
+
     bounding_box_features = similarity_detector.extract_features(bboxes)
     #cluster = clustering_alg.predict(bounding_box_features)
     cluster = [1]
@@ -328,9 +347,11 @@ def select_and_go(robot,
             "mapa": mapa
         })
 
+
     if np.isclose(coords[0], img_center[0], atol=atol):
         print("Move straight")
         robot.move_straight(vel_forward)
+
         return ("SELECT_AND_GO", frame, {
             "prev_BB_target": BB_target,
             "cluster": cluster,
@@ -376,6 +397,7 @@ def move_to_brick_blind_and_grip(robot,
                                  vel=400,
                                  t=1700,
                                  cluster=None):
+
     # Make sure the grip is open
     robot.grip.open()
     robot.elevator.down()
@@ -385,6 +407,7 @@ def move_to_brick_blind_and_grip(robot,
     robot.pick_up()
 
     # odometry update
+
     P = np.identity(3)
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
@@ -563,6 +586,7 @@ def move_to_box_by_vision(robot,
                           mapa=[],
                           robot_trajectory=[]):
     # THIS IS ALLL
+
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
@@ -625,6 +649,7 @@ def place_object_in_the_box(robot, frame, ltrack_pos=0, rtrack_pos=0, P=np.ident
     #map_renderer.plot_bricks_and_trajectory(mapa, R)
     ############################################
     robot.move(vel_left=100, vel_right=100, time=2000)
+
     print("MOVING")
     robot.left_track.wait_until_not_moving(timeout=3000)
     robot.reset()
@@ -647,6 +672,7 @@ with Robot(AsyncCamera(0)) as robot:
     robot.sampling_rate = 0.1
     print("These are the robot motor positions before planning:", robot.left_track.position,
           robot.right_track.position)
+
     # Define the state graph, we can do this better, currently each method
     # returns the next state name
     states = [
@@ -692,3 +718,4 @@ with Robot(AsyncCamera(0)) as robot:
     start_state = states[1]
 
     main_loop(robot, start_state, state_dict, delay=0)
+
