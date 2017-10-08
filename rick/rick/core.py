@@ -1,4 +1,5 @@
 from collections import namedtuple
+import rpyc
 import cv2
 from detection.opencv import draw_lines
 import time
@@ -6,7 +7,7 @@ import time
 State = namedtuple("State", "name act default_args")
 State.__new__.__defaults__ = tuple([None] * 2) + ({},)
 
-def main_loop(robot, start_state, state_dict, delay=0.02):
+def main_loop(robot, start_state, state_dict, delay=0.02, remote_display=None):
 
     print("Checking states...")
     for state in state_dict.values():
@@ -14,6 +15,9 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
             raise Exception("The state " + str(state) + "is not of type State.")
     state = start_state
     kwargs = state.default_args
+
+    if remote_display is not None:
+        cv2 = rpyc.classic.connect(remote_display).modules["cv2"]
 
     tstart = time.time()
 
@@ -35,7 +39,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02):
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
-        
+
 
 
 
