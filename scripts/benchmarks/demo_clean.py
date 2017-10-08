@@ -235,11 +235,11 @@ def select_and_go(robot,
                   tracker=None,
                   img_res=np.asarray((640, 480)),
                   atol=10,
-                  vel_forward=299,
-                  vel_rot=100,
-                  atol_move_blind=90,
+                  vel_forward=200,
+                  vel_rot=50,
+                  atol_move_blind=30,
                   fail_counter=0,
-                  center_position_error=55,
+                  center_position_error=25,
                   robot_trajectory=[],
                   prev_BB_target=[]):
 
@@ -330,8 +330,11 @@ def select_and_go(robot,
     coords = bbox_center(*bbox)
     img_center = img_res / 2 - center_position_error
     error = img_center - coords
-    atol = 10 + coords[1] / 480 * 40
-    cv2.line(frame, (img_center[0], 0), (img_center[0], 480), (0, 255, 0))
+    atol = 5 + coords[1]/480 * 25
+    cv2.line(frame, (5+int(img_center[0]),0), (25+int(img_center[0]),480), (255,0,0))
+    cv2.line(frame, (-5+int(img_center[0]),0), (-25+int(img_center[0]),480), (255,0,0))
+    cv2.line(frame, (int(img_center[0]),0), (int(img_center[0]),480), (0,255,0))
+    cv2.line(frame,(0,480-atol_move_blind),(640,480-atol_move_blind), (0,255,0))
     #print("Error:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame, bbox, 0, (255, 0, 0))
 
@@ -480,7 +483,7 @@ def A_star_move_to_box_blind(robot,
         np.power(estim_rob_pos[0] - marker_map_obj[cluster[0], 0], 2) + np.power(
             estim_rob_pos[1] - marker_map_obj[cluster[0], 1], 2))
 
-    if distance_to_target < 20:
+    if abs(estim_rob_pos[0]-marker_map_obj[0,0]) < 20 and abs(estim_rob_pos[1]-marker_map_obj[0,1]) < 10:
         return ("MOVE_TO_BOX_BY_VISION", frame, {
             "cluster": cluster,
             "ltrack_pos": new_ltrack_pos,
@@ -526,50 +529,62 @@ def A_star_move_to_box_blind(robot,
 
 
 def PID_control(robot, marker_map, box_coords, hist):
-    vel_st = 100
-    vel_rot = 60
-    lat_tol = 4
-    yshift = 2
-    er_x = marker_map[0, 0] - robot[0]
-    er_y = marker_map[0, 1] - robot[1]
-    er_angle = np.arctan2(er_y, er_x) - robot[2] * pi / 180
-    print("ANGLES WITH MARKER AND", np.arctan2(er_y, er_x) * 180 / pi, robot[2])
+    vel_st=100
+    vel_rot=40
+    lat_tol=4
+    vel_st2=100
+    yshift=2
+    er_x = marker_map[0,0] - robot[0]
+    er_y = marker_map[0,1] - robot[1]
+    er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
+    print("ANGLES WITH MARKER,WITH WORLD AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2],er_angle*180/pi)
 
     if er_angle > pi:
-        er_angle = er_angle - 2 * pi
+        er_angle = er_angle - 2*pi
     if er_angle < -pi:
-        er_angle = er_angle + 2 * pi
+        er_angle = er_angle + 2*pi
 
-    distance = np.sqrt(np.power(er_x, 2) + np.power(er_y, 2))
+    distance = np.sqrt(np.power(er_x,2)+np.power(er_y,2))
 
     if box_coords:
-        print("Y_DISTANCE_TO_MARKER", box_coords[1])
-        if abs(box_coords[1] + yshift) > lat_tol:
-            vel_wheels = np.asarray([-vel_rot, vel_rot]) * np.sign(-abs(box_coords[1] + yshift))
-            print("GUIDDE BY VISION")
-        elif box_coords[0] > 35:
-            vel_wheels = np.asarray([vel_st, vel_st])
-            print("GUIDDE BY VISION")
+        print("Y_DISTANCE_TO_MARKER",box_coords[1])
+        if abs(box_coords[1]+yshift)>lat_tol and box_coords[0]>35:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1]-yshift)+np.asarray([vel_st2,vel_st2])
+            print("Case 1")
+        if abs(box_coords[1]+yshift)>lat_tol and box_coords[0]<35:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])*np.sign(-box_coords[1]-yshift)
+            print("Case 2")
+        elif box_coords[0]>35:
+            vel_wheels=np.asarray([vel_st,vel_st])
+            print("Case3")
         else:
-            vel_wheels = np.asarray([0, 0])
+            vel_wheels=np.asarray([0,0])
             hist = 0
             print("STOP")
 
+
     else:
         if hist == 0:
-            vel_wheels = np.asarray([0, 0])
+            vel_wheels=np.asarray([0,0])
+
+        elif hist==2:
+            vel_wheels=np.asarray([vel_rot,-vel_rot])*np.sign(er_angle)
+            hist=np.sign(er_angle)
+            print("first hist",hist)
         elif er_angle > 0.7:
-            vel_wheels = np.asarray([vel_rot, -vel_rot])
+            vel_wheels=np.asarray([vel_rot,-vel_rot])
             hist = 1
-        elif er_angle < -0.7:
-            vel_wheels = np.asarray([-vel_rot, vel_rot])
+        elif er_angle <-0.7:
+            vel_wheels=np.asarray([-vel_rot,vel_rot])
             hist = -1
-        elif hist == 1:
-            vel_wheels = np.asarray([vel_rot, -vel_rot])
-        else:
-            vel_wheels = np.asarray([-vel_rot, vel_rot])
-        print("CORRECTING ANGLE", er_angle)
+        elif hist ==1 : 
+            vel_wheels=np.asarray([vel_rot,-vel_rot])
+        elif hist==-1 : 
+            vel_wheels=np.asarray([-vel_rot,vel_rot])
+
+        print("CORRECTING ANGLE and HISTERESIS",er_angle,hist)
     return vel_wheels, hist
+
 
 
 def move_to_box_by_vision(robot,
@@ -582,7 +597,7 @@ def move_to_box_by_vision(robot,
                           rtrack_pos=0,
                           TIME=0,
                           P=np.identity(3),
-                          histeresis=1,
+                          histeresis=2,
                           mapa=[],
                           robot_trajectory=[]):
     # THIS IS ALLL
