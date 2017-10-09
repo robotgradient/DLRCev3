@@ -137,12 +137,12 @@ class VAESimilarityDetector(SimilarityDetector):
             x2 = x1 = np.asarray([cv2.resize(x, (64, 64)) / 255 for x in x2])
             x1 =  self.model.encoder.predict(x1)
             x2 = self.model.encoder.predict(x2)
-            np.square(x1-x2).mean()
+            return np.square(x1-x2).mean(axis=1)
         else:
             return -self.siamese_network.predict([x1, np.tile(self.target)])
 
     def extract_features(self, bboxes):
-        bboxes = np.asarray(([cv2.resize(bbox, (64, 64)) for bbox in bboxes]))
+        bboxes = np.asarray([cv2.resize(bbox, (64, 64))/255. for bbox in bboxes])
         return self.model.encoder.predict(bboxes)
 
 
