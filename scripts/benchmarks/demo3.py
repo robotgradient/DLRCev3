@@ -181,7 +181,7 @@ def index23(BB_legos,BB_target):
 
 def search_target_with_Kalman_and_mapping(robot, frame
                             , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0, 
-                            t = None,feature_map = []):
+                            t = None,feature_map = [],iteration=0,iteration2=0):
     
     if not t:
         t = time.time()
@@ -202,10 +202,17 @@ def search_target_with_Kalman_and_mapping(robot, frame
         if bbox[3]<460 and (bbox[2]<380 or bbox[2]>420):
             BB_legos.append(bbox)
 
+    image_name="lego_boxes"
     
 
     for bbox in BB_legos:
-        frame = plot_bbox(frame, bbox)
+
+        image_complete_name="{}_{}{}".format(image_name,iteration,".png")
+        iteration+=1
+        input_frame=frame[bbox[1]:bbox[3],bbox[0]:bbox[2],:]
+        cv2.imwrite(image_complete_name,input_frame)
+
+        #frame = plot_bbox(frame, bbox)
     lego_landmarks = mapping.cam2rob(BB_legos,H)
     mtx,dist=load_camera_params()
     frame,marker_list=get_marker_pose(frame,mtx,dist,marker_list=[0,1,2,3],markerLength=8.6)
@@ -235,11 +242,16 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 
     #Feature extraction from bounding boxes
+    image_name2="lego_boxes_no_duplicates"
     bboxes = []
-
     for i in range(0,len(links)):
         bbox = BB_legos[links[i][0]]
         bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2],:])
+        image_complete_name2="{}_{}{}".format(image_name2,iteration2,".png")
+        iteration2+=1
+        input_frame2=frame[bbox[1]:bbox[3],bbox[0]:bbox[2],:]
+        cv2.imwrite(image_complete_name2,input_frame2)
+
     bounding_box_features = similarity_detector.extract_features(bboxes)
 
     for i in range(0,len(links)):
@@ -253,6 +265,8 @@ def search_target_with_Kalman_and_mapping(robot, frame
     # THE CONTROL IS : 1. GO TO THE CENTER OF THE WORKSPACE, 2. ROUND FOR 2 secs ,  SELECT A POINT CLOSE TO THE CENTER as new target
 
     vel_wheels = naive_obstacle_avoidance_control(mapa, robot.position)
+
+    iteration+=1
     
     if time.time()-t  > 30:
 
@@ -272,7 +286,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
-                                        "state_search" : 2, "t1" : t1, "t" : t, "feature_map":feature_map }
+                                        "state_search" : 2, "t1" : t1, "t" : t, "feature_map":feature_map ,"iteration":iteration,"iteration":iteration2}
 
 
 
@@ -719,7 +733,7 @@ with Robot(AsyncCamera(0)) as robot:
     for state in states:
         state_dict[state.name] = state
 
-    start_state = states[1]
+    start_state = states[0]
 
     main_loop(robot, start_state, state_dict, delay=0)
 
