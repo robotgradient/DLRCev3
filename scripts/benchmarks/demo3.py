@@ -14,7 +14,7 @@ from rick.live_plotting import MapRenderer
 
 from detection.marker_localization import get_marker_pose, load_camera_params
 import cv2.aruco as aruco
-from dlrc_one_shot_learning.similarity_detectors import EuclidianNNFeaturesBrickFinder
+from dlrc_one_shot_learning.similarity_detectors import EuclidianNNFeaturesBrickFinder, VAESimilarityDetector
 
 from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path, A_star_control
 
@@ -22,14 +22,9 @@ import numpy as np
 
 from math import pi
 
-
-<<<<<<< HEAD
+from sklearn.mixture import GaussianMixture
 from detection.opencv import get_lego_boxes, eliminate_grip
-=======
-from detection.opencv import eliminate_grip
-from detection.opencv import get_lego_boxes as gl
->>>>>>> last_demo
-from clustering import BBoxKMeansClustering
+# from clustering import BBoxKMeansClustering
 
 
 from rick.motion_control import euclidian_kalman , kalman_filter , kalman_filter2 , robot_control, odom_estimation
@@ -56,8 +51,8 @@ H=data["arr_0"]
 
 map_renderer = MapRenderer()
 object_detector = NNObjectDetector(PATH_TO_CKPT, PATH_TO_LABELS)
-similarity_detector = EuclidianNNFeaturesBrickFinder()
-clustering_alg = BBoxKMeansClustering()
+similarity_detector = VAESimilarityDetector()
+clustering_alg = GaussianMixture(n_components=4)
 
 
 NUM_CLUSTERS = 2
