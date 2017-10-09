@@ -171,9 +171,7 @@ def generate_tensorboard_embeddings(images, feature_vectors, clusters, logdir_pa
     #    metadata_file.write('%06d\t%s\n' % (i, names[y[i]]))
     for i in range(num_of_samples):
         c = y[i]
-        if i % k == 0:
-            j = j + 1
-        metadata_file.write('{}\t{}\n'.format(j, c))
+        metadata_file.write('{}\t{}\n'.format(y[i], c))
         # metadata_file.write('%06d\t%s\n' % (j, c))
     metadata_file.close()
 
