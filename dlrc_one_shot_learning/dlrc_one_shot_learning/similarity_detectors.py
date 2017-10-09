@@ -112,17 +112,49 @@ class SiameseSimilarityDetector(SimilarityDetector):
 
 
 
+class VAESimilarityDetector(SimilarityDetector):
+
+
+    def __init__(self, ckpt):
+        super(VAESimilarityDetector, self).__init__()
+
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        os.environ["KERAS_BACKEND"] = "tensorflow"
+
+        from unsupervised_models.cvae import default_cvae
+
+        self.model = default_cvae(ckpt)
+        self.target_feature_vector = None
+
+    def set_target(self, target):
+        self.target = cv2.resize(target, (64,64))
+        self.target_feature_vector = self.model.encoder.predict(np.expand_dims(self.target, 0)).reshape(-1)
+
+    def similarity(self, x1, x2=None):
+        x1 = np.asarray([cv2.resize(x, (64, 64)) / 255 for x in x1])
+        if not x2 is None:
+            x2 = x1 = np.asarray([cv2.resize(x, (64, 64)) / 255 for x in x2])
+            x1 =  self.model.encoder.predict(x1)
+            x2 = self.model.encoder.predict(x2)
+            np.square(x1-x2).mean()
+        else:
+            return -self.siamese_network.predict([x1, np.tile(self.target)])
+
+    def extract_features(self, bboxes):
+        bboxes = np.asarray(([cv2.resize(bbox, (64, 64)) for bbox in bboxes]))
+        return self.model.encoder.predict(bboxes)
 
 
 
 if __name__ == "__main__":
 
-    ckpt = "/Users/Jimmy/Desktop/siamese4/checkpoint.59.hdf5"
+    #ckpt = "/Users/Jimmy/Desktop/siamese4/checkpoint.59.hdf5"
+    ckpt = "/Users/Jimmy/Downloads/weights.489.hdf5"
     print("Executing test...")
     pool = ProcessPoolExecutor(8)
-    siamese = SiameseSimilarityDetector(ckpt)
+    siamese = VAESimilarityDetector(ckpt)
     cap = AsyncCamera(0)
-    import time
     futures = []
     while(1):
         ret, frame = cap.read()
