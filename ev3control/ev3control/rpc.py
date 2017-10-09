@@ -16,7 +16,7 @@ class Robot:
         self.left_track = ev3.LargeMotor("outA")
         self.right_track = ev3.LargeMotor("outB")
         self.grip = objects.Grip("outC", closed_position=-650)
-        self.elevator = objects.Elevator("outD")
+        self.elevator = objects.Elevator("outD",lowered_position=650)
 
         self.cap = camera_capture
         self.map = []

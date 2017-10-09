@@ -182,7 +182,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
     
-    marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]])
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos2=get_lego_boxes(frame)
 
@@ -261,15 +261,15 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
 def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.identity(3),R=[], mapa = [],tracker=None
                     ,img_res=np.asarray((640, 480)), atol=10,
-                         vel_forward = 299, vel_rot = 100, atol_move_blind=140, 
-                         fail_counter=0, center_position_error = 55, robot_trajectory = [], prev_BB_target = []):
+                         vel_forward = 150, vel_rot = 50, atol_move_blind=90, 
+                         fail_counter=0, center_position_error = 70, robot_trajectory = [], prev_BB_target = []):
     
     
     ################ THIS IS ALLL
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]])
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
 
     BB_legos2=get_lego_boxes(frame, return_closest=True)
@@ -346,7 +346,12 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     img_center = img_res / 2 - center_position_error 
     #img_center[0] = 285
     error = img_center - coords
-    atol = 10 + coords[1]/480 * 40
+    atol = 5 + coords[1]/480 * 25
+    cv2.line(frame, (5+int(img_center[0]),0), (25+int(img_center[0]),480), (255,0,0))
+    cv2.line(frame, (-5+int(img_center[0]),0), (-25+int(img_center[0]),480), (255,0,0))
+    cv2.line(frame, (int(img_center[0]),0), (int(img_center[0]),480), (0,255,0))
+
+    cv2.line(frame,(0,480-atol_move_blind),(640,480-atol_move_blind), (0,255,0))
 
     print("Errror:", error, "Coords ", coords, " ok ", ok)
     frame = plot_bbox(frame,bbox, 0, (255,0,0))
@@ -381,7 +386,7 @@ def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,
     robot.pick_up()
 
     #odometry update
-    marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]])
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     P = np.identity(3)
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
@@ -406,7 +411,7 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos=get_lego_boxes(frame)
 
@@ -430,7 +435,7 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     ############################################
     print("robot_estim_pos_Astar: ", robot.position)
 
-    marker_map_obj = [[110,0,0],[91,70,pi/2],[41,40,pi],[0,0,0]]
+    marker_map_obj = [[90,75,pi/2],[120,60,0],[75,30,-pi/2],[-10,60,-pi]]
     marker_map_obj = np.int_(np.array(marker_map_obj))
     obj = marker_map_obj[cluster[0],:2]
     print("THE BOX TO GO", obj, cluster)
@@ -524,7 +529,7 @@ def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]])
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos=get_lego_boxes(frame)
 
@@ -551,7 +556,7 @@ def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
     print("######################################")
 
     
-    marker_map_obj = [[110,0,0],[91,70,pi/2],[40,41,pi],[0,0,0]]
+    marker_map_obj = [[90,75,pi/2],[120,60,0],[75,30,-pi/2],[-10,60,-pi]]
     obj = marker_map_obj[cluster[0]]
     print("robot_estim_pos_PID: ", robot.position)
 
@@ -571,7 +576,7 @@ def place_object_in_the_box(robot,frame, ltrack_pos=0, rtrack_pos=0, P = np.iden
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[150,0,0],[91,110,pi/2],[0,41,pi],[0,0,0]]) # WHERE VTHE OPTICAL MARKERS ARE IN THE ENVIROMENT
+    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     BB_legos=get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
@@ -621,6 +626,7 @@ def camera_related(frame):
 with Robot(AsyncCamera(0)) as robot:
     robot.map = [(200, 0)]
     robot.sampling_rate = 0.1
+    robot.position = [50,50,0]
     print("These are the robot motor positions before planning:", robot.left_track.position, robot.right_track.position)
     # Define the state graph, we can do this better, currently each method
     # returns the next state name
