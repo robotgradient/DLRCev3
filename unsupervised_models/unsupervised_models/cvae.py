@@ -18,6 +18,15 @@ def _dummy_bnorm():
     return wrapped_bnorm
 
 
+def default_cvae(weights_path, n_latents=50):
+    vae = ConvolutionalVariationalAutoencoder(image_dims=(64, 64, 3),
+                                              latent_dim=n_latents,
+                                              filters=32,
+                                              intermediate_dim=100)
+    vae.load_weights(weights_path)
+    return vae
+
+
 class CustomVariationalLayer(Layer):
     """Custom Loss Layer."""
 
@@ -98,7 +107,8 @@ class ConvolutionalVariationalAutoencoder(Model):
                         padding='same', activation='relu',
                         strides=2)(bnorm_3)
         flat = Flatten()(conv_4)
-        hidden = Dense(intermediate_dim, activation='relu', kernel_initializer='glorot_uniform')(flat)
+        hidden = Dense(intermediate_dim, activation='relu',
+                       kernel_initializer='glorot_uniform')(flat)
         bnorm_hidden = bnorm()(hidden)
 
         z_mean = Dense(latent_dim, kernel_initializer='glorot_uniform')(bnorm_hidden)
@@ -116,8 +126,10 @@ class ConvolutionalVariationalAutoencoder(Model):
         upsample = 8
         # we instantiate these layers separately so as to reuse them later
 
-        decoder_hid = Dense(intermediate_dim, activation='relu', kernel_initializer='glorot_uniform')
-        decoder_upsample = Dense(filters * upsample * upsample, activation='relu', kernel_initializer='glorot_uniform')
+        decoder_hid = Dense(intermediate_dim, activation='relu',
+                            kernel_initializer='glorot_uniform')
+        decoder_upsample = Dense(filters * upsample * upsample,
+                                 activation='relu', kernel_initializer='glorot_uniform')
 
         if K.image_data_format() == 'channels_first':
             output_shape = (batch_size, filters, upsample, upsample)
@@ -154,10 +166,10 @@ class ConvolutionalVariationalAutoencoder(Model):
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
 
         y = CustomVariationalLayer(z_log_var=z_log_var,
-            z_mean=z_mean,
-            x_std=x_std,
-            img_cols=img_cols,
-            img_rows=img_rows)([x, x_decoded_mean_squash])
+                                   z_mean=z_mean,
+                                   x_std=x_std,
+                                   img_cols=img_cols,
+                                   img_rows=img_rows)([x, x_decoded_mean_squash])
 
         # build a model to project inputs on the latent space
         self.encoder = Model(x, z_mean)
@@ -192,7 +204,6 @@ if __name__ == '__main__':
     # train the VAE on MNIST digits
     (x_train, _), (x_test, y_test) = mnist.load_data()
     vae.compile('rmsprop', None)
-
 
     x_train = x_train.astype('float32') / 255.
     x_train = x_train.reshape((x_train.shape[0],) + image_dims)
