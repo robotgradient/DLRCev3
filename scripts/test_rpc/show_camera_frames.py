@@ -47,5 +47,5 @@ if __name__ == '__main__':
     start_state = states[0]
 
     main_loop(DummyRobot(cv2.VideoCapture(0)), start_state, state_dict, delay=0,
-        remote_display="192.168.0.101"
+        remote_display="10.250.144.107"
         )

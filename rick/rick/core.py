@@ -3,24 +3,11 @@ import rpyc
 import cv2
 from detection.opencv import draw_lines
 import time
-import numpy as np
+
 
 State = namedtuple("State", "name act default_args")
 State.__new__.__defaults__ = tuple([None] * 2) + ({},)
 
-
-class RemoteDisplay:
-    """Creates remotestuff"""
-
-    def imshow(self, name, thing):
-        print("here we go")
-        cv2.imshow(name, np.array(thing))
-
-    def waitKey(self, n):
-        cv2.waitKey(n)
-
-    def destroyAllWindows(self):
-        cv2.destroyAllWindows()
 
 
 
@@ -38,7 +25,7 @@ def main_loop(robot, start_state, state_dict, delay=0.02, remote_display=None):
     else:
         print("using remote")
         conn = rpyc.classic.connect(remote_display)
-        _mod = conn.modules["rick.core"]
+        _mod = conn.modules["rick.rpc"]
         cv2display = _mod.RemoteDisplay()
 
     tstart = time.time()
