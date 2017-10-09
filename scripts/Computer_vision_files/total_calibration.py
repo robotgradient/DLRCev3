@@ -84,6 +84,16 @@ def get_T_from_marker(frame,mtx,dist,marker_id,arucoParams=arucoParams,aruco_dic
         Tc2r=[]
     return Tc2r
 
+
+class CoordinateStore:
+    def __init__(self):
+        self.points = []
+
+    def select_point(self,event,x,y,flags,param):
+            if event == cv2.EVENT_LBUTTONDBLCLK:
+                cv2.circle(img,(x,y),3,(255,0,0),-1)
+                self.points.append((x,y))
+
 # TO GET CAMERA PARAMETERS
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -125,22 +135,31 @@ print(mtx,dist)
 
 np.savez("camera_parameters",cam_matrix=mtx,dist_coeff=dist)
 
+
+
+cap = cv2.VideoCapture(1)
+
+
 #######################################################################################
 
 ## GET HOMOGRAPHY MATRIX
 
 #########################################################################################3
 
-cap = cv2.VideoCapture(1)
+
 #img = cv2.imread('Chessboard_9.jpg')
 while True:
     ret,img=cap.read()
-    cv2.imshow("actual image",img)
+
     h,  w = img.shape[:2]
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
     dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    cv2.line(img, (320,0),(320,480), (0,255,0))
+    cv2.line(img, (0,240),(640,240), (0,255,0))
+    cv2.circle(img, (250,380), 2, (255,0,0), thickness=2)
+    cv2.circle(img, (450,380), 2, (255,0,0), thickness=2)
+    cv2.imshow("actual image",img)
     print("newcameramtx",newcameramtx)
-    np.savez("newcameramtx",newcameramtx)
     cv2.imshow("distorsion", dst)
     mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
     dst2 = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
@@ -148,13 +167,14 @@ while True:
     if cv2.waitKey(100) & 0xFF==27:
         break
 
+np.savez("newcameramtx",newcameramtx)
 
 #img=cv2.imread('Chessboard_10.jpg')
-gray = cv2.cvtColor(dst,cv2.COLOR_BGR2GRAY)
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # Find the chess board corners
 
 
-ret, corners = cv2.findChessboardCorners(dst, (9,6),None, 1 | 4)
+ret, corners = cv2.findChessboardCorners(gray, (9,6),None, 1 | 4)
 
 #corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParams) 
 
@@ -209,4 +229,22 @@ print("Transformation camera with respect robot",Tc2r)
 np.savez("Tc2r",Tc2r)
 
 
+#################333####
+#GET MOUSE POSITION
+cv2.namedWindow('Mouse_clicking')
+cv2.setMouseCallback('Mouse_clicking',coordinateStore1.select_point)
 
+
+
+
+while(1):
+    cv2.imshow('Mouse_clicking',img)
+    k = cv2.waitKey(20) & 0xFF
+    if k == 27:
+        break
+cv2.destroyAllWindows()
+
+
+print ("Selected Coordinates: ")
+for i in range(len(coordinateStore1.points)):
+    print ("point {} is in {} coordinates".format(i,coordinateStore1.points[i]))

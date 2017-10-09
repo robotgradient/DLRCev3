@@ -15,8 +15,8 @@ class Robot:
     def __init__(self, camera_capture, object_detector=None, tracker=None):
         self.left_track = ev3.LargeMotor("outA")
         self.right_track = ev3.LargeMotor("outB")
-        self.grip = objects.Grip("outC", closed_position=-650)
-        self.elevator = objects.Elevator("outD",lowered_position=650)
+        self.grip = objects.Grip("outC", closed_position=-750)
+        self.elevator = objects.Elevator("outD", lowered_position=450)
 
         self.cap = camera_capture
         self.map = []

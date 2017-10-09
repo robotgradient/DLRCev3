@@ -44,19 +44,14 @@ class EuclidianNNFeaturesBrickFinder(SimilarityDetector):
 
     def similarity(self, x):
         x = cv2.resize(x, (224,224))
-        x_features = self.model.predict(np.expand_dims(x, 0)).reshape(-1)[color_feature_indices]
+        x_features = self.model.predict(x)[:,color_feature_indices]
         similarity = -np.sum(np.square(x_features-self.target_feature_vector))
         return similarity
 
 
     def extract_features(self, bboxes):
-        features = []
-        for bbox in bboxes:
-            
-            #print("############# ", bbox)
-            bbox = cv2.resize(bbox, (224,224))
-            features.append(self.model.predict(np.expand_dims(bbox, 0)).reshape(-1)[color_feature_indices])
-        return features
+        bboxes = np.asarray(([cv2.resize(bbox, (224, 224)) for bbox in bboxes]))
+        return self.model.predict(bboxes)
 
 
 from concurrent.futures import ProcessPoolExecutor
@@ -70,27 +65,98 @@ def func(brick_finder, cap):
         return None
     else:
         return brick_finder.similarity(frame)
-        
+
+
+
+
+class SiameseSimilarityDetector(SimilarityDetector):
+
+
+    def __init__(self, path_to_ckpt):
+        super(SiameseSimilarityDetector, self).__init__()
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        os.environ["KERAS_BACKEND"] = "tensorflow"
+        import keras
+        import keras.backend as K
+
+        def contrastive_loss(y_true, y_pred):
+            '''Contrastive loss from Hadsell-et-al.'06
+            http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+            '''
+            margin = 1
+            return K.mean(y_true * K.square(y_pred) +
+                          (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
+
+        keras.losses.contrastive_loss = contrastive_loss
+
+        self.siamese_network = keras.models.load_model(path_to_ckpt)
+        self.base_network = self.siamese_network.layers[2]
+
+    def set_target(self, target):
+        self.target = np.expand_dims(cv2.resize(target, (64, 64)), axis=0)/255
+
+
+    def similarity(self, x1, x2=None):
+        x1 = np.asarray([cv2.resize(x, (64, 64))/255 for x in x1])
+        if not x2 is None:
+            x2 = x1 = np.asarray([cv2.resize(x, (64, 64))/255 for x in x2])
+            return -self.siamese_network.predict([x1,x2])
+        else:
+            return -self.siamese_network.predict([x1, np.tile(self.target)])
+
+    def extract_features(self, bboxes):
+
+        bboxes = np.asarray(([cv2.resize(bbox, (64, 64))/255 for bbox in bboxes]))
+        return self.base_network.predict(bboxes).reshape(-1)
+
+
+
+class VAESimilarityDetector(SimilarityDetector):
+
+
+    def __init__(self, ckpt):
+        super(VAESimilarityDetector, self).__init__()
+
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        os.environ["KERAS_BACKEND"] = "tensorflow"
+
+        from unsupervised_models.cvae import default_cvae
+
+        self.model = default_cvae(ckpt)
+        self.target_feature_vector = None
+
+    def set_target(self, target):
+        self.target = cv2.resize(target, (64,64))
+        self.target_feature_vector = self.model.encoder.predict(np.expand_dims(self.target, 0)).reshape(-1)
+
+    def similarity(self, x1, x2=None):
+        x1 = np.asarray([cv2.resize(x, (64, 64)) / 255 for x in x1])
+        if not x2 is None:
+            x2 = x1 = np.asarray([cv2.resize(x, (64, 64)) / 255 for x in x2])
+            x1 =  self.model.encoder.predict(x1)
+            x2 = self.model.encoder.predict(x2)
+            return np.square(x1-x2).mean(axis=1)
+        else:
+            return -self.siamese_network.predict([x1, np.tile(self.target)])
+
+    def extract_features(self, bboxes):
+        bboxes = np.asarray([cv2.resize(bbox, (64, 64))/255. for bbox in bboxes])
+        return self.model.encoder.predict(bboxes)
+
 
 
 if __name__ == "__main__":
 
+    #ckpt = "/Users/Jimmy/Desktop/siamese4/checkpoint.59.hdf5"
+    ckpt = "/Users/Jimmy/Downloads/weights.489.hdf5"
     print("Executing test...")
     pool = ProcessPoolExecutor(8)
-    brick_finder = EuclidianNNFeaturesBrickFinder()
-    #cap = cv2.VideoCapture('/home/dlrc/Videos/Webcam/2017-10-04-145623.webm')
+    siamese = VAESimilarityDetector(ckpt)
     cap = AsyncCamera(0)
-    import time
     futures = []
     while(1):
         ret, frame = cap.read()
-        t1 = time.time()
-        future = pool.submit(func, (brick_finder, cap))
-        futures.append(future) 
-        print("Future: ", futures[0].done())
-        if futures[0].done():
-            print(future[0].result())
-        cv2.imshow('frame',frame)
-        k = cv2.waitKey(30) & 0xff
-        if k == 27:
-            break
+        print(siamese.extract_features([frame]))
+        print(siamese.similarity(frame, frame))

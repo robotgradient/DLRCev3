@@ -343,6 +343,11 @@ def BB_purple(frame):
 	BB_purple=detection_BB(frame, LowH=113, HighH=142, LowS=72 \
 		,HighS=170,LowV=45,HighV=215,sizemorph=(7, 7),Arearef=1)
 	return BB_purple
+
+def BB_ligth_green(frame):
+	BB_purple=detection_BB(frame, LowH=32, HighH=80, LowS=139 \
+		,HighS=255,LowV=42,HighV=134,sizemorph=(3, 9),Arearef=10)
+	return BB_purple
 def draw_lines(frame, atol=50):
 	cv2.line(frame, (320 - atol, 0), (320 - atol, 479), (255, 0, 0), 2)
 	cv2.line(frame, (320 + atol, 0), (320 + atol, 479), (255, 0, 0), 2)
