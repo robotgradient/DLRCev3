@@ -44,19 +44,14 @@ class EuclidianNNFeaturesBrickFinder(SimilarityDetector):
 
     def similarity(self, x):
         x = cv2.resize(x, (224,224))
-        x_features = self.model.predict(np.expand_dims(x, 0)).reshape(-1)[color_feature_indices]
+        x_features = self.model.predict(x)[:,color_feature_indices]
         similarity = -np.sum(np.square(x_features-self.target_feature_vector))
         return similarity
 
 
     def extract_features(self, bboxes):
-        features = []
-        for bbox in bboxes:
-            
-            #print("############# ", bbox)
-            bbox = cv2.resize(bbox, (224,224))
-            features.append(self.model.predict(np.expand_dims(bbox, 0)).reshape(-1)[color_feature_indices])
-        return features
+        bboxes = np.asarray(([cv2.resize(bbox, (224, 224)) for bbox in bboxes]))
+        return self.model.predict(bboxes)
 
 
 from concurrent.futures import ProcessPoolExecutor
@@ -70,7 +65,7 @@ def func(brick_finder, cap):
         return None
     else:
         return brick_finder.similarity(frame)
-        
+
 
 
 
@@ -103,20 +98,17 @@ class SiameseSimilarityDetector(SimilarityDetector):
 
 
     def similarity(self, x1, x2=None):
-        x1 = np.expand_dims(cv2.resize(x1, (64, 64)), axis=0)/255
+        x1 = np.asarray([cv2.resize(x, (64, 64))/255 for x in x1])
         if not x2 is None:
-            x2 = np.expand_dims(cv2.resize(x2, (64, 64)), axis=0)/255
+            x2 = x1 = np.asarray([cv2.resize(x, (64, 64))/255 for x in x2])
             return -self.siamese_network.predict([x1,x2])
         else:
-            return -self.siamese_network.predict([x1, self.target])
+            return -self.siamese_network.predict([x1, np.tile(self.target)])
 
     def extract_features(self, bboxes):
-        features = []
-        for bbox in bboxes:
-            # print("############# ", bbox)
-            bbox = np.expand_dims(cv2.resize(bbox, (64, 64)), axis=0)
-            features.append(self.base_network.predict([bbox]).reshape(-1))
-        return features
+
+        bboxes = np.asarray(([cv2.resize(bbox, (64, 64))/255 for bbox in bboxes]))
+        return self.base_network.predict(bboxes).reshape(-1)
 
 
 
