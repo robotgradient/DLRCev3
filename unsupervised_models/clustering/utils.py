@@ -130,6 +130,16 @@ def generate_tensorboard_embeddings_from_path(images_path, features_path, logdir
         # Saves a config file that TensorBoard will read during startup.
         projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
 
+
+def rm_rf(d):
+    for path in (os.path.join(d,f) for f in os.listdir(d)):
+        if os.path.isdir(path):
+            rm_rf(path)
+        else:
+            os.unlink(path)
+    os.rmdir(d)
+
+
 def generate_tensorboard_embeddings(images, feature_vectors, clusters, logdir_path):
     """
     Function that generates tensorflow data for embeddings visualization
@@ -141,6 +151,8 @@ def generate_tensorboard_embeddings(images, feature_vectors, clusters, logdir_pa
     """
     # %%
     LOG_DIR = logdir_path
+
+    rm_rf(logdir_path)
 
     os.makedirs(logdir_path, exist_ok=True)
 
