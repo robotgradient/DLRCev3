@@ -18,14 +18,16 @@ from dlrc_one_shot_learning.similarity_detectors import EuclidianNNFeaturesBrick
 
 from rick.mc_please_github_donot_fuck_with_this_ones import A_star_path_planning_control,compute_A_star_path, A_star_control
 
+from clustering.utils import generate_tensorboard_embeddings
+
 import numpy as np
 
 from math import pi
 
-from sklearn.mixture import GaussianMixture
+# from sklearn.mixture import GaussianMixture
 from detection.opencv import get_lego_boxes, eliminate_grip
-# from clustering import BBoxKMeansClustering
-
+from clustering import BBoxKMeansClustering
+from sklearn.mixture import GaussianMixture
 
 from rick.motion_control import euclidian_kalman , kalman_filter , kalman_filter2 , robot_control, odom_estimation
 
@@ -39,9 +41,9 @@ import matplotlib.pyplot as plt
 
 from detection.opencv import detect_purple
 
-PATH_TO_CKPT = "/home/julen/dlrc_models/frozen_inference_graph.pb"
+PATH_TO_CKPT = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/models/faster_rcnn_resnet_lego_v1/train/frozen_inference_graph.pb"
 PATH_TO_LABELS = "/home/dlrc/projects/DLRCev3/object_detection/nn_object_detection/tf_train_dir/data/label_map.pbtxt"
-
+logdir_path = "tb_logdir"
 
 print("Creating robot...")
 
@@ -51,8 +53,9 @@ H=data["arr_0"]
 
 map_renderer = MapRenderer()
 object_detector = NNObjectDetector(PATH_TO_CKPT, PATH_TO_LABELS)
-similarity_detector = VAESimilarityDetector()
-clustering_alg = GaussianMixture(n_components=4)
+similarity_detector = VAESimilarityDetector("/home/dlrc/Downloads/weights.489.hdf5")
+#clustering_alg = BBoxKMeansClustering()
+clustering_alg = GaussianMixture(4)
 
 
 NUM_CLUSTERS = 2
@@ -104,7 +107,7 @@ def search_control(state_search,mapa, pos_rob, t_old):
 
         distance = np.sqrt(np.power(pos_rob[0]-target[0],2) + np.power(pos_rob[1]-target[1],2))
 
-        if distance < 10:
+        if distance < 17:
             state_search = 2
             t1 = time.time()
     
@@ -146,18 +149,16 @@ def naive_obstacle_avoidance_control(mapa, pos_rob):
         if (distance< max_dist and er_angle > min_angle and er_angle< max_angle): # AVOID OBSTACLES
             vel_wheels = [-100,100]
             break
-        elif next_x < 0 or next_x > 300 or next_y < 0 or next_y> 300:
+        elif next_x < 0 or next_x > 150 or next_y < 0 or next_y> 120:
             vel_wheels = [-100,100]
 
     return vel_wheels
     
 def get_lego_boxes(frame, threshold=0.9, return_closest=False):
 
-    #res = object_detector.detect_with_threshold(frame,threshold=threshold, return_closest=return_closest)
-    #BB_legos = map(lambda x: x[0], res)
-    #return list(BB_legos)
-    BB_legos=gl(frame)
-    return BB_legos
+    res = object_detector.detect_with_threshold(frame,threshold=threshold, return_closest=return_closest)
+    BB_legos = map(lambda x: x[0], res)
+    return list(BB_legos)
 
 
 
@@ -176,7 +177,7 @@ def index23(BB_legos,BB_target):
 
 def search_target_with_Kalman_and_mapping(robot, frame
                             , ltrack_pos=0, rtrack_pos=0, P=np.identity(3), marker_list = [], delete_countdown = 0 , mapa = [], robot_trajectory = [],R=[],state_search = 2 , t1=0, 
-                            t = None,feature_map = [],iteration=0,iteration2=0):
+                            t = None,feature_map = [],iteration=0,iteration2=0, image_name =[]):
     
     if not t:
         t = time.time()
@@ -187,7 +188,7 @@ def search_target_with_Kalman_and_mapping(robot, frame
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
     
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos2=get_lego_boxes(frame)
 
@@ -197,15 +198,11 @@ def search_target_with_Kalman_and_mapping(robot, frame
         if bbox[3]<460 and (bbox[2]<380 or bbox[2]>420):
             BB_legos.append(bbox)
 
-    image_name="lego_boxes"
     
 
     for bbox in BB_legos:
 
-        image_complete_name="{}_{}{}".format(image_name,iteration,".png")
-        iteration+=1
         input_frame=frame[bbox[1]:bbox[3],bbox[0]:bbox[2],:]
-        cv2.imwrite(image_complete_name,input_frame)
 
         #frame = plot_bbox(frame, bbox)
     lego_landmarks = mapping.cam2rob(BB_legos,H)
@@ -239,19 +236,22 @@ def search_target_with_Kalman_and_mapping(robot, frame
     #Feature extraction from bounding boxes
     image_name2="lego_boxes_no_duplicates"
     bboxes = []
+    bounding_box_features = None
     for i in range(0,len(links)):
         bbox = BB_legos[links[i][0]]
         bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2],:])
         image_complete_name2="{}_{}{}".format(image_name2,iteration2,".png")
         iteration2+=1
         input_frame2=frame[bbox[1]:bbox[3],bbox[0]:bbox[2],:]
-        cv2.imwrite(image_complete_name2,input_frame2)
-
-    bounding_box_features = similarity_detector.extract_features(bboxes)
+        # cv2.imwrite(image_complete_name2,input_frame2)
+    if bboxes:
+        bounding_box_features = similarity_detector.extract_features(bboxes)
 
     for i in range(0,len(links)):
 
         feature_map[links[i][1]] = bounding_box_features[i]
+        image_name[links[i][1]] = bboxes[i]
+        # feature_map[links[i][1]] = frame[bbox[1]:bbox[3], bbox[0]:bbox[2],:]
 
     print("SHAPE: ", len(feature_map))
     #print("FEAT" , feature_map)
@@ -263,15 +263,22 @@ def search_target_with_Kalman_and_mapping(robot, frame
 
     iteration+=1
     
-    if time.time()-t  > 30:
+    if time.time()-t  > 40:
 
         clust_feats=[]
+        images = []
         for item in feature_map:
             if not np.all(item==0):
                 clust_feats.append(item)
+        for item in image_name:
+             if not np.all(item==0):
+                images.append(item)
 
-        clustering_alg.fit(clust_feats, n_clusters=NUM_CLUSTERS)
 
+        clustering_alg.fit(clust_feats)
+        classes = clustering_alg.predict(clust_feats)
+        # if bounding_box_features is not None:
+        #     generate_tensorboard_embeddings(np.array([images]), bounding_box_features, classes, logdir_path)
         map_renderer.plot_bricks_and_trajectory_and_robot(mapa, R, d)
 
 
@@ -281,13 +288,13 @@ def search_target_with_Kalman_and_mapping(robot, frame
         robot.move(vel_left=vel_wheels[1], vel_right=vel_wheels[0])
         return "SEARCH_TARGET", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos": new_rtrack_pos, "P": P , "marker_list": [],
                                         "delete_countdown" : delete_countdown , "mapa": mapa, "robot_trajectory": robot_trajectory, "R" : R,
-                                        "state_search" : 2, "t1" : t1, "t" : t, "feature_map":feature_map ,"iteration":iteration,"iteration":iteration2}
+                                        "image_name": image_name, "state_search" : 2, "t1" : t1, "t" : t, "feature_map":feature_map ,"iteration":iteration,"iteration":iteration2}
 
 
 
 def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.identity(3),R=[], mapa = [],tracker=None
                     ,img_res=np.asarray((640, 480)), atol=10,
-                         vel_forward = 150, vel_rot = 50, atol_move_blind=90, 
+                         vel_forward = 150, vel_rot = 80, atol_move_blind=90, 
                          fail_counter=0, center_position_error = 70, robot_trajectory = [], prev_BB_target = []):
     
     
@@ -295,7 +302,7 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
 
     BB_legos2=get_lego_boxes(frame, return_closest=True)
@@ -367,9 +374,9 @@ def select_and_go(robot,frame, cluster = 0,ltrack_pos=0, rtrack_pos=0,P = np.ide
     print("EL TARGET",BB_target)
     bbox = BB_target
     bboxes.append(frame[bbox[1]:bbox[3], bbox[0]:bbox[2],:])
-    bounding_box_features = similarity_detector.extract_features(bboxes)
-    #cluster = clustering_alg.predict(bounding_box_features)
-    cluster = [1]
+    if bboxes:
+        bounding_box_features = similarity_detector.extract_features(bboxes)
+        cluster = clustering_alg.predict(bounding_box_features)
     #########################################################
 
 
@@ -417,7 +424,7 @@ def move_to_brick_blind_and_grip(robot, frame, R=[],ltrack_pos=0 ,
     robot.pick_up()
 
     #odometry update
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     P = np.identity(3)
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
@@ -441,7 +448,7 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,0,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos=get_lego_boxes(frame)
 
@@ -465,15 +472,16 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
 
     box_print = [x + [0] for x in marker_map.tolist()]
 
-    box_print[cluster][3] = 1
+    #box_print[cluster][3] = 1
 
     map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
   
 
     ############################################
     print("robot_estim_pos_Astar: ", robot.position)
+    print("cluster: ", cluster)
 
-    marker_map_obj = [[90,75,pi/2],[120,60,0],[75,30,-pi/2],[-10,60,-pi]]
+    marker_map_obj = np.array([[75,110,pi/2],[130,60,0],[75,20,-pi/2],[20,60,-pi]])
     marker_map_obj = np.int_(np.array(marker_map_obj))
     obj = marker_map_obj[cluster[0],:2]
     print("THE BOX TO GO", obj, cluster)
@@ -514,13 +522,13 @@ def A_star_move_to_box_blind(robot, frame, Map=[],cluster = 0, replan=1,
     return ("GO_TO_BOX", frame, {"cluster":cluster, "replan":replan,"Map":Map,"iteration" : iteration, "path" : new_path, "ltrack_pos": new_ltrack_pos, 
                 "rtrack_pos": new_rtrack_pos, "TIME": t0,"R":R, "mapa" : mapa})
 
-def PID_control(robot, marker_map, box_coords,hist):
+def PID_control(robot, marker_map, box_coords,hist,cluster):
     vel_st=100
     vel_rot=60
     lat_tol=4
     yshift=2
-    er_x = marker_map[0,0] - robot[0]
-    er_y = marker_map[0,1] - robot[1]
+    er_x = marker_map[cluster,0] - robot[0]
+    er_y = marker_map[cluster,1] - robot[1]
     er_angle = np.arctan2(er_y, er_x) - robot[2]*pi/180
     print("ANGLES WITH MARKER AND ERROR",np.arctan2(er_y, er_x)*180/pi,robot[2])
 
@@ -539,6 +547,9 @@ def PID_control(robot, marker_map, box_coords,hist):
         elif box_coords[0]>35:
             vel_wheels=np.asarray([vel_st,vel_st])
             print("GUIDDE BY VISION")
+        elif distance >50:
+            vel_wheels=np.asarray([0,0])
+            hist = 3
         else:
             vel_wheels=np.asarray([0,0])
             hist = 0
@@ -562,12 +573,12 @@ def PID_control(robot, marker_map, box_coords,hist):
     return vel_wheels, hist
 def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
                             path=[], iteration=0, ltrack_pos=0, rtrack_pos=0, TIME=0, P = np.identity(3),
-                            histeresis = 1,mapa=[],robot_trajectory=[]):
+                            histeresis = 1,mapa=[],robot_trajectory=[], R = []):
     ################ THIS IS ALLL
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     frame = eliminate_grip(frame)
     BB_legos=get_lego_boxes(frame)
 
@@ -589,9 +600,12 @@ def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
 
     R.append(d)
 
+    print("cluster: ", cluster)
+
+
     box_print = [x + [0] for x in marker_map.tolist()]
 
-    box_print[cluster][3] = 1
+    #box_print[cluster][3] = 1
 
     map_renderer.plot_bricks_and_trajectory_and_robot_and_boxes(mapa, R, d, box_print)
   
@@ -603,18 +617,23 @@ def move_to_box_by_vision(robot, frame, cluster =0, replan=1,
     print("######################################")
 
     
-    marker_map_obj = [[90,75,pi/2],[120,60,0],[75,30,-pi/2],[-10,60,-pi]]
+    marker_map_obj = np.array([[75,90,pi/2],[120,60,0],[75,30,-pi/2],[30,60,-pi]])
     obj = marker_map_obj[cluster[0]]
     print("robot_estim_pos_PID: ", robot.position)
 
     
     box_coords = [marker_list[cluster[0],1]*np.cos(marker_list[cluster[0],0]),marker_list[cluster[0],1]*np.sin(marker_list[cluster[0],0])]
-    vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis)
+    vel_wheels, hist = PID_control(estim_rob_pos, marker_map,box_coords, histeresis, cluster[0])
     if hist==0:
         return "PLACE_OBJECT_IN_THE_BOX",frame,{"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "mapa" : mapa}
     
+    elif hist == 3:
+        return ("GO_TO_BOX", frame, {"cluster":cluster,  "ltrack_pos": new_ltrack_pos, 
+                "rtrack_pos": new_rtrack_pos,"R":R, "mapa" : mapa})
+
     robot.move(vel_wheels[0],vel_wheels[1])
-    return ("MOVE_TO_BOX_BY_VISION", frame, {"ltrack_pos": new_ltrack_pos, "rtrack_pos" : new_rtrack_pos, "histeresis" : hist, "cluster": cluster})
+    return ("MOVE_TO_BOX_BY_VISION", frame, { "R": R,"ltrack_pos": new_ltrack_pos,
+             "rtrack_pos" : new_rtrack_pos, "histeresis" : hist, "cluster": cluster})
 
 
 def place_object_in_the_box(robot,frame, ltrack_pos=0, rtrack_pos=0, P = np.identity(3), mapa = []):
@@ -623,7 +642,7 @@ def place_object_in_the_box(robot,frame, ltrack_pos=0, rtrack_pos=0, P = np.iden
     new_ltrack_pos = robot.left_track.position
     new_rtrack_pos = robot.right_track.position
     odom_l, odom_r = new_ltrack_pos - ltrack_pos, new_rtrack_pos - rtrack_pos
-    marker_map = np.array([[130,75,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
+    marker_map = np.array([[75,130,pi/2],[160,60,0],[75,-10,-pi/2],[-10,60,-pi]])
     BB_legos=get_lego_boxes(frame)
 
     lego_landmarks = mapping.cam2rob(BB_legos,H)
@@ -690,7 +709,8 @@ with Robot(AsyncCamera(0)) as robot:
                 "delete_countdown" : 0,
                 "mapa": [], 
                 "robot_trajectory": [],
-                "feature_map" : [0] * 300
+                "feature_map" : [0] * 300,
+                "image_name" : [0] * 300
             }
          ),
         State(
